@@ -1,5 +1,6 @@
 import express from "express";
 import authRouter from "../modules/auth/auth.routes.js";
+import topicRouter from "../modules/topics/topic.routes.js";
 
 const router = express.Router();
 
@@ -10,5 +11,6 @@ router.get("/health", (req, res) => {
 });
 
 router.use("/auth", authRouter);
+router.use("/topic", topicRouter);
 
 export default router;

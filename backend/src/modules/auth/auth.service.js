@@ -3,9 +3,7 @@ import * as authRepository from "./auth.repository.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../../utils/jwt.js";
 
-export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-
+export const registerUser = async (name, email, password) => {
   const ifUserExists = await authRepository.findUserByEmail(email);
 
   if (ifUserExists) {
@@ -33,9 +31,7 @@ export const registerUser = async (req, res) => {
   };
 };
 
-export const authenticateUser = async (req, res) => {
-  const { email, password } = req.body;
-
+export const authenticateUser = async (email, password) => {
   const userExist = await authRepository.findUserByEmail(email);
 
   if (!userExist) {
@@ -63,9 +59,7 @@ export const authenticateUser = async (req, res) => {
   };
 };
 
-export const getCurrentUser = async (req, res) => {
-  const userId = req.body;
-
+export const getCurrentUser = async (userId) => {
   const response = await authRepository.findUserById(userId);
 
   return {
