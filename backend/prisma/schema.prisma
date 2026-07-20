@@ -5,13 +5,276 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Type {
+  MCQ
+  NUMERIC
+}
+
+enum Mode {
+  PRACTICE
+  TEST
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  avatar    String?  @default("https://dicebear.com")
-  bio       String?  @default("Aptitude learner")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id       String @id @default(uuid())
+  email    String @unique @db.VarChar(200)
+  password String
+  name     String @db.VarChar(255)
+  role     Role   @default(USER)
+
+  avatar String? @default("https://dicebear.com")
+  bio    String? @default("Aptitude learner")
+
+  currentStreak Int?      @map("current_streak")
+  longestStreak Int?      @map("longest_streak")
+  lastSolvedDate DateTime? @map("last_solved_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  practiceSessions PracticeSession[]
+  attempts         Attempt[]
+  discussions      Discussion[]
+  comments         Comment[]
+  replies          Reply[]
+  discussionLikes  DiscussionLike[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Topic {
+  id          String @id @default(uuid())
+  title       String @db.VarChar(255)
+  description String @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  subtopics Subtopic[]
+
+  @@map("topics")
+}
+
+model Subtopic {
+  id          String @id @default(uuid())
+  title       String @db.VarChar(255)
+  description String @db.Text
+
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topicId String @map("topic_id")
+
+  questions        Question[]
+  practiceSessions PracticeSession[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([topicId])
+  @@map("subtopics")
+}
+
+model Question {
+  id         String @id @default(uuid())
+  title      String @db.Text
+  difficulty Difficulty @default(EASY)
+  type       Type @default(MCQ)
+  solution   String @db.Text
+
+  subtopic   Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+  subtopicId String   @map("subtopic_id")
+
+  options        Option[]
+  sheetQuestions SheetQuestion[]
+  attempts       Attempt[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([subtopicId])
+  @@map("questions")
+}
+
+model Option {
+  id        String @id @default(uuid())
+  text      String @db.VarChar(255)
+  isCorrect Boolean @default(false)
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String   @map("question_id")
+
+  attempts Attempt[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([questionId])
+  @@map("options")
+}
+
+model Sheet {
+  id            String @id @default(uuid())
+  title         String @db.VarChar(255)
+  description   String @db.Text
+  companyName   String @db.VarChar(255)
+  difficulty    Difficulty @default(MEDIUM)
+  estimatedTime String @default("1:00")
+
+  sheetQuestions SheetQuestion[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sheets")
+}
+
+model SheetQuestion {
+  id String @id @default(uuid())
+
+  sheet      Sheet    @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  sheetId    String @map("sheet_id")
+  questionId String @map("question_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([sheetId])
+  @@index([questionId])
+  @@unique([sheetId, questionId])
+  @@map("sheet_questions")
+}
+
+model PracticeSession {
+  id String @id @default(uuid())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtopic  Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+
+  userId     String @map("user_id")
+  subtopicId String @map("subtopic_id")
+
+  mode                 Mode @default(PRACTICE)
+  currentQuestionIndex Int @default(0)
+  completed            Boolean @default(false)
+
+  startedAt   DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  attempts Attempt[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([subtopicId])
+  @@map("practice_sessions")
+}
+
+model Attempt {
+  id String @id @default(uuid())
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session        PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption Option          @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+
+  userId           String @map("user_id")
+  sessionId        String @map("session_id")
+  questionId       String @map("question_id")
+  selectedOptionId String @map("selected_option_id")
+
+  isCorrect Boolean
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([questionId])
+  @@map("attempts")
+}
+
+model Discussion {
+  id      String @id @default(uuid())
+  title   String @db.VarChar(255)
+  content String @db.Text
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  comments Comment[]
+  likes    DiscussionLike[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("discussions")
+}
+
+model Comment {
+  id      String @id @default(uuid())
+  content String @db.Text
+
+  discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  discussionId String @map("discussion_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  replies Reply[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([discussionId])
+  @@index([userId])
+  @@map("comments")
+}
+
+model Reply {
+  id      String @id @default(uuid())
+  content String @db.Text
+
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String @map("comment_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([commentId])
+  @@index([userId])
+  @@map("replies")
+}
+
+model DiscussionLike {
+  id String @id @default(uuid())
+
+  discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  discussionId String @map("discussion_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([discussionId, userId])
+  @@index([discussionId])
+  @@index([userId])
+  @@map("discussion_likes")
 }

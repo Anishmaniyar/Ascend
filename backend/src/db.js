@@ -1,18 +1,15 @@
-// src/db.js
-import pg from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-import "dotenv/config";
 
-// 1. Establish a standard PostgreSQL connection pool
-const pool = new pg.Pool({
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// 2. Initialize the Prisma v7 Driver Adapter wrapper
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaNeon(pool);
 
-// 3. Construct the clean client instance by explicitly injecting the adapter
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({
+  adapter,
+});
 
 export default prisma;
