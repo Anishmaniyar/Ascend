@@ -4,6 +4,7 @@ import authRouter from "../modules/auth/auth.routes.js";
 import topicRouter from "../modules/topics/topic.routes.js";
 import questionRouter from "../modules/questions/question.routes.js";
 import practiceSessionRouter from "../modules/practiceSession/practice-session.routes.js";
+import profileRouter from "../modules/profile/profile.routes.js";
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.use("/auth", authRouter);
 router.use("/topic", topicRouter);
 router.use("/question", questionRouter);
 router.use("/practice-session", practiceSessionRouter);
+router.use("/profile", profileRouter);
 
 export default router;
