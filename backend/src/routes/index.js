@@ -6,6 +6,7 @@ import questionRouter from "../modules/questions/question.routes.js";
 import practiceSessionRouter from "../modules/practiceSession/practice-session.routes.js";
 import profileRouter from "../modules/profile/profile.routes.js";
 import adminRouter from "../modules/admin/admin.routes.js";
+import companySheets from "../modules/companySheets/companySheets.routes.js";
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use("/question", questionRouter);
 router.use("/practice-session", practiceSessionRouter);
 router.use("/profile", profileRouter);
 router.use("/admin", adminRouter);
+router.use("/admin/sheets", companySheets);
 
 export default router;
