@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GitHubIcon } from "@/components/ui/icons";
+import Logo from "@/components/ui/Logo";
 
 const PRODUCT_LINKS = [
   { href: "/topics", label: "Topics" },
@@ -20,11 +21,11 @@ export default function Footer() {
       <div className="mx-auto max-w-[var(--page-max-width)] px-6 py-16">
         <div className="grid gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
-            <Link href="/" className="flex items-center gap-2.5 font-polysans text-base tracking-[-0.02em] text-graphite">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-graphite">
-                <span className="h-2 w-2 rounded-full bg-ember" />
+            <Link href="/" className="flex items-center gap-2.5">
+              <Logo className="h-7 w-7" />
+              <span className="font-polysans text-base tracking-[-0.02em] text-graphite">
+                LeetAptitude
               </span>
-              LeetAptitude
             </Link>
             <p className="mt-4 max-w-[36ch] text-15 leading-[1.5] text-steel">
               Learn. Practice. Improve. Placement-ready — one topic at a time.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { GitHubIcon, MenuIcon, XIcon } from "@/components/ui/icons";
+import Logo from "@/components/ui/Logo";
 
 const LINKS = [
   { href: "/topics", label: "Topics" },
@@ -21,12 +22,12 @@ export default function Navbar() {
         {/* Brand */}
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2.5 font-polysans text-base tracking-[-0.02em] text-graphite"
+          className="flex shrink-0 items-center gap-2.5"
         >
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-graphite">
-            <span className="h-2 w-2 rounded-full bg-ember" />
+          <Logo className="h-7 w-7" />
+          <span className="font-polysans text-base tracking-[-0.02em] text-graphite">
+            LeetAptitude
           </span>
-          LeetAptitude
         </Link>
 
         {/* Pill nav container */}
@@ -55,12 +56,11 @@ export default function Navbar() {
             <GitHubIcon className="h-5 w-5" />
           </a>
           <ThemeToggle />
-          {/* TODO: wire to /login when the auth pages are built */}
           <Link
-            href="#"
+            href="/dashboard"
             className="hidden font-polysans text-15 tracking-[-0.02em] text-slate transition-colors hover:text-graphite sm:block"
           >
-            Log in
+            Sign In
           </Link>
           <Link
             href="/dashboard"
@@ -95,10 +95,11 @@ export default function Navbar() {
             ))}
             <div className="mt-3 flex gap-3 border-t border-mist pt-4">
               <Link
-                href="#"
+                href="/dashboard"
+                onClick={() => setOpen(false)}
                 className="flex-1 rounded-buttons border border-graphite px-5 py-2 text-center font-polysans text-15 tracking-[-0.02em] text-graphite"
               >
-                Log in
+                Sign In
               </Link>
               <Link
                 href="/dashboard"

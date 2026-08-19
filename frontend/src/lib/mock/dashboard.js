@@ -3,12 +3,45 @@
 
 export const user = {
   name: "Anish",
+  displayName: "Anish Maniyar",
   email: "anish@student.in",
-  initials: "A",
+  userId: "anish_2026",
+  initials: "AM",
+  avatar: null, // null = show initials fallback
   bio: "Final year CSE · targeting TCS & Infosys",
   memberSince: "Jan 2026",
   streak: 7,
+  location: "Mumbai, India",
+  xId: "",
+  github: "",
+  linkedin: "",
+  leetcode: "",
+  website: "",
 };
+
+// Skills derived from user's practice/attempt data.
+// Each skill = a subtopic the user has solved questions from.
+// solved = number of questions solved from that subtopic.
+export const profileSkills = [
+  // Advanced
+  { name: "Permutations & Combinations", solved: 14, level: "advanced" },
+  { name: "Probability", solved: 8, level: "advanced" },
+  { name: "Trigonometry", solved: 6, level: "advanced" },
+  { name: "Mensuration", solved: 5, level: "advanced" },
+  { name: "Coordinate Geometry", solved: 3, level: "advanced" },
+  // Intermediate
+  { name: "Profit & Loss", solved: 31, level: "intermediate" },
+  { name: "Time & Work", solved: 23, level: "intermediate" },
+  { name: "Time & Distance", solved: 21, level: "intermediate" },
+  { name: "Simple & Compound Interest", solved: 18, level: "intermediate" },
+  { name: "Number System", solved: 12, level: "intermediate" },
+  // Fundamental
+  { name: "Percentages", solved: 99, level: "fundamental" },
+  { name: "Ratio & Proportion", solved: 33, level: "fundamental" },
+  { name: "Averages", solved: 21, level: "fundamental" },
+  { name: "Mixtures & Alligations", solved: 19, level: "fundamental" },
+  { name: "HCF & LCM", solved: 15, level: "fundamental" },
+];
 
 export const quickStats = [
   { id: "solved", label: "Questions Solved", value: 324, suffix: "", icon: "trend" },
