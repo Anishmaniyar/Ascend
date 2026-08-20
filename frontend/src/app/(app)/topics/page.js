@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import { topics } from "@/lib/mock/landing";
 
 export default function TopicsPage() {
@@ -13,27 +15,36 @@ export default function TopicsPage() {
 
       <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {topics.map((topic) => (
-          <article
+          <Link
             key={topic.id}
-            className="rounded-2xl border border-transparent bg-ash p-6 transition-colors hover:border-graphite"
+            href={`/topics/${topic.id}`}
+            className="group rounded-2xl border border-transparent bg-ash p-6 transition-colors hover:border-graphite"
           >
-            <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-              {topic.title}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                {topic.title}
+              </p>
+              <ArrowRightIcon className="mt-1 h-4 w-4 shrink-0 text-slate transition-colors group-hover:text-ember" />
+            </div>
             <p className="mt-2 text-15 leading-[1.5] text-steel">
               {topic.description}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {topic.subtopics.map((subtopic) => (
+              {topic.subtopics.slice(0, 4).map((subtopic) => (
                 <span
-                  key={subtopic.name}
+                  key={subtopic.id}
                   className="rounded-tags bg-canvas px-3 py-1 text-13 text-slate"
                 >
                   {subtopic.name} · {subtopic.questions}
                 </span>
               ))}
+              {topic.subtopics.length > 4 && (
+                <span className="rounded-tags bg-canvas px-3 py-1 text-13 text-slate">
+                  +{topic.subtopics.length - 4} more
+                </span>
+              )}
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </div>

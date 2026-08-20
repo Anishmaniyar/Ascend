@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/topics", label: "Topics" },
   { href: "/sheets", label: "Sheets" },
   { href: "/practice-history", label: "Practice" },
+  { href: "/badges", label: "Badges" },
   { href: "/contests", label: "Contests" },
   { href: "/discussions", label: "Discussions" },
 ];

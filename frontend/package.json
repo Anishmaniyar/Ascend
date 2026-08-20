@@ -8,6 +8,7 @@
     "start": "next start -p 3001"
   },
   "dependencies": {
+    "@subhanhq/amicro": "^1.0.1",
     "lucide-react": "^1.33.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
