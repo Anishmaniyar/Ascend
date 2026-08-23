@@ -56,6 +56,41 @@ export const topics = [
       { id: "ver-6", name: "Error Spotting", questions: 16 },
     ],
   },
+  {
+    id: "di",
+    title: "Data Interpretation",
+    description: "Charts, graphs, tables and data-driven analytical questions.",
+    subtopics: [
+      { id: "di-1", name: "Bar Graphs", questions: 18 },
+      { id: "di-2", name: "Pie Charts", questions: 14 },
+      { id: "di-3", name: "Line Graphs", questions: 16 },
+      { id: "di-4", name: "Tables", questions: 20 },
+      { id: "di-5", name: "Caselets", questions: 12 },
+    ],
+  },
+  {
+    id: "ga",
+    title: "General Awareness",
+    description: "Current affairs, static GK and business awareness.",
+    subtopics: [
+      { id: "ga-1", name: "Current Affairs", questions: 25 },
+      { id: "ga-2", name: "Static GK", questions: 30 },
+      { id: "ga-3", name: "Business Awareness", questions: 15 },
+      { id: "ga-4", name: "Science & Technology", questions: 12 },
+    ],
+  },
+  {
+    id: "english",
+    title: "English Language",
+    description: "Advanced grammar, vocabulary and communication skills.",
+    subtopics: [
+      { id: "eng-1", name: "Active & Passive Voice", questions: 14 },
+      { id: "eng-2", name: "Direct & Indirect Speech", questions: 12 },
+      { id: "eng-3", name: "One Word Substitutions", questions: 18 },
+      { id: "eng-4", name: "Idioms & Phrases", questions: 16 },
+      { id: "eng-5", name: "Comprehension Passages", questions: 20 },
+    ],
+  },
 ];
 
 export const companies = [
@@ -94,6 +129,15 @@ export const companies = [
     estimatedTime: "0:50",
     questions: 75,
     description: "Foundation level questions to build test-day confidence.",
+  },
+  {
+    id: "wipro",
+    name: "Wipro",
+    initial: "W",
+    difficulty: "MEDIUM",
+    estimatedTime: "1:10",
+    questions: 100,
+    description: "Wipro NLTH pattern — quant, reasoning and verbal sections.",
   },
 ];
 

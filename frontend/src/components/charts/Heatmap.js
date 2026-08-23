@@ -71,9 +71,9 @@ export default function Heatmap({ weeks, stats, className = "" }) {
           >
             {/* Month labels row */}
             <div className="relative h-4">
-              {months.map((m) => (
+              {months.map((m, i) => (
                 <span
-                  key={m.label}
+                  key={`${m.label}-${i}`}
                   className="absolute top-0 text-[10px] text-slate"
                   style={{ left: `calc(${(m.index / weeks.length) * 100}% - 0.5px)` }}
                 >

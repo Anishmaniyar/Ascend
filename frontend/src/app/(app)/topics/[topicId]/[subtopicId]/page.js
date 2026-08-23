@@ -2,16 +2,26 @@
 
 import { useState, useMemo, use } from "react";
 import Link from "next/link";
-import { ArrowLeftIcon, SearchIcon } from "@/components/ui/icons";
-import RadialGauge from "@/components/charts/RadialGauge";
-import SheetCard from "@/components/dashboard/SheetCard";
-import SheetDetail from "@/components/dashboard/SheetDetail";
+import { ArrowLeftIcon, SearchIcon, ArrowRightIcon } from "@/components/ui/icons";
+import { getSubtopicIcon } from "@/lib/subtopicIcons";
 import { topics } from "@/lib/mock/landing";
 import {
   practiceSheets,
   getSubtopicSheetStats,
+  subtopicProgress,
 } from "@/lib/mock/dashboard";
-import { getSubtopicIcon } from "@/lib/subtopicIcons";
+
+const DIFF_COLORS = {
+  Easy: "bg-success/10 text-success",
+  Medium: "bg-brass/10 text-brass",
+  Hard: "bg-ember/10 text-ember",
+};
+
+const DIFF_DOT_COLORS = {
+  Easy: "bg-success",
+  Medium: "bg-brass",
+  Hard: "bg-ember",
+};
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All" },
@@ -27,12 +37,13 @@ export default function SubtopicPracticePage({ params }) {
 
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [selectedSheet, setSelectedSheet] = useState(null);
 
   const stats = useMemo(
     () => getSubtopicSheetStats(subtopicId),
     [subtopicId],
   );
+
+  const progress = subtopicProgress[subtopicId] ?? { solved: 0, total: subtopic?.questions ?? 0 };
 
   const sheets = useMemo(() => {
     const all = practiceSheets[subtopicId] ?? [];
@@ -66,7 +77,7 @@ export default function SubtopicPracticePage({ params }) {
   }
 
   const SubtopicIcon = getSubtopicIcon(subtopicId);
-  const hasAnySessions = (practiceSheets[subtopicId] ?? []).length > 0;
+  const pct = progress.total > 0 ? Math.round((progress.solved / progress.total) * 100) : 0;
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
@@ -101,36 +112,37 @@ export default function SubtopicPracticePage({ params }) {
 
           {/* Question count */}
           <p className="mt-4 text-15 text-steel">
-            {subtopic.questions} Questions
+            {progress.total} Questions
           </p>
-
-          {/* Practice button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (hasAnySessions) {
-                const allSheets = practiceSheets[subtopicId] ?? [];
-                const resumeSheet = allSheets.find(
-                  (s) => s.solved > 0 && s.solved < s.questions.length,
-                );
-                const nextSheet = allSheets.find(
-                  (s) => s.solved === 0,
-                );
-                const target = resumeSheet ?? nextSheet ?? allSheets[0];
-                if (target) setSelectedSheet(target);
-              }
-            }}
-            className="mt-5 w-full rounded-buttons bg-graphite px-5 py-2.5 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-          >
-            Practice
-          </button>
 
           {/* Divider */}
           <div className="my-6 h-px bg-mist" />
 
-          {/* Progress section */}
+          {/* Progress gauge */}
           <div className="flex flex-col items-center">
-            <RadialGauge solved={stats.solved} total={stats.totalQuestions} size={140} strokeWidth={10} />
+            <div className="relative inline-flex items-center justify-center" style={{ width: 140, height: 140 }}>
+              <svg width={140} height={140} className="-rotate-90">
+                <circle cx={70} cy={70} r={60} fill="none" stroke="var(--color-mist)" strokeWidth={10} strokeLinecap="round" />
+                <circle
+                  cx={70}
+                  cy={70}
+                  r={60}
+                  fill="none"
+                  stroke="var(--color-ember)"
+                  strokeWidth={10}
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 60}
+                  strokeDashoffset={2 * Math.PI * 60 - (pct / 100) * 2 * Math.PI * 60}
+                  style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-polysans text-heading tracking-[-0.02em] text-graphite">
+                  {progress.solved}/{progress.total}
+                </span>
+                <span className="text-13 text-slate">Solved</span>
+              </div>
+            </div>
           </div>
 
           {/* Stats grid */}
@@ -143,7 +155,7 @@ export default function SubtopicPracticePage({ params }) {
             </div>
             <div className="rounded-xl bg-fog px-3 py-3 text-center">
               <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.solved}
+                {progress.solved}
               </p>
               <p className="mt-0.5 text-13 text-slate">Solved</p>
             </div>
@@ -207,13 +219,60 @@ export default function SubtopicPracticePage({ params }) {
           {/* Sheet list */}
           {sheets.length > 0 ? (
             <div className="mt-4 space-y-3">
-              {sheets.map((sheet) => (
-                <SheetCard
-                  key={sheet.id}
-                  sheet={sheet}
-                  onClick={() => setSelectedSheet(sheet)}
-                />
-              ))}
+              {sheets.map((sheet) => {
+                const total = sheet.questions.length;
+                const completed = sheet.solved === total && total > 0;
+                const inProgress = sheet.solved > 0 && !completed;
+
+                return (
+                  <Link
+                    key={sheet.id}
+                    href={`/topics/${topicId}/${subtopicId}/sheet/${sheet.id}`}
+                    className="group flex w-full items-center justify-between rounded-2xl border border-mist bg-canvas p-5 text-left transition-all hover:border-graphite hover:shadow-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      {/* Session number + difficulty badge */}
+                      <div className="flex items-center gap-3">
+                        <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
+                          Session {sheet.session}
+                        </p>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-tags px-2.5 py-0.5 font-polysans text-13 tracking-[-0.02em] ${DIFF_COLORS[sheet.difficulty]}`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${DIFF_DOT_COLORS[sheet.difficulty]}`} />
+                          {sheet.difficulty}
+                        </span>
+                      </div>
+
+                      {/* Question count */}
+                      <p className="mt-1.5 text-13 text-slate">
+                        {total} Questions
+                      </p>
+
+                      {/* Completion status */}
+                      <div className="mt-2">
+                        {completed ? (
+                          <span className="inline-flex items-center gap-1.5 text-13 font-polysans text-success">
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                            {sheet.solved} / {total} Completed
+                          </span>
+                        ) : inProgress ? (
+                          <span className="text-13 font-polysans text-graphite">
+                            {sheet.solved} / {total} Completed
+                          </span>
+                        ) : (
+                          <span className="text-13 text-slate">Not Started</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Arrow */}
+                    <ArrowRightIcon className="ml-4 h-4 w-4 shrink-0 text-slate transition-colors group-hover:text-ember" />
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="mt-16 rounded-2xl border border-dashed border-mist px-6 py-16 text-center">
@@ -235,21 +294,6 @@ export default function SubtopicPracticePage({ params }) {
           )}
         </div>
       </div>
-
-      {/* Sheet detail modal */}
-      {selectedSheet && (
-        <SheetDetail
-          sheet={selectedSheet}
-          subtopicName={subtopic.name}
-          onClose={() => setSelectedSheet(null)}
-          onStart={() => {
-            alert(
-              `Starting "${subtopic.name} — Session ${selectedSheet.session}"!\nThis will launch a practice session.`,
-            );
-            setSelectedSheet(null);
-          }}
-        />
-      )}
     </div>
   );
 }

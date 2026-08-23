@@ -29,6 +29,10 @@ import {
   Type,
   Shuffle,
   CircleAlert,
+  Brain,
+  Lightbulb,
+  FileText,
+  GraduationCap,
 } from "lucide-react";
 
 function InequalityIcon(props) {
@@ -81,6 +85,23 @@ const SUBTOPIC_ICON_MAP = {
 
 export function getSubtopicIcon(subtopicId) {
   return SUBTOPIC_ICON_MAP[subtopicId] ?? null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TOPIC-LEVEL ICONS — one icon per major topic (used on topic cards)
+// ═══════════════════════════════════════════════════════════════════════
+
+const TOPIC_ICON_MAP = {
+  quant: Calculator,
+  logical: Brain,
+  verbal: BookOpen,
+  di: BarChart3,
+  ga: Lightbulb,
+  english: FileText,
+};
+
+export function getTopicIcon(topicId) {
+  return TOPIC_ICON_MAP[topicId] ?? null;
 }
 
 export default SUBTOPIC_ICON_MAP;

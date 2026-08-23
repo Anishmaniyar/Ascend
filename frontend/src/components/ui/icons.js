@@ -226,3 +226,42 @@ export const ArrowLeftIcon = make(
     <path d="M19 12H5" />
   </>,
 );
+
+export const ChevronLeftIcon = make(<path d="m15 18-6-6 6-6" />);
+
+export const ChevronRightIcon = make(<path d="m9 18 6-6-6-6" />);
+
+export const FilterIcon = make(
+  <>
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </>,
+);
+
+export const PlayIcon = make(
+  <path d="M5 3l14 9-14 9V3Z" />,
+);
+
+export const RotateCcwIcon = make(
+  <>
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
+  </>,
+);
+
+export const UsersIcon = make(
+  <>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </>,
+);
+
+export const BarChart3Icon = make(
+  <>
+    <path d="M3 3v18h18" />
+    <path d="M18 17V9" />
+    <path d="M13 17V5" />
+    <path d="M8 17v-3" />
+  </>,
+);

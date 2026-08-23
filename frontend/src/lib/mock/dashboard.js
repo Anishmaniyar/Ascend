@@ -112,19 +112,38 @@ export const subtopicProgress = {
   "ver-4": { solved: 0, total: 12 },       // Fill in the Blanks 0%
   "ver-5": { solved: 0, total: 10 },       // Para Jumbles 0%
   "ver-6": { solved: 0, total: 16 },       // Error Spotting 0%
+  // Data Interpretation
+  "di-1": { solved: 8, total: 18 },        // Bar Graphs 44%
+  "di-2": { solved: 5, total: 14 },        // Pie Charts 36%
+  "di-3": { solved: 0, total: 16 },        // Line Graphs 0%
+  "di-4": { solved: 3, total: 20 },        // Tables 15%
+  "di-5": { solved: 0, total: 12 },        // Caselets 0%
+  // General Awareness
+  "ga-1": { solved: 10, total: 25 },       // Current Affairs 40%
+  "ga-2": { solved: 6, total: 30 },        // Static GK 20%
+  "ga-3": { solved: 0, total: 15 },        // Business Awareness 0%
+  "ga-4": { solved: 2, total: 12 },        // Science & Technology 17%
+  // English Language
+  "eng-1": { solved: 7, total: 14 },       // Active & Passive Voice 50%
+  "eng-2": { solved: 4, total: 12 },       // Direct & Indirect Speech 33%
+  "eng-3": { solved: 0, total: 18 },       // One Word Substitutions 0%
+  "eng-4": { solved: 3, total: 16 },       // Idioms & Phrases 19%
+  "eng-5": { solved: 0, total: 20 },       // Comprehension Passages 0%
 };
 
 // ═══════════════════════════════════════════════════════════════════════
 // PRACTICE SHEETS (per subtopic)
+// Each sheet = a predefined collection of questions for a subtopic.
 // ═══════════════════════════════════════════════════════════════════════
 
-// practiceSheets[subtopicId] = array of sessions
 export const practiceSheets = {
   "quant-1": [
     {
       id: "q1-s1",
       session: 1,
       difficulty: "Easy",
+      description: "Warm-up questions on profit, loss and discount basics.",
+      estimatedMinutes: 15,
       questions: [
         { id: "q1", title: "A shopkeeper buys goods at 20% discount and sells at 10% above cost price. Find the profit percent.", difficulty: "Easy" },
         { id: "q2", title: "If the cost price of 12 articles is equal to the selling price of 10 articles, find the profit percent.", difficulty: "Easy" },
@@ -139,11 +158,15 @@ export const practiceSheets = {
       ],
       solved: 10,
       accuracy: 80,
+      attempts: 1,
+      lastPracticed: "2 days ago",
     },
     {
       id: "q1-s2",
       session: 2,
       difficulty: "Easy",
+      description: "More practice on marking, discount and basic profit-loss scenarios.",
+      estimatedMinutes: 15,
       questions: [
         { id: "q11", title: "A shopkeeper marks his goods 40% above cost price and gives a 20% discount. Find profit percent.", difficulty: "Easy" },
         { id: "q12", title: "If profit is 25% of SP, find the profit as a percentage of CP.", difficulty: "Easy" },
@@ -158,11 +181,15 @@ export const practiceSheets = {
       ],
       solved: 7,
       accuracy: 71,
+      attempts: 2,
+      lastPracticed: "Yesterday",
     },
     {
       id: "q1-s3",
       session: 3,
       difficulty: "Medium",
+      description: "Medium-level Profit & Loss questions covering important concepts.",
+      estimatedMinutes: 20,
       questions: [
         { id: "q21", title: "A man sells two chairs at ₹500 each. On one he gains 20% and on the other he loses 20%. Find the overall gain or loss.", difficulty: "Medium" },
         { id: "q22", title: "The selling price of 12 pencils equals the cost price of 15 pencils. Find the gain percent.", difficulty: "Medium" },
@@ -177,11 +204,15 @@ export const practiceSheets = {
       ],
       solved: 4,
       accuracy: 50,
+      attempts: 1,
+      lastPracticed: "3 days ago",
     },
     {
       id: "q1-s4",
       session: 4,
       difficulty: "Medium",
+      description: "Intermediate scenarios with mixed profit, loss and discount problems.",
+      estimatedMinutes: 20,
       questions: [
         { id: "q31", title: "A shopkeeper sells a TV at 10% profit and a fridge at 10% loss. If the TV costs ₹20,000 and fridge costs ₹15,000, find overall profit or loss.", difficulty: "Medium" },
         { id: "q32", title: "If the CP of 20 oranges is equal to SP of 16 oranges, find the gain percent.", difficulty: "Medium" },
@@ -196,11 +227,15 @@ export const practiceSheets = {
       ],
       solved: 0,
       accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
     },
     {
       id: "q1-s5",
       session: 5,
       difficulty: "Hard",
+      description: "Advanced Profit & Loss problems with multiple steps and tricky scenarios.",
+      estimatedMinutes: 25,
       questions: [
         { id: "q41", title: "A shopkeeper buys an article at 20% discount on the marked price. He marks it 30% above the price he paid. After giving a 10% discount on the marked price, find his overall profit percent.", difficulty: "Hard" },
         { id: "q42", title: "A trader professes to sell his goods at CP but uses a weight of 800g for 1 kg. Find his gain percent.", difficulty: "Hard" },
@@ -215,6 +250,127 @@ export const practiceSheets = {
       ],
       solved: 0,
       accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
+    },
+  ],
+
+  // ─── Algebra ──────────────────────────────────────────────────────────
+  "quant-11": [
+    {
+      id: "q11-s1",
+      session: 1,
+      difficulty: "Easy",
+      description: "Basic algebraic expressions, simplification and linear equations.",
+      estimatedMinutes: 15,
+      questions: [
+        { id: "a1", title: "Simplify: 3x + 5x - 2x + 4.", difficulty: "Easy" },
+        { id: "a2", title: "If 2x + 3 = 11, find the value of x.", difficulty: "Easy" },
+        { id: "a3", title: "Find the value of x if 5x - 7 = 3x + 9.", difficulty: "Easy" },
+        { id: "a4", title: "Simplify: (2x + 3)(x - 4).", difficulty: "Easy" },
+        { id: "a5", title: "If x/3 + 2 = 5, what is the value of x?", difficulty: "Easy" },
+        { id: "a6", title: "Find x: 4(x - 1) = 2(x + 3).", difficulty: "Easy" },
+        { id: "a7", title: "Simplify: 2(x + y) + 3(x - y).", difficulty: "Easy" },
+        { id: "a8", title: "If 3x = 27, what is x?", difficulty: "Easy" },
+        { id: "a9", title: "Solve for x: x + 7 = 2x - 3.", difficulty: "Easy" },
+        { id: "a10", title: "Evaluate: 2a + 3b when a = 4 and b = -1.", difficulty: "Easy" },
+      ],
+      solved: 0,
+      accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
+    },
+    {
+      id: "q11-s2",
+      session: 2,
+      difficulty: "Easy",
+      description: "More practice on linear equations and basic word problems.",
+      estimatedMinutes: 15,
+      questions: [
+        { id: "a11", title: "The sum of two consecutive integers is 47. Find them.", difficulty: "Easy" },
+        { id: "a12", title: "If a number is tripled and 5 is added, the result is 20. Find the number.", difficulty: "Easy" },
+        { id: "a13", title: "Simplify: 5(2x - 3) - 3(x + 4).", difficulty: "Easy" },
+        { id: "a14", title: "Solve: 3(x + 2) = 2(x + 5) + x.", difficulty: "Easy" },
+        { id: "a15", title: "If 2(x - 3) = x + 1, find x.", difficulty: "Easy" },
+        { id: "a16", title: "A number decreased by 9 is equal to one-third of the number. Find it.", difficulty: "Easy" },
+        { id: "a17", title: "Simplify: (x + 3)² - (x - 3)².", difficulty: "Easy" },
+        { id: "a18", title: "Find x if 7x - 4 = 3x + 12.", difficulty: "Easy" },
+        { id: "a19", title: "If 5 times a number is 8 more than 3 times the number, find it.", difficulty: "Easy" },
+        { id: "a20", title: "Simplify: 4a²b / 2ab.", difficulty: "Easy" },
+      ],
+      solved: 0,
+      accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
+    },
+    {
+      id: "q11-s3",
+      session: 3,
+      difficulty: "Medium",
+      description: "Quadratic equations, factoring and moderate algebraic manipulations.",
+      estimatedMinutes: 20,
+      questions: [
+        { id: "a21", title: "Solve: x² - 5x + 6 = 0.", difficulty: "Medium" },
+        { id: "a22", title: "Factorize: x² - 9.", difficulty: "Medium" },
+        { id: "a23", title: "Find the roots of 2x² - 7x + 3 = 0.", difficulty: "Medium" },
+        { id: "a24", title: "If x + 1/x = 5, find x² + 1/x².", difficulty: "Medium" },
+        { id: "a25", title: "Solve: (x + 2)(x - 5) = 0.", difficulty: "Medium" },
+        { id: "a26", title: "Simplify: (a + b)³ using the identity.", difficulty: "Medium" },
+        { id: "a27", title: "Find x: x² - 4x - 12 = 0.", difficulty: "Medium" },
+        { id: "a28", title: "If the sum of roots of x² - 6x + k = 0 is 6, find k.", difficulty: "Medium" },
+        { id: "a29", title: "A rectangular field's length is 3 more than twice its width. If the perimeter is 54, find the dimensions.", difficulty: "Medium" },
+        { id: "a30", title: "Factorize: x³ - 8.", difficulty: "Medium" },
+      ],
+      solved: 0,
+      accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
+    },
+    {
+      id: "q11-s4",
+      session: 4,
+      difficulty: "Medium",
+      description: "Systems of equations, inequalities and applied algebra problems.",
+      estimatedMinutes: 20,
+      questions: [
+        { id: "a31", title: "Solve: x + y = 10 and x - y = 4.", difficulty: "Medium" },
+        { id: "a32", title: "If 2x + 3y = 12 and x - y = 1, find x and y.", difficulty: "Medium" },
+        { id: "a33", title: "Find the value of k for which x² + kx + 9 = 0 has equal roots.", difficulty: "Medium" },
+        { id: "a34", title: "Simplify: (x² - 4)/(x + 2).", difficulty: "Medium" },
+        { id: "a35", title: "Solve: |2x - 5| = 7.", difficulty: "Medium" },
+        { id: "a36", title: "If one root of x² - 5x + k = 0 is 3, find the other root and k.", difficulty: "Medium" },
+        { id: "a37", title: "A train covers 360 km. If the speed were 20 km/h more, it would take 1 hour less. Find the speed.", difficulty: "Medium" },
+        { id: "a38", title: "Solve: 3/(x-1) + 2/(x+1) = 5.", difficulty: "Medium" },
+        { id: "a39", title: "Find x: log₂(x) + log₂(x-2) = 3.", difficulty: "Medium" },
+        { id: "a40", title: "If a + b = 7 and ab = 12, find a² + b².", difficulty: "Medium" },
+      ],
+      solved: 0,
+      accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
+    },
+    {
+      id: "q11-s5",
+      session: 5,
+      difficulty: "Hard",
+      description: "Advanced algebra with complex equations, identities and competition-level problems.",
+      estimatedMinutes: 25,
+      questions: [
+        { id: "a41", title: "Solve: x⁴ - 13x² + 36 = 0.", difficulty: "Hard" },
+        { id: "a42", title: "If x² + 1/x² = 23, find x - 1/x.", difficulty: "Hard" },
+        { id: "a43", title: "Find the number of real roots of x⁴ + x² + 1 = 0.", difficulty: "Hard" },
+        { id: "a44", title: "If α and β are roots of x² - 5x + 3 = 0, find α² + β².", difficulty: "Hard" },
+        { id: "a45", title: "Solve: √(x + 5) + √(x - 3) = 4.", difficulty: "Hard" },
+        { id: "a46", title: "If the sum of the squares of two numbers is 85 and their sum is 13, find the numbers.", difficulty: "Hard" },
+        { id: "a47", title: "Simplify: (a + b + c)² - a² - b² - c².", difficulty: "Hard" },
+        { id: "a48", title: "Find all integer solutions: x² - y² = 45.", difficulty: "Hard" },
+        { id: "a49", title: "A two-digit number is 7 times the sum of its digits. If 27 is subtracted, the digits reverse. Find the number.", difficulty: "Hard" },
+        { id: "a50", title: "If p + q + r = 0, prove that p³ + q³ + r³ = 3pqr.", difficulty: "Hard" },
+      ],
+      solved: 0,
+      accuracy: 0,
+      attempts: 0,
+      lastPracticed: null,
     },
   ],
 };
@@ -242,6 +398,28 @@ export function getSubtopicSheetStats(subtopicId) {
     accuracy: totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0,
     completedSessions,
     totalSessions: sheets.length,
+  };
+}
+
+// Helper: get aggregate progress for a major topic (sums all its subtopics)
+export function getTopicProgress(topic) {
+  let totalSolved = 0;
+  let totalQuestions = 0;
+
+  topic.subtopics.forEach((sub) => {
+    const p = subtopicProgress[sub.id];
+    if (p) {
+      totalSolved += p.solved;
+      totalQuestions += p.total;
+    } else {
+      totalQuestions += sub.questions;
+    }
+  });
+
+  return {
+    solved: totalSolved,
+    total: totalQuestions,
+    percent: totalQuestions > 0 ? Math.round((totalSolved / totalQuestions) * 100) : 0,
   };
 }
 

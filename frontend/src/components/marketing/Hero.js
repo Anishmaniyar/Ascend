@@ -94,16 +94,16 @@ export default function Hero() {
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="/dashboard"
+            href="/register"
             className="rounded-buttons bg-graphite px-7 py-3 font-polysans text-base tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
           >
             Start Practicing
           </Link>
           <Link
-            href="/topics"
+            href="/login"
             className="rounded-buttons border border-graphite px-7 py-3 font-polysans text-base tracking-[-0.02em] text-graphite transition-colors hover:bg-graphite hover:text-inverse"
           >
-            Explore Topics
+            Sign In
           </Link>
         </div>
 
