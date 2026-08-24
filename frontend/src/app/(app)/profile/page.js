@@ -1,42 +1,192 @@
+import Link from "next/link";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import SectionCard from "@/components/dashboard/SectionCard";
-import SkillsOverview from "@/components/dashboard/SkillsOverview";
-import StatCard from "@/components/dashboard/StatCard";
-import { user, quickStats } from "@/lib/mock/dashboard";
+import ContinueCard from "@/components/dashboard/ContinueCard";
+import DashboardBadges from "@/components/dashboard/DashboardBadges";
+import DonutMetricCard from "@/components/dashboard/DonutMetricCard";
+import PracticeHistoryList from "@/components/dashboard/PracticeHistoryList";
+import RecommendedTopics from "@/components/dashboard/RecommendedTopics";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import Heatmap from "@/components/charts/Heatmap";
+import {
+  buildHeatmap,
+  heatmapStats,
+  performanceSummary,
+} from "@/lib/mock/dashboard";
+
+const ViewAll = ({ href }) => (
+  <Link
+    href={href}
+    className="inline-flex items-center gap-1 font-polysans text-13 tracking-[-0.02em] text-slate transition-colors hover:text-ember"
+  >
+    View all
+    <ArrowRightIcon className="h-3.5 w-3.5" />
+  </Link>
+);
 
 export default function ProfilePage() {
+  const weeks = buildHeatmap(52);
+  const {
+    questionsSolved,
+    totalSessions,
+    overallAccuracy,
+    easy,
+    medium,
+    hard,
+    practiceSessions,
+    testSessions,
+  } = performanceSummary;
+
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
-      <header>
-        <h1 className="text-heading-lg text-graphite">Profile</h1>
-      </header>
+      {/* ── Two-column layout ──────────────────────────────────────── */}
+      <div className="flex flex-col gap-8 lg:flex-row">
+        {/* ── Left: Profile sidebar (sticky) ──────────────────────── */}
+        <DashboardSidebar />
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-3">
-        {/* User card */}
-        <div className="rounded-asymmetric bg-ash p-7">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-graphite font-polysans text-heading tracking-[-0.02em] text-inverse">
-            {user.initials}
-          </span>
-          <p className="mt-5 font-polysans text-heading tracking-[-0.02em] text-graphite">
-            {user.name}
-          </p>
-          <p className="mt-1 text-15 text-steel">{user.email}</p>
-          <p className="mt-4 text-13 leading-[1.5] text-slate">{user.bio}</p>
-          <p className="mt-4 border-t border-mist pt-4 text-13 text-slate">
-            Member since {user.memberSince}
-          </p>
-        </div>
+        {/* ── Right: Main content ─────────────────────────────────── */}
+        <div className="min-w-0 flex-1 space-y-6">
+          {/* 1. Resume Practice — full width */}
+          <ContinueCard />
 
-        {/* Stats + skills */}
-        <div className="space-y-6 lg:col-span-2">
-          <div className="grid grid-cols-2 gap-6">
-            {quickStats.map((stat) => (
-              <StatCard key={stat.id} {...stat} />
-            ))}
+          {/* 2. Practice Statistics + Badges — side by side */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Left: Practice Statistics */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <DonutMetricCard
+                label="Questions Solved"
+                value={questionsSolved}
+                valueLabel="Solved"
+                percent={(questionsSolved / 1000) * 100}
+              >
+                <div className="space-y-2">
+                  <DifficultyRow
+                    label="Easy"
+                    solved={easy.solved}
+                    total={easy.total}
+                    color="bg-success"
+                  />
+                  <DifficultyRow
+                    label="Medium"
+                    solved={medium.solved}
+                    total={medium.total}
+                    color="bg-brass"
+                  />
+                  <DifficultyRow
+                    label="Hard"
+                    solved={hard.solved}
+                    total={hard.total}
+                    color="bg-ember"
+                  />
+                </div>
+              </DonutMetricCard>
+
+              <DonutMetricCard
+                label="Accuracy"
+                value={`${overallAccuracy}%`}
+                valueLabel="Accuracy"
+                subtitle="Overall Performance"
+                percent={overallAccuracy}
+              />
+
+              <DonutMetricCard
+                label="Practice Sessions"
+                value={totalSessions}
+                valueLabel="Sessions"
+                percent={(totalSessions / 50) * 100}
+              >
+                <div className="space-y-2">
+                  <SessionRow
+                    label="Practice"
+                    count={practiceSessions}
+                    total={totalSessions}
+                    color="bg-ember"
+                  />
+                  <SessionRow
+                    label="Test"
+                    count={testSessions}
+                    total={totalSessions}
+                    color="bg-brass"
+                  />
+                </div>
+              </DonutMetricCard>
+            </div>
+
+            {/* Right: Badges */}
+            <DashboardBadges />
           </div>
-          <SectionCard title="Skills Overview">
-            <SkillsOverview />
+
+          {/* 3. Activity Heatmap */}
+          <SectionCard title="Activity">
+            <Heatmap weeks={weeks} stats={heatmapStats} />
+          </SectionCard>
+
+          {/* 4. Practice History */}
+          <SectionCard
+            title="Practice History"
+            action={<ViewAll href="/practice-history" />}
+          >
+            <PracticeHistoryList />
+          </SectionCard>
+
+          {/* 5. Recommended weak topics */}
+          <SectionCard
+            title="Recommended for you"
+            action={
+              <span className="font-polysans text-13 tracking-[-0.02em] text-slate">
+                Based on your accuracy
+              </span>
+            }
+          >
+            <RecommendedTopics />
           </SectionCard>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Breakdown row helpers ──────────────────────────────────────────── */
+
+function DifficultyRow({ label, solved, total, color }) {
+  const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between text-13">
+        <div className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${color}`} />
+          <span className="text-steel">{label}</span>
+        </div>
+        <span className="font-polysans text-graphite">{solved}</span>
+      </div>
+      <div className="mt-1.5 h-1.5 w-full rounded-full bg-fog">
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SessionRow({ label, count, total, color }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between text-13">
+        <div className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${color}`} />
+          <span className="text-steel">{label}</span>
+        </div>
+        <span className="font-polysans text-graphite">
+          {count} <span className="text-slate">({pct}%)</span>
+        </span>
+      </div>
+      <div className="mt-1.5 h-1.5 w-full rounded-full bg-fog">
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );

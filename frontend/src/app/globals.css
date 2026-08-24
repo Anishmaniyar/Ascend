@@ -4,65 +4,46 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ═══════════════════════════════════════════════════════════════════════
-   LEETAPTITUDE — GLOBAL THEME  (Ventriloc design system)
+   LEETAPTITUDE — GLOBAL THEME
    ───────────────────────────────────────────────────────────────────────
-   HOW TO RE-THEME THE WHOLE APP:
-   • Light-mode values → edit the `:root` block below.
-   • Dark-mode values  → edit the `.dark` block below.
-   • Raw reference hex → the `--palette-*` variables (style-guide values).
+   Design language: Typography + whitespace + subtle borders + restrained amber accent.
 
-   Components never hard-code colors/fonts. They consume the semantic
-   `--color-*` / `--font-*` tokens — either directly via `var(--color-ash)`
-   or through Tailwind utilities generated from them (`bg-ash`,
-   `text-graphite`, `font-polysans`, `text-display`, `rounded-asymmetric`).
-   One edit in this file re-themes the entire app.
+   • Light: warm paper (#FAFAF8) + charcoal (#171717) + muted gold
+   • Dark:  warm black (#11110F) + ivory (#F5F3EC) + muted gold
+   • Accent: gold (#D9B45B) — identical across both modes
+
+   Components consume semantic tokens — one edit here re-themes the app.
    ═══════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Raw palette — reference values from the style guide ─────────── */
-  --palette-graphite: #202020;
-  --palette-canvas-white: #ffffff;
-  --palette-ash: #efefef;
-  --palette-fog: #f5f5f5;
-  --palette-ivory: #ebe6dd;
-  --palette-steel: #4d4d4d;
-  --palette-slate: #828282;
-  --palette-mist: #e8e8e8;
-  --palette-ember-orange: #ff682c;
-  --palette-brass: #816729;
-
-  /* ── Semantic tokens — LIGHT MODE (default) ──────────────────────── */
-  --color-graphite: var(--palette-graphite);   /* primary text, headings, nav links, icon strokes */
-  --color-canvas: var(--palette-canvas-white); /* page background — the brightest base layer */
-  --color-ash: var(--palette-ash);             /* cards & section surfaces — dominant warm-gray */
-  --color-fog: var(--palette-fog);             /* nested / secondary containers */
-  --color-ivory: var(--palette-ivory);         /* featured warm blocks — paper-stock feel */
-  --color-steel: var(--palette-steel);         /* secondary body copy, long-form text */
-  --color-slate: var(--palette-slate);         /* muted helper text, tertiary nav, inactive controls */
-  --color-mist: var(--palette-mist);           /* hairline borders & dividers */
-  --color-ember: var(--palette-ember-orange);  /* accent — link underlines, highlights, small accents */
-  --color-brass: var(--palette-brass);         /* secondary accent — chart strokes, tags */
-  --color-inverse: #ffffff;                    /* text placed ON graphite fills */
-  --color-success: #3f7d54;                    /* app extension — correct / positive states */
-  --color-danger: #c2402e;                     /* app extension — incorrect / destructive states */
+  /* ── Semantic tokens — LIGHT MODE ────────────────────────────────── */
+  --color-graphite: #171717;       /* primary text, headings, nav links */
+  --color-canvas: #fafaf8;         /* page background — warm off-white */
+  --color-ash: #f2f2ef;            /* cards & section surfaces */
+  --color-fog: #f7f7f4;            /* nested / secondary containers */
+  --color-ivory: #ffffff;          /* brightest surface layer */
+  --color-steel: #6b6b67;          /* secondary body copy */
+  --color-slate: #a19f96;          /* muted helper text */
+  --color-mist: #e3e3de;           /* hairline borders & dividers */
+  --color-ember: #d9b45b;          /* accent — gold */
+  --color-brass: #c9a348;          /* accent hover / darker variant */
+  --color-inverse: #11100d;        /* text placed ON accent fills */
+  --color-success: #3f8f62;        /* correct / positive states */
+  --color-danger: #c95c5c;         /* incorrect / destructive states */
 
   /* ── Typography ───────────────────────────────────────────────────── */
-  /* --font-display is the PolySans substitute (Inter Tight @400 per the
-     style guide). Swapping in the real PolySans = one change here. */
-  --font-display: "Inter Tight", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-body), "Poppins", ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
+  --font-body: var(--font-body), "Poppins", ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
 
-  /* ── Spacing (base unit 4px — mirrors Tailwind's spacing scale) ──── */
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-36: 36px;
-  --spacing-40: 40px;
-  --spacing-60: 60px;
-  --spacing-140: 140px;
+  /* ── Font weight hierarchy ────────────────────────────────────────── */
+  --font-weight-heading: 300;      /* Level 1 — page headings (large, elegant) */
+  --font-weight-section: 500;      /* Level 2 — section headings */
+  --font-weight-card: 500;         /* Level 3 — card/component headings */
+  --font-weight-body: 400;         /* Level 4 — body / descriptions */
+  --font-weight-metadata: 400;     /* Level 5 — metadata, labels */
+  --font-weight-emphasis: 500;     /* Level 6 — strong emphasis, stats */
 
   /* ── Layout ───────────────────────────────────────────────────────── */
   --page-max-width: 1200px;
@@ -73,33 +54,31 @@
   color-scheme: light;
 }
 
-/* ── DARK MODE — the same tokens, flipped values ─────────────────────── */
+/* ── DARK MODE ──────────────────────────────────────────────────────── */
 .dark {
-  --color-graphite: #f0f0ee;
-  --color-canvas: #0e0e0d;
-  --color-ash: #1a1a19;
-  --color-fog: #151514;
-  --color-ivory: #26221a;
-  --color-steel: #b0b0ad;
-  --color-slate: #868683;
-  --color-mist: #2a2a28;
-  --color-ember: #ff7a45;
-  --color-brass: #c9a45e;
-  --color-inverse: #0e0e0d;
-  --color-success: #5cb87e;
-  --color-danger: #e0654f;
+  --color-graphite: #f5f3ec;       /* warm ivory text */
+  --color-canvas: #11110f;         /* near-black background */
+  --color-ash: #1a1a17;            /* surface */
+  --color-fog: #151513;            /* nested surface */
+  --color-ivory: #151513;          /* surface */
+  --color-steel: #a19f96;          /* secondary text */
+  --color-slate: #706d64;          /* muted text */
+  --color-mist: #302f2a;           /* borders */
+  --color-ember: #d9b45b;          /* accent — gold (same as light) */
+  --color-brass: #e4c16a;          /* accent hover */
+  --color-inverse: #11110f;        /* text on accent */
+  --color-success: #62a878;
+  --color-danger: #d66a6a;
 
   color-scheme: dark;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
    TAILWIND v4 THEME MAPPING
-   Colors are mapped `inline` so generated utilities reference the CSS
-   variables above at runtime — this is what makes the `.dark` flip work.
    ═══════════════════════════════════════════════════════════════════════ */
 
 @theme inline {
-  /* Colors — style-guide names + short aliases */
+  /* Colors — all mapped through CSS variables for dark mode support */
   --color-graphite: var(--color-graphite);
   --color-canvas-white: var(--color-canvas);
   --color-canvas: var(--color-canvas);
@@ -118,37 +97,37 @@
 }
 
 @theme {
-  /* Font families — `font-polysans` for headings/nav/buttons, `font-inter` for body */
+  /* Font families */
   --font-polysans: var(--font-display);
   --font-inter: var(--font-body);
 
-  /* Type scale — e.g. `text-display`, `text-heading`, `text-caption` */
+  /* Type scale */
   --text-13: 13px;
   --text-13--line-height: 1.43;
   --text-15: 15px;
   --text-15--line-height: 1.5;
   --text-caption: 14px;
   --text-caption--line-height: 1.43;
-  --text-subheading: 18px;
-  --text-subheading--line-height: 1.25;
-  --text-heading: 32px;
-  --text-heading--line-height: 1.19;
-  --text-heading--letter-spacing: -0.64px;
-  --text-heading-lg: 40px;
-  --text-heading-lg--line-height: 1.2;
-  --text-heading-lg--letter-spacing: -0.8px;
-  --text-display: 66px;
-  --text-display--line-height: 0.91;
-  --text-display--letter-spacing: -1.32px;
+  --text-subheading: 25px;
+  --text-subheading--line-height: 31px;
+  --text-heading: 45px;
+  --text-heading--line-height: 45px;
+  --text-heading--letter-spacing: -1.35px;
+  --text-heading-lg: 45px;
+  --text-heading-lg--line-height: 45px;
+  --text-heading-lg--letter-spacing: -1.35px;
+  --text-display: 45px;
+  --text-display--line-height: 45px;
+  --text-display--letter-spacing: -1.35px;
 
-  /* Border radius — sharp buttons, asymmetric feature cards, pill nav */
+  /* Border radius */
   --radius-tags: 20px;
-  --radius-2xl: 20px; /* data dashboard cards (style guide) */
-  --radius-cards: 8px;
-  --radius-buttons: 0px;
+  --radius-2xl: 14px;
+  --radius-cards: 14px;
+  --radius-buttons: 9999px;
   --radius-nav-pills: 200px;
   --radius-asymmetric: 6px 0px 0px;
-  --radius-asymmetric-card: 6px 0px 0px; /* style-guide alias */
+  --radius-asymmetric-card: 6px 0px 0px;
 }
 
 /* ── Base layer ───────────────────────────────────────────────────────── */
@@ -168,22 +147,48 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* PolySans rule — display type stays at weight 400 with -0.02em tracking.
-     Never bold headings; the whisper-weight is the signature. */
+  /* Headings — lightweight, elegant, refined
+     NOTE: font-size and line-height are controlled by Tailwind utility
+     classes (text-heading-lg, text-subheading, etc.) to avoid conflicts
+     between base CSS and utility specificity. */
   h1,
   h2,
-  h3,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-heading);
+    letter-spacing: -0.03em;
+    color: var(--color-graphite);
+  }
+
+  h2,
+  h3 {
+    font-weight: var(--font-weight-section);
+    letter-spacing: -0.02em;
+  }
+
   h4,
   h5,
   h6 {
     font-family: var(--font-display);
-    font-weight: 400;
+    font-weight: var(--font-weight-section);
     letter-spacing: -0.02em;
+    color: var(--color-graphite);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
   }
 
   button {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    color: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
   }
 
   ::selection {
@@ -195,6 +200,29 @@
     outline: 2px solid var(--color-ember);
     outline-offset: 2px;
   }
+}
+
+/* ── Button arrow hover ──────────────────────────────────────────────── */
+.group:hover .btn-arrow {
+  transform: translateX(3px);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-mist);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate);
 }
 
 /* ── Motion (micro-interactions) ─────────────────────────────────────── */

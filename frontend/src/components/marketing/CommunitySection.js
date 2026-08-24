@@ -2,6 +2,7 @@ import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ChatIcon, HeartIcon, ArrowRightIcon } from "@/components/ui/icons";
 import { discussions } from "@/lib/mock/landing";
+import Button from "@/components/ui/Button";
 
 export default function CommunitySection() {
   return (
@@ -14,13 +15,10 @@ export default function CommunitySection() {
             title="Learn together."
             description="Stuck on a concept? Ask the community. Discussions, comments, replies and likes keep everyone moving — the way real placement prep works."
           />
-          <Link
-            href="/discussions"
-            className="mt-8 inline-flex items-center gap-1.5 rounded-buttons border border-graphite px-6 py-3 font-polysans text-base tracking-[-0.02em] text-graphite transition-colors hover:bg-graphite hover:text-inverse"
-          >
+          <Button render={<Link href="/discussions" />} variant="secondary" size="lg" className="mt-8">
             Join the discussion
             <ArrowRightIcon className="h-4 w-4" />
-          </Link>
+          </Button>
         </div>
 
         {/* Discussion preview */}

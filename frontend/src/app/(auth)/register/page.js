@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowRightIcon } from "@/components/ui/icons";
+import Logo from "@/components/ui/Logo";
+import DashboardPreview from "@/components/auth/DashboardPreview";
+import Button from "@/components/ui/Button";
 
-// Google SVG icon
+/* ── Google SVG icon ──────────────────────────────────────────────────── */
 function GoogleIcon({ className }) {
   return (
     <svg
@@ -39,131 +40,68 @@ export default function RegisterPage() {
 
   function handleGoogleSignUp() {
     setLoading(true);
-    // Simulate Google OAuth — in production, redirect to Google OAuth
     setTimeout(() => {
       router.push("/dashboard");
     }, 800);
   }
 
   return (
-    <div className="rounded-2xl border border-mist bg-canvas p-8">
-      {/* Heading */}
-      <div className="text-center">
-        <h1 className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-          Create your account
-        </h1>
-        <p className="mt-2 text-15 text-steel">
-          Start your aptitude preparation journey
-        </p>
+    <div className="flex min-h-screen">
+      {/* ════════════════════════════════════════════════════════════════
+          LEFT — SIGN UP AREA
+          ════════════════════════════════════════════════════════════════ */}
+      <div className="relative flex w-full flex-col justify-between px-8 py-8 lg:w-[480px] xl:w-[520px] lg:px-12 lg:py-10">
+        {/* Logo — top left */}
+        <div className="flex items-center gap-2.5">
+          <Logo className="h-7 w-7" />
+          <span className="font-polysans text-[15px] tracking-[-0.02em] text-graphite">
+            LeetAptitude
+          </span>
+        </div>
+
+        {/* Signup content — vertically centered */}
+        <div className="mx-auto w-full max-w-[320px]">
+          <h1 className="font-polysans text-heading tracking-[-0.02em] text-graphite">
+            Get started
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-steel">
+            Start your aptitude preparation journey.
+          </p>
+
+          {/* Google sign up button */}
+          <Button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+            variant="secondary"
+            className="mt-8 w-full gap-3 border border-mist bg-canvas hover:border-graphite hover:shadow-sm"
+          >
+            {loading ? (
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-graphite border-t-transparent" />
+            ) : (
+              <>
+                <GoogleIcon className="h-5 w-5 shrink-0" />
+                Get Started with Google
+              </>
+            )}
+          </Button>
+
+          {/* Subtle info line */}
+          <p className="mt-6 text-center text-[13px] leading-relaxed text-slate">
+            One click to sign up or sign in. Track your practice, progress, and preparation in one place.
+          </p>
+        </div>
+
+        {/* Copyright — bottom left */}
+        <p className="text-[13px] text-slate">&copy; 2026 LeetAptitude</p>
       </div>
 
-      {/* Google Sign Up */}
-      <button
-        type="button"
-        onClick={handleGoogleSignUp}
-        disabled={loading}
-        className="mt-8 flex w-full items-center justify-center gap-3 rounded-buttons border border-mist bg-canvas px-5 py-3 font-polysans text-15 tracking-[-0.02em] text-graphite transition-all hover:border-graphite hover:shadow-sm disabled:opacity-60"
-      >
-        {loading ? (
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-graphite border-t-transparent" />
-        ) : (
-          <>
-            <GoogleIcon className="h-5 w-5" />
-            Sign up with Google
-          </>
-        )}
-      </button>
-
-      {/* Divider */}
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-mist" />
-        </div>
-        <div className="relative flex justify-center text-13">
-          <span className="bg-canvas px-3 text-slate">or</span>
-        </div>
+      {/* ════════════════════════════════════════════════════════════════
+          RIGHT — PRODUCT PREVIEW
+          ════════════════════════════════════════════════════════════════ */}
+      <div className="hidden flex-1 items-center justify-center overflow-hidden bg-canvas lg:flex">
+        <DashboardPreview />
       </div>
-
-      {/* Email sign up */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setLoading(true);
-          setTimeout(() => router.push("/dashboard"), 800);
-        }}
-        className="space-y-4"
-      >
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-13 font-polysans text-steel"
-          >
-            Full name
-          </label>
-          <input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            required
-            className="mt-1.5 h-10 w-full rounded-lg border border-mist bg-canvas px-3 text-15 text-graphite placeholder:text-slate focus:border-graphite focus:outline-none"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-13 font-polysans text-steel"
-          >
-            Email address
-          </label>
-          <input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            required
-            className="mt-1.5 h-10 w-full rounded-lg border border-mist bg-canvas px-3 text-15 text-graphite placeholder:text-slate focus:border-graphite focus:outline-none"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-13 font-polysans text-steel"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            className="mt-1.5 h-10 w-full rounded-lg border border-mist bg-canvas px-3 text-15 text-graphite placeholder:text-slate focus:border-graphite focus:outline-none"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-buttons bg-graphite px-5 py-3 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85 disabled:opacity-60"
-        >
-          {loading ? (
-            <span className="h-5 w-5 animate-spin rounded-full border-2 border-inverse border-t-transparent" />
-          ) : (
-            <>
-              Create Account
-              <ArrowRightIcon className="h-4 w-4" />
-            </>
-          )}
-        </button>
-      </form>
-
-      {/* Sign in link */}
-      <p className="mt-6 text-center text-15 text-steel">
-        Already have an account?{" "}
-        <Link
-          href="/login"
-          className="font-polysans text-graphite underline underline-offset-2 hover:text-ember"
-        >
-          Sign in
-        </Link>
-      </p>
     </div>
   );
 }

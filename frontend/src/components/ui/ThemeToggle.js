@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 
 /**
  * ThemeToggle — flips the `.dark` class on <html>, which re-maps every
  * semantic color token in globals.css. Persists the choice to localStorage;
  * the root layout script reads it before first paint (no flash).
+ *
+ * Renders as a small icon-only button (Sun / Moon).
  */
-export default function ThemeToggle() {
+export default function ThemeToggle({ className = "" }) {
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Read the theme applied by the no-FOUC script in layout.js once the
-  // component mounts, so the label always matches the actual theme.
+  // component mounts, so the icon always matches the actual theme.
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
     setMounted(true);
@@ -34,9 +37,18 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="inline-flex min-w-16 items-center justify-center rounded-nav-pills border border-mist bg-fog px-4 py-2 font-polysans text-13 tracking-[-0.02em] text-slate transition-colors hover:border-graphite hover:text-graphite"
+      className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-slate transition-colors hover:bg-ash hover:text-graphite ${className}`}
     >
-      {mounted && (dark ? "Light" : "Dark")}
+      {mounted ? (
+        dark ? (
+          <Sun className="h-4 w-4" />
+        ) : (
+          <Moon className="h-4 w-4" />
+        )
+      ) : (
+        // Prevent layout shift — render a placeholder of the same size
+        <span className="h-4 w-4" />
+      )}
     </button>
   );
 }

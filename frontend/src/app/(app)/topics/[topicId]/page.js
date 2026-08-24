@@ -15,6 +15,7 @@ import {
   practiceSheets,
   getSubtopicSheetStats,
 } from "@/lib/mock/dashboard";
+import Button from "@/components/ui/Button";
 
 // ── Top-level topic filters (same as main topics page) ──────────────────
 const TOPIC_FILTERS = [
@@ -141,13 +142,10 @@ export default function SubtopicsPage({ params }) {
             </p>
           </div>
         </div>
-        <Link
-          href="#"
-          className="hidden shrink-0 items-center gap-2 rounded-buttons bg-graphite px-5 py-2.5 font-polysans text-13 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85 sm:inline-flex"
-        >
+        <Button render={<Link href="#" />} variant="primary" size="sm" className="hidden shrink-0 sm:inline-flex">
           Plan My Preparation
           <ArrowRightIcon className="h-3.5 w-3.5" />
-        </Link>
+        </Button>
       </div>
 
       {/* ── 3. Main Topic Navigation ───────────────────────────────────── */}

@@ -8,18 +8,24 @@ import {
   Pencil,
   ChevronDown,
   ChevronUp,
+  Github,
+  Linkedin,
+  Globe,
+  Calendar,
+  Target,
+  BarChart3,
 } from "lucide-react";
 import { user, profileSkills } from "@/lib/mock/dashboard";
+import Button from "@/components/ui/Button";
 
 const VISIBLE_COUNT = 3;
 
-const SOCIAL_FIELDS = [
-  { key: "location", label: "Location", icon: MapPin },
-  { key: "xId", label: "X", prefix: "@" },
-  { key: "github", label: "GitHub", icon: ExternalLink },
-  { key: "linkedin", label: "LinkedIn", icon: ExternalLink },
-  { key: "leetcode", label: "LeetCode", icon: ExternalLink },
-  { key: "website", label: "Website", icon: ExternalLink },
+const SOCIAL_LINKS = [
+  { key: "github", label: "GitHub", icon: Github, baseUrl: "https://github.com/" },
+  { key: "linkedin", label: "LinkedIn", icon: Linkedin, baseUrl: "https://linkedin.com/in/" },
+  { key: "xId", label: "X", icon: null, baseUrl: "https://x.com/", prefix: "@" },
+  { key: "leetcode", label: "LeetCode", icon: null, baseUrl: "https://leetcode.com/u/" },
+  { key: "website", label: "Website", icon: Globe, baseUrl: "https://" },
 ];
 
 const LEVEL_META = {
@@ -84,82 +90,115 @@ export default function DashboardSidebar() {
   return (
     <aside className="w-full space-y-6 lg:sticky lg:top-20 lg:w-72 lg:shrink-0">
       {/* ── Profile Card ──────────────────────────────────────────────── */}
-      <section className="p-0">
-        {/* Avatar */}
-        <div className="flex justify-center">
+      <section className="rounded-2xl border border-mist bg-ash p-5">
+        {/* Row 1: Avatar + Name/ID */}
+        <div className="flex items-center gap-4">
+          {/* Avatar */}
           {user.avatar ? (
             <img
               src={user.avatar}
               alt={user.displayName}
-              className="h-20 w-20 rounded-xl object-cover"
+              className="h-14 w-14 shrink-0 rounded-xl object-cover"
             />
           ) : (
-            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-graphite font-polysans text-heading tracking-[-0.02em] text-inverse">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-graphite font-polysans text-lg tracking-[-0.02em] text-inverse">
               {user.initials}
             </span>
           )}
-        </div>
 
-        {/* Name + userId */}
-        <div className="mt-4 text-center">
-          <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-            {user.displayName}
-          </p>
-          <p className="mt-1 text-13 text-slate">@{user.userId}</p>
+          {/* Name + ID in column */}
+          <div className="min-w-0">
+            <p className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
+              {user.displayName}
+            </p>
+            <p className="mt-0.5 truncate text-13 text-slate">@{user.userId}</p>
+          </div>
         </div>
 
         {/* Bio */}
         {user.bio && (
-          <p className="mt-4 text-center text-15 leading-[1.5] text-steel">{user.bio}</p>
+          <p className="mt-3 text-13 leading-[1.5] text-steel">{user.bio}</p>
         )}
 
-        {/* Social / Profile Info — only non-empty fields */}
-        {SOCIAL_FIELDS.some((f) => user[f.key]) && (
-          <div className="mt-5 space-y-2.5">
-            {SOCIAL_FIELDS.map((field) => {
-              const value = user[field.key];
-              if (!value) return null;
+        {/* Info rows — one item per row */}
+        <div className="mt-4 space-y-2.5">
+          {/* Location */}
+          {user.location && (
+            <div className="flex items-center gap-2.5 text-13">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate" />
+              <span className="text-graphite">{user.location}</span>
+            </div>
+          )}
 
-              const Icon = field.icon;
-              const display = field.prefix ? `${field.prefix}${value}` : value;
-              const isUrl = field.key !== "location" && field.key !== "xId";
+          {/* DOB */}
+          {user.dob && (
+            <div className="flex items-center gap-2.5 text-13">
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-slate" />
+              <span className="text-graphite">{user.dob}</span>
+            </div>
+          )}
 
-              return (
-                <div
-                  key={field.key}
-                  className="flex items-center gap-2.5 text-13"
-                >
+          {/* Member Since */}
+          {user.memberSince && (
+            <div className="flex items-center gap-2.5 text-13">
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-slate" />
+              <span className="text-graphite">Member since {user.memberSince}</span>
+            </div>
+          )}
+
+          {/* Target Companies */}
+          {user.targetCompanies?.length > 0 && (
+            <div className="flex items-center gap-2.5 text-13">
+              <Target className="h-3.5 w-3.5 shrink-0 text-slate" />
+              <span className="text-graphite">{user.targetCompanies.join(" · ")}</span>
+            </div>
+          )}
+
+          {/* Social links — one per row */}
+          {SOCIAL_LINKS.map((link) => {
+            const value = user[link.key];
+            if (!value) return null;
+
+            const Icon = link.icon;
+            const display = link.prefix ? `${link.prefix}${value}` : value;
+            const url = `${link.baseUrl}${value}`;
+
+            return (
+              <a
+                key={link.key}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 text-13 text-graphite transition-colors hover:text-ember"
+              >
+                {Icon ? (
                   <Icon className="h-3.5 w-3.5 shrink-0 text-slate" />
-                  {isUrl ? (
-                    <a
-                      href={value.startsWith("http") ? value : `https://${value}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="truncate text-graphite underline-offset-2 hover:underline"
-                    >
-                      {display}
-                    </a>
-                  ) : (
-                    <span className="truncate text-graphite">{display}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                ) : (
+                  <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded bg-fog font-polysans text-9 font-medium text-slate">
+                    {link.label.charAt(0)}
+                  </span>
+                )}
+                <span className="truncate underline-offset-2 hover:underline">{display}</span>
+              </a>
+            );
+          })}
+        </div>
 
-        {/* Edit Profile */}
-        <Link
-          href="/settings"
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-buttons border border-graphite bg-transparent px-4 py-2.5 font-polysans text-15 tracking-[-0.02em] text-graphite transition-colors hover:bg-graphite hover:text-inverse"
-        >
-          <Pencil className="h-4 w-4" />
-          Edit Profile
-        </Link>
+        {/* Action buttons */}
+        <div className="mt-4 flex gap-2">
+          <Button render={<Link href="/settings" />} variant="secondary" className="flex-1">
+            <Pencil className="h-4 w-4" />
+            Edit Profile
+          </Button>
+          <Button render={<Link href="/progress" />} variant="primary" className="flex-1">
+            <BarChart3 className="h-4 w-4" />
+            Progress
+          </Button>
+        </div>
       </section>
 
       {/* ── Skills Card ───────────────────────────────────────────────── */}
-      <section className="p-0">
+      <section className="rounded-2xl border border-mist bg-ash p-5">
         <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
           Skills
         </h2>

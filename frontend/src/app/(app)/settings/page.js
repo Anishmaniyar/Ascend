@@ -42,7 +42,7 @@ export default function SettingsPage() {
       {/* ── Page header ──────────────────────────────────────────────── */}
       <header className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-slate" />
-        <h1 className="text-heading-lg text-graphite">Settings</h1>
+        <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">Settings</h1>
       </header>
 
       {/* ── Profile card + settings grid ─────────────────────────────── */}

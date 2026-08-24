@@ -26,7 +26,7 @@ export default function WelcomeHeader() {
         {dateLabel && (
           <p className="font-polysans text-13 tracking-[-0.02em] text-slate">{dateLabel}</p>
         )}
-        <h1 className="mt-2 text-heading-lg text-graphite">
+        <h1 className="mt-2 font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
           {greeting}, {user.name} 👋
         </h1>
         <p className="mt-2 text-15 leading-[1.5] text-steel">

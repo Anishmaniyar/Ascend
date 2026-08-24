@@ -16,7 +16,7 @@ export default function SectionHeading({
           {kicker}
         </p>
       )}
-      <h2 className="mt-4 text-heading-lg text-graphite">{title}</h2>
+      <h2 className="mt-4 font-polysans text-heading-lg tracking-[-0.02em] text-graphite">{title}</h2>
       {description && (
         <p className="mt-4 text-subheading text-steel">{description}</p>
       )}

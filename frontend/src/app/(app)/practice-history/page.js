@@ -4,7 +4,7 @@ export default function PracticeHistoryPage() {
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
       <header>
-        <h1 className="text-heading-lg text-graphite">Practice History</h1>
+        <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">Practice History</h1>
         <p className="mt-2 max-w-[56ch] text-15 leading-[1.5] text-steel">
           Every session you&apos;ve completed — what you solved, how you did,
           and when.

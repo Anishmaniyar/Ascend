@@ -22,6 +22,7 @@ import {
 } from "@/lib/mock/practiceSession";
 import { practiceSheets } from "@/lib/mock/dashboard";
 import { topics } from "@/lib/mock/landing";
+import Button from "@/components/ui/Button";
 
 // ═══════════════════════════════════════════════════════════════════════
 // Custom BookmarkIcon (flag for mark-for-review)
@@ -150,20 +151,12 @@ function SessionHeader({ onExit, showExitConfirm, setShowExitConfirm }) {
               Your progress has been saved. You can resume this session later from the sheet page.
             </p>
             <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowExitConfirm(false)}
-                className="flex-1 rounded-buttons border border-mist px-4 py-2.5 font-polysans text-15 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-              >
+              <Button variant="secondary" className="flex-1" onClick={() => setShowExitConfirm(false)}>
                 Continue Session
-              </button>
-              <Link
-                href={`/topics`}
-                onClick={() => onExit()}
-                className="flex-1 rounded-buttons bg-graphite px-4 py-2.5 text-center font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-              >
+              </Button>
+              <Button render={<Link href={`/topics`} onClick={() => onExit()} />} variant="primary" className="flex-1 text-center">
                 Exit
-              </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -291,34 +284,21 @@ function QuestionDisplay() {
 
       {/* Bottom navigation */}
       <div className="mt-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={goPrev}
-          disabled={currentIndex === 0}
-          className="flex items-center gap-2 rounded-buttons border border-mist px-4 py-2.5 font-polysans text-15 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog disabled:opacity-40 disabled:cursor-not-allowed"
-        >
+        <Button variant="secondary" onClick={goPrev} disabled={currentIndex === 0}>
           <ArrowLeftIcon className="h-4 w-4" />
           Previous
-        </button>
+        </Button>
 
         {isLast ? (
-          <button
-            type="button"
-            onClick={submit}
-            className="flex items-center gap-2 rounded-buttons bg-graphite px-6 py-2.5 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-          >
+          <Button variant="primary" onClick={submit}>
             Submit Session
             <CheckIcon className="h-4 w-4" />
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={goNext}
-            className="flex items-center gap-2 rounded-buttons bg-graphite px-5 py-2.5 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-          >
+          <Button variant="primary" onClick={goNext}>
             Next
             <ArrowRightIcon className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -453,14 +433,10 @@ function QuestionNavigator() {
 
       {/* Submit button */}
       <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => setShowConfirmSubmit(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-buttons bg-graphite px-5 py-3 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-        >
+        <Button variant="primary" className="w-full" onClick={() => setShowConfirmSubmit(true)}>
           Submit Session
           <CheckIcon className="h-4 w-4" />
-        </button>
+        </Button>
         <p className="mt-2 text-center text-13 text-slate">
           {remaining} question{remaining !== 1 ? "s" : ""} remaining
         </p>
@@ -491,23 +467,19 @@ function QuestionNavigator() {
               )}
             </div>
             <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowConfirmSubmit(false)}
-                className="flex-1 rounded-buttons border border-mist px-4 py-2.5 font-polysans text-15 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-              >
+              <Button variant="secondary" className="flex-1" onClick={() => setShowConfirmSubmit(false)}>
                 Go Back
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
                 onClick={() => {
                   submit();
                   setShowConfirmSubmit(false);
                 }}
-                className="flex-1 rounded-buttons bg-graphite px-4 py-2.5 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
               >
                 Confirm Submit
-              </button>
+              </Button>
             </div>
           </div>
         </div>

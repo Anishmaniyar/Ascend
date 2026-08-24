@@ -10,14 +10,13 @@ import Logo from "@/components/ui/Logo";
 const NAV_LINKS = [
   { href: "/topics", label: "Topics" },
   { href: "/sheets", label: "Sheets" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/leaderboard", label: "Leaderboards" },
   { href: "/contests", label: "Contests" },
-  { href: "/discussions", label: "Discussions" },
 ];
 
 const PROFILE_MENU = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/practice-history", label: "Progress", icon: BarChart3 },
+  { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/badges", label: "Badges", icon: Award },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/appearance", label: "Appearance", icon: Palette },

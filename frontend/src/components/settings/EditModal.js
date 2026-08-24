@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { X, Info } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 export default function EditModal({
   open,
@@ -124,20 +125,13 @@ export default function EditModal({
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-nav-pills border border-mist px-5 py-2 font-polysans text-15 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-            >
+            <Button variant="ghost" onClick={onClose}>
               Cancel
-            </button>
+            </Button>
             {!readOnly && (
-              <button
-                type="submit"
-                className="rounded-nav-pills bg-graphite px-5 py-2 font-polysans text-15 tracking-[-0.02em] text-inverse transition-colors hover:opacity-90"
-              >
+              <Button type="submit" variant="primary">
                 Save
-              </button>
+              </Button>
             )}
           </div>
         </form>

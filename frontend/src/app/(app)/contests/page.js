@@ -19,6 +19,7 @@ import {
   DIFF_DOT_COLORS,
   userContests,
 } from "@/lib/mock/contests";
+import Button from "@/components/ui/Button";
 
 // ─── Helper: format date ──────────────────────────────────────────────
 function formatDate(dateStr) {
@@ -405,38 +406,26 @@ export default function ContestsPage() {
                   {/* Action button */}
                   <div className="mt-auto pt-4">
                     {contest.status === "live" && (
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center gap-2 rounded-buttons bg-success px-4 py-2.5 font-polysans text-13 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-                      >
+                      <Button variant="primary" size="sm" className="w-full bg-success hover:brightness-110">
                         <PlayIcon className="h-3.5 w-3.5" />
                         Join Now
-                      </button>
+                      </Button>
                     )}
                     {contest.status === "upcoming" && (
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center gap-2 rounded-buttons bg-graphite px-4 py-2.5 font-polysans text-13 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-                      >
+                      <Button variant="primary" size="sm" className="w-full">
                         Register
-                      </button>
+                      </Button>
                     )}
                     {contest.status === "completed" && !isParticipated && (
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center gap-2 rounded-buttons border border-mist bg-canvas px-4 py-2.5 font-polysans text-13 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-                      >
+                      <Button variant="secondary" size="sm" className="w-full">
                         View Results
-                      </button>
+                      </Button>
                     )}
                     {contest.status === "completed" && isParticipated && (
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-center gap-2 rounded-buttons border border-mist bg-canvas px-4 py-2.5 font-polysans text-13 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-                      >
+                      <Button variant="secondary" size="sm" className="w-full">
                         <RotateCcwIcon className="h-3.5 w-3.5" />
                         Review
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -509,13 +498,10 @@ export default function ContestsPage() {
                     {result.accuracy}%
                   </span>
                   <span className="text-13 text-steel">{result.time}</span>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-buttons border border-mist bg-canvas px-3 py-1.5 font-polysans text-13 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-                  >
+                  <Button variant="secondary" size="sm">
                     <RotateCcwIcon className="h-3.5 w-3.5" />
                     Review
-                  </button>
+                  </Button>
                 </div>
               );
             })}

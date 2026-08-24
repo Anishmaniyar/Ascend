@@ -1,14 +1,35 @@
 import Link from "next/link";
-import { ArrowRightIcon } from "@/components/ui/icons";
+import {
+  ArrowRightIcon,
+  LockIcon,
+  FootprintIcon,
+  TargetIcon,
+  ZapIcon,
+  BrainIcon,
+  FlameIcon,
+  TrophyIcon,
+  ClipboardCheckIcon,
+  CrownIcon,
+} from "@/components/ui/icons";
 import SectionCard from "@/components/dashboard/SectionCard";
 import ContinueCard from "@/components/dashboard/ContinueCard";
-import DashboardBadges from "@/components/dashboard/DashboardBadges";
 import DonutMetricCard from "@/components/dashboard/DonutMetricCard";
 import PracticeHistoryList from "@/components/dashboard/PracticeHistoryList";
 import RecommendedTopics from "@/components/dashboard/RecommendedTopics";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import Heatmap from "@/components/charts/Heatmap";
-import { buildHeatmap, heatmapStats, performanceSummary } from "@/lib/mock/dashboard";
+import { buildHeatmap, heatmapStats, performanceSummary, getDashboardBadges } from "@/lib/mock/dashboard";
+
+const BADGE_ICON_MAP = {
+  FootprintIcon,
+  TargetIcon,
+  ZapIcon,
+  BrainIcon,
+  FlameIcon,
+  TrophyIcon,
+  ClipboardCheckIcon,
+  CrownIcon,
+};
 
 const ViewAll = ({ href }) => (
   <Link
@@ -41,15 +62,48 @@ export default function DashboardPage() {
 
         {/* ── Main content ──────────────────────────────────────────── */}
         <div className="min-w-0 flex-1 space-y-6">
-          {/* 1. Resume Practice — top priority */}
-          <ContinueCard />
+          {/* 1. Resume Practice + Badges — side by side */}
+          <div className="flex flex-col gap-6 lg:flex-row">
+            <ContinueCard />
 
-          {/* 2. Badges — 3 earned/locked previews */}
-          <DashboardBadges />
+            {/* Compact Badges — fills remaining space */}
+            <Link
+              href="/badges"
+              className="flex flex-1 items-center gap-4 rounded-2xl border border-mist bg-ash px-5 py-4 transition-all hover:border-graphite hover:shadow-sm"
+            >
+              <div className="flex -space-x-2">
+                {getDashboardBadges(3).map((badge) => {
+                  const Icon = BADGE_ICON_MAP[badge.icon] ?? TargetIcon;
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-ash ${
+                        badge.earned ? "bg-ember/10" : "bg-fog"
+                      }`}
+                    >
+                      {badge.earned ? (
+                        <Icon className="h-5 w-5 text-ember" />
+                      ) : (
+                        <LockIcon className="h-4 w-4 text-slate" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="min-w-0">
+                <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
+                  Badges
+                </p>
+                <p className="mt-0.5 text-13 text-slate">
+                  {getDashboardBadges(10).filter((b) => b.earned).length} earned
+                </p>
+              </div>
+              <ArrowRightIcon className="ml-auto h-4 w-4 shrink-0 text-slate" />
+            </Link>
+          </div>
 
-          {/* 3. Three donut metric cards */}
+          {/* 2. Practice Statistics — full width horizontal row */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {/* Questions Solved — with Easy/Medium/Hard breakdown */}
             <DonutMetricCard
               label="Questions Solved"
               value={questionsSolved}
@@ -63,7 +117,6 @@ export default function DashboardPage() {
               </div>
             </DonutMetricCard>
 
-            {/* Accuracy */}
             <DonutMetricCard
               label="Accuracy"
               value={`${overallAccuracy}%`}
@@ -72,7 +125,6 @@ export default function DashboardPage() {
               percent={overallAccuracy}
             />
 
-            {/* Practice Sessions — with Practice/Test breakdown */}
             <DonutMetricCard
               label="Practice Sessions"
               value={totalSessions}
@@ -86,17 +138,17 @@ export default function DashboardPage() {
             </DonutMetricCard>
           </div>
 
-          {/* 4. Activity Heatmap — full width with stats */}
+          {/* 3. Activity Heatmap — full width with stats */}
           <SectionCard title="Activity">
             <Heatmap weeks={weeks} stats={heatmapStats} />
           </SectionCard>
 
-          {/* 5. Practice History */}
+          {/* 4. Practice History */}
           <SectionCard title="Practice History" action={<ViewAll href="/practice-history" />}>
             <PracticeHistoryList />
           </SectionCard>
 
-          {/* 6. Recommended weak topics */}
+          {/* 5. Recommended weak topics */}
           <SectionCard
             title="Recommended for you"
             action={

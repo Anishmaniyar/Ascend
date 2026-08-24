@@ -15,6 +15,7 @@ import {
   LayersIcon,
 } from "@/components/ui/icons";
 import { companies } from "@/lib/mock/landing";
+import Button from "@/components/ui/Button";
 
 // ─── Color maps ───────────────────────────────────────────────────────
 const DIFF_COLORS = {
@@ -689,16 +690,10 @@ export default function SheetsPage() {
                     </div>
 
                     {/* Action */}
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-buttons px-3 py-1.5 font-polysans text-13 tracking-[-0.02em] transition-opacity ${
-                        completed
-                          ? "border border-mist bg-canvas text-graphite hover:bg-fog"
-                          : "bg-graphite text-inverse hover:opacity-85"
-                      }`}
-                    >
+                    <Button variant={completed ? "secondary" : "primary"} size="sm" className="pointer-events-none">
                       <ActionIcon className="h-3.5 w-3.5" />
                       {actionLabel}
-                    </span>
+                    </Button>
                   </Link>
                 );
               })}

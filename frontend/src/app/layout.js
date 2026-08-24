@@ -1,19 +1,12 @@
-import { Inter, Inter_Tight } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 
-/* PolySans substitute (style guide): Inter Tight at weight 400 for display,
-   Inter for body/UI. These become --font-display and --font-body, consumed
-   by the theme tokens --font-polysans / --font-inter in globals.css. */
-const inter = Inter({
+/* Poppins — the single font family for all text in LeetAptitude. */
+const poppins = Poppins({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
-});
-
-const interTight = Inter_Tight({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata = {
@@ -40,7 +33,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${inter.variable} ${interTight.variable}`}>
+      <body className={`${poppins.variable}`}>
         {children}
       </body>
     </html>

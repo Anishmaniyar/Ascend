@@ -1,6 +1,7 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ChevronDownIcon, ArrowRightIcon } from "@/components/ui/icons";
 import { topics } from "@/lib/mock/landing";
+import Button from "@/components/ui/Button";
 
 export default function WorkflowSection() {
   const selected = topics[0];
@@ -106,10 +107,10 @@ export default function WorkflowSection() {
             </div>
             <div className="mt-5 flex items-center justify-between">
               <span className="text-13 text-slate">12 / {activeSubtopic.questions} solved</span>
-              <span className="inline-flex items-center gap-1.5 rounded-buttons bg-graphite px-4 py-2 font-polysans text-13 tracking-[-0.02em] text-inverse">
+              <Button variant="primary" size="sm">
                 Submit
                 <ArrowRightIcon className="h-3.5 w-3.5" />
-              </span>
+              </Button>
             </div>
           </div>
         </div>

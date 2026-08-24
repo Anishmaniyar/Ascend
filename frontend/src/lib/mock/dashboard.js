@@ -12,11 +12,14 @@ export const user = {
   memberSince: "Jan 2026",
   streak: 7,
   location: "Mumbai, India",
-  xId: "",
-  github: "",
-  linkedin: "",
-  leetcode: "",
-  website: "",
+  dob: "15 Aug 2004",
+  xId: "anish_codes",
+  github: "anishmaniyar",
+  linkedin: "anishmaniyar",
+  leetcode: "anish2026",
+  website: "anish.dev",
+  targetCompanies: ["TCS", "Infosys", "Wipro"],
+  dailyGoal: 20,
 };
 
 // Skills derived from user's practice/attempt data.

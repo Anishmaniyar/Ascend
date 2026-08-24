@@ -1,5 +1,6 @@
 import SectionHeading from "@/components/ui/SectionHeading";
 import { CheckIcon, ClockIcon, ZapIcon, ArrowRightIcon } from "@/components/ui/icons";
+import Button from "@/components/ui/Button";
 
 const MODES = [
   {
@@ -55,10 +56,10 @@ export default function PracticeSection() {
           </div>
           <div className="mt-6 flex items-center justify-between">
             <span className="text-13 text-slate">Answer saved — explanation shown instantly</span>
-            <span className="inline-flex items-center gap-1.5 rounded-buttons bg-graphite px-5 py-2.5 font-polysans text-13 tracking-[-0.02em] text-inverse">
+            <Button variant="primary" size="sm">
               Next
               <ArrowRightIcon className="h-3.5 w-3.5" />
-            </span>
+            </Button>
           </div>
         </div>
 

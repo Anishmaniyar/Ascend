@@ -35,7 +35,19 @@ const AVATARS = [
   { initials: "GY", bg: "bg-success/10", color: "text-success" },
 ];
 
+// Seeded PRNG so leaderboard is deterministic across server/client (no hydration mismatch).
+function mulberry32(seed) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function generateLeaderboard() {
+  const rand = mulberry32(777);
   const names = [
     "Arjun Kumar",
     "Riya Sharma",
@@ -71,10 +83,10 @@ function generateLeaderboard() {
 
   const entries = names.map((name, i) => {
     const avatar = AVATARS[i % AVATARS.length];
-    const questionsSolved = Math.max(40, 186 - i * 6 + Math.floor(Math.random() * 10));
-    const accuracy = Math.max(55, Math.min(98, 92 - i * 0.8 + Math.floor(Math.random() * 6)));
-    const sessions = Math.max(3, 24 - Math.floor(i * 0.7) + Math.floor(Math.random() * 4));
-    const streak = Math.max(0, 16 - Math.floor(i * 0.5) + Math.floor(Math.random() * 3));
+    const questionsSolved = Math.max(40, 186 - i * 6 + Math.floor(rand() * 10));
+    const accuracy = Math.max(55, Math.min(98, 92 - i * 0.8 + Math.floor(rand() * 6)));
+    const sessions = Math.max(3, 24 - Math.floor(i * 0.7) + Math.floor(rand() * 4));
+    const streak = Math.max(0, 16 - Math.floor(i * 0.5) + Math.floor(rand() * 3));
     const score = Math.round(questionsSolved * 4 + accuracy * 2 + sessions * 3 + streak * 5);
 
     return {

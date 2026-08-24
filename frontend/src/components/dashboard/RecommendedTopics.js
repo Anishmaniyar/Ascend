@@ -2,6 +2,7 @@ import Link from "next/link";
 import RingProgress from "@/components/charts/RingProgress";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { recommendedTopics } from "@/lib/mock/dashboard";
+import Button from "@/components/ui/Button";
 
 export default function RecommendedTopics() {
   return (
@@ -23,13 +24,10 @@ export default function RecommendedTopics() {
             </p>
             <p className="mt-1 text-13 text-slate">{topic.solved} solved so far</p>
           </div>
-          <Link
-            href="/topics"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-buttons border border-graphite px-4 py-2 font-polysans text-13 tracking-[-0.02em] text-graphite transition-colors hover:bg-graphite hover:text-inverse"
-          >
+          <Button render={<Link href="/topics" />} variant="secondary" size="sm" className="shrink-0">
             Practice
             <ArrowRightIcon className="h-3.5 w-3.5" />
-          </Link>
+          </Button>
         </div>
       ))}
     </div>

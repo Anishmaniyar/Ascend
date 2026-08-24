@@ -16,6 +16,7 @@ import {
   FlameIcon,
 } from "@/components/ui/icons";
 import { user } from "@/lib/mock/dashboard";
+import Button from "@/components/ui/Button";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: HomeIcon },

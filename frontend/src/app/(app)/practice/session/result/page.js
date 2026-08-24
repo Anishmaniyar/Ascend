@@ -6,6 +6,7 @@ import { ArrowLeftIcon, CheckIcon, XIcon, ClockIcon } from "@/components/ui/icon
 import { questionOptions, calculateResult, formatTime } from "@/lib/mock/practiceSession";
 import { practiceSheets } from "@/lib/mock/dashboard";
 import { topics } from "@/lib/mock/landing";
+import Button from "@/components/ui/Button";
 
 // ═══════════════════════════════════════════════════════════════════════
 // DIFFICULTY COLORS
@@ -162,7 +163,7 @@ export default function PracticeSessionResultPage({ searchParams }) {
         <div className="mt-8 rounded-2xl border border-mist bg-canvas p-6 sm:p-8">
           <div className="text-center">
             <p className="text-13 text-slate uppercase tracking-wider">Your Score</p>
-            <p className="mt-2 font-polysans text-display tracking-[-0.02em] text-graphite">
+            <p className="mt-2 font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
               {result.score}
               <span className="text-heading text-slate">/{result.total}</span>
             </p>
@@ -207,18 +208,12 @@ export default function PracticeSessionResultPage({ searchParams }) {
 
         {/* Action buttons */}
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <Link
-            href={`/practice/session?topicId=${displayTopic?.id}&subtopicId=${displaySubtopic?.id}&sheetId=${displaySheet.id}&mode=PRACTICE`}
-            className="flex-1 flex items-center justify-center gap-2 rounded-buttons bg-graphite px-5 py-3 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-          >
+          <Button render={<Link href={`/practice/session?topicId=${displayTopic?.id}&subtopicId=${displaySubtopic?.id}&sheetId=${displaySheet.id}&mode=PRACTICE`} />} variant="primary" className="flex-1">
             Practice Again
-          </Link>
-          <Link
-            href={`/topics/${displayTopic?.id}/${displaySubtopic?.id}`}
-            className="flex-1 flex items-center justify-center gap-2 rounded-buttons border border-mist px-5 py-3 font-polysans text-15 tracking-[-0.02em] text-graphite transition-colors hover:bg-fog"
-          >
+          </Button>
+          <Button render={<Link href={`/topics/${displayTopic?.id}/${displaySubtopic?.id}`} />} variant="secondary" className="flex-1">
             Back to Sheet
-          </Link>
+          </Button>
         </div>
 
         {/* Question-by-question review */}

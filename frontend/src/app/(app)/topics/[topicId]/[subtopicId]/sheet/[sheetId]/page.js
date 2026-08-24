@@ -6,6 +6,7 @@ import { ArrowLeftIcon, ClockIcon, ZapIcon } from "@/components/ui/icons";
 import { getSubtopicIcon } from "@/lib/subtopicIcons";
 import { topics } from "@/lib/mock/landing";
 import { practiceSheets } from "@/lib/mock/dashboard";
+import Button from "@/components/ui/Button";
 
 const DIFF_COLORS = {
   Easy: "bg-success/10 text-success",
@@ -237,13 +238,10 @@ export default function SheetDetailPage({ params }) {
             <div className="my-5 h-px bg-mist" />
 
             {/* Action button — now links to practice session */}
-            <Link
-              href={practiceUrl}
-              className="flex w-full items-center justify-center gap-2 rounded-buttons bg-graphite px-5 py-2.5 font-polysans text-15 tracking-[-0.02em] text-inverse transition-opacity hover:opacity-85"
-            >
+            <Button render={<Link href={practiceUrl} />} variant="primary" className="w-full">
               {hasStarted && !isCompleted && <ZapIcon className="h-4 w-4" />}
               {actionLabel}
-            </Link>
+            </Button>
 
             {/* Status hint */}
             {hasStarted && !isCompleted && (
