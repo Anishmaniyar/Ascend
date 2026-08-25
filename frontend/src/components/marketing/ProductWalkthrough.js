@@ -27,7 +27,7 @@ import {
   recommendedTopics,
 } from "@/lib/mock/dashboard";
 import { leaderboardData } from "@/lib/mock/leaderboard";
-import { contests } from "@/lib/mock/contests";
+import { upcomingContests } from "@/lib/mock/contests";
 
 /* ═══════════════════════════════════════════════════════════════════════
    HOOKS
@@ -841,7 +841,7 @@ export function PlacementSection() {
    ═══════════════════════════════════════════════════════════════════════ */
 
 const LEADERBOARD_TOP5 = leaderboardData.slice(0, 5);
-const UPCOMING_CONTESTS = contests.filter(c => c.status === "upcoming").slice(0, 2);
+const UPCOMING_CONTESTS = Object.values(upcomingContests);
 
 export function CompetitionSection() {
   const { ref: textRef, visible: textVisible } = useScrollReveal(0.15);
@@ -928,6 +928,7 @@ export function CompetitionSection() {
 
           {/* ── Contests (real contest data) ──────────────── */}
           <div
+            id="contests"
             ref={contestRef}
             className={`flex flex-col gap-4 transition-all duration-700 ${
               contestVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import SettingsRow from "@/components/settings/SettingsRow";
 import EditModal from "@/components/settings/EditModal";
+import GoBack from "@/components/ui/GoBack";
 import { generalSettings, experienceSettings } from "@/lib/mock/settings";
 import { user } from "@/lib/mock/dashboard";
 import { Settings } from "lucide-react";
@@ -39,6 +40,9 @@ export default function SettingsPage() {
   // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+      {/* Go back */}
+      <GoBack className="mb-6" />
+
       {/* ── Page header ──────────────────────────────────────────────── */}
       <header className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-slate" />

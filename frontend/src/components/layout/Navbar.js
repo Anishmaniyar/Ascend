@@ -9,14 +9,15 @@ import Logo from "@/components/ui/Logo";
 import Button from "@/components/ui/Button";
 
 const NAV_LINKS = [
-  { href: "/topics", label: "Topics" },
-  { href: "/sheets", label: "Sheets" },
-  { href: "/leaderboard", label: "Leaderboards" },
-  { href: "/contests", label: "Contests" },
+  { href: "#topics", label: "Topics" },
+  { href: "#sheets", label: "Sheets" },
+  { href: "#leaderboard", label: "Leaderboards" },
+  { href: "#contests", label: "Contests" },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
   // Close mobile menu on route change
@@ -24,8 +25,24 @@ export default function Navbar() {
     setOpen(false);
   }, [pathname]);
 
+  // Track scroll position for navbar background
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 20);
+    }
+    handleScroll(); // check on mount
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50">
+    <header
+      className={`sticky top-0 z-50 transition-colors duration-250 ${
+        scrolled
+          ? "border-b border-mist bg-canvas shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          : "bg-transparent"
+      }`}
+    >
       <div className="mx-auto flex h-16 max-w-[var(--page-max-width)] items-center justify-between gap-4 px-6">
         {/* ── Left: Brand ─────────────────────────────────────────────── */}
         <Link href="/" className="flex shrink-0 items-center gap-2.5">

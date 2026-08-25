@@ -1,39 +1,40 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ClockIcon,
   UsersIcon,
-  TrophyIcon,
-  PlayIcon,
-  RotateCcwIcon,
-  FlameIcon,
+  CalendarIcon,
+  ClipboardCheckIcon,
 } from "@/components/ui/icons";
-import {
-  contests,
-  CONTEST_TYPES,
-  CONTEST_STATUS,
-  STATUS_COLORS,
-  STATUS_DOT_COLORS,
-  DIFF_COLORS,
-  DIFF_DOT_COLORS,
-  userContests,
-} from "@/lib/mock/contests";
-import Button from "@/components/ui/Button";
 
-// ─── Helper: format date ──────────────────────────────────────────────
+function InfoIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+import GoBack from "@/components/ui/GoBack";
+import Button from "@/components/ui/Button";
+import { upcomingContests, pastContests, PAST_PAGE_SIZE } from "@/lib/mock/contests";
+
+// ─── Helpers ───────────────────────────────────────────────────────────
 function formatDate(dateStr) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return d.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
 }
 
-// ─── Helper: time until contest ───────────────────────────────────────
+function formatDay(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", { weekday: "long" });
+}
+
 function timeUntil(dateStr) {
   const now = new Date();
   const target = new Date(dateStr);
@@ -41,509 +42,345 @@ function timeUntil(dateStr) {
   if (diff < 0) return null;
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 0) return `${days}d ${hours}h`;
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
-// ─── Component ────────────────────────────────────────────────────────
+function formatParticipants(n) {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K+`;
+  return `${n}`;
+}
+
+// ─── Component ─────────────────────────────────────────────────────────
 export default function ContestsPage() {
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [pastPage, setPastPage] = useState(1);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    let list = contests;
+  // Past contests pagination
+  const totalPastPages = Math.ceil(pastContests.length / PAST_PAGE_SIZE);
+  const paginatedPast = pastContests.slice(
+    (pastPage - 1) * PAST_PAGE_SIZE,
+    pastPage * PAST_PAGE_SIZE
+  );
 
-    if (typeFilter !== "all") {
-      list = list.filter((c) => c.type === typeFilter);
-    }
-    if (statusFilter !== "all") {
-      list = list.filter((c) => c.status === statusFilter);
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (c) =>
-          c.title.toLowerCase().includes(q) ||
-          c.description.toLowerCase().includes(q) ||
-          c.tags.some((t) => t.toLowerCase().includes(q)),
-      );
-    }
-
-    // Sort: live first, then upcoming, then completed
-    const statusOrder = { live: 0, upcoming: 1, completed: 2 };
-    list = [...list].sort(
-      (a, b) => statusOrder[a.status] - statusOrder[b.status],
-    );
-
-    return list;
-  }, [typeFilter, statusFilter, search]);
-
-  const clearAll = () => {
-    setTypeFilter("all");
-    setStatusFilter("all");
-    setSearch("");
-  };
-
-  const hasActiveFilters =
-    typeFilter !== "all" || statusFilter !== "all" || search;
-
-  // Stats
-  const stats = useMemo(() => {
-    const live = contests.filter((c) => c.status === "live").length;
-    const upcoming = contests.filter((c) => c.status === "upcoming").length;
-    const participated = userContests.participated.length;
-    const avgScore =
-      userContests.participated.length > 0
-        ? Math.round(
-            userContests.participated.reduce((sum, id) => {
-              const r = userContests.results[id];
-              return sum + (r ? r.accuracy : 0);
-            }, 0) / userContests.participated.length,
-          )
-        : 0;
-    return { live, upcoming, participated, avgScore };
-  }, []);
+  const pageNumbers = useMemo(() => {
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, pastPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPastPages, start + maxVisible - 1);
+    start = Math.max(1, end - maxVisible + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  }, [pastPage, totalPastPages]);
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
-      {/* ════════════════════════════════════════════════════════════════
-          1. PAGE HEADER
-          ════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+      {/* ── Go back ────────────────────────────────────────────────── */}
+      <GoBack className="mb-6" />
+
+      {/* ── Page Header ────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
             Contests
           </h1>
-          <p className="mt-2 max-w-[56ch] text-15 leading-[1.5] text-steel">
-            Compete in timed aptitude contests, test your speed, and earn
-            recognition. Join live contests or prepare for upcoming ones.
+          <p className="mt-2 max-w-[56ch] text-[15px] leading-[1.5] text-steel">
+            Compete with peers and improve your aptitude skills.
           </p>
         </div>
-
-        {/* How it works */}
-        <div className="shrink-0 rounded-2xl border border-mist bg-canvas p-5 sm:w-64">
-          <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-            How contests work
-          </p>
-          <div className="mt-3 space-y-2">
-            {[
-              "Join a contest",
-              "Solve questions under time limit",
-              "Compete on the leaderboard",
-              "Earn badges & recognition",
-            ].map((step, i) => (
-              <div key={i} className="flex items-center gap-2.5 text-13 text-steel">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ash font-polysans text-11 text-graphite">
-                  {i + 1}
-                </span>
-                {step}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ════════════════════════════════════════════════════════════════
-          2. CONTEST STATISTICS
-          ════════════════════════════════════════════════════════════════ */}
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10">
-              <PlayIcon className="h-4 w-4 text-success" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.live}
-              </p>
-              <p className="text-13 text-slate">Live Now</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Contests in progress</p>
-        </div>
-
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brass/10">
-              <ClockIcon className="h-4 w-4 text-brass" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.upcoming}
-              </p>
-              <p className="text-13 text-slate">Upcoming</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Starting soon</p>
-        </div>
-
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember/10">
-              <TrophyIcon className="h-4 w-4 text-ember" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.participated}
-              </p>
-              <p className="text-13 text-slate">Participated</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Total contests</p>
-        </div>
-
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-graphite/10">
-              <FlameIcon className="h-4 w-4 text-graphite" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.avgScore}%
-              </p>
-              <p className="text-13 text-slate">Avg. Accuracy</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Across contests</p>
-        </div>
-      </div>
-
-      {/* ════════════════════════════════════════════════════════════════
-          3. FILTERS
-          ════════════════════════════════════════════════════════════════ */}
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        {/* Search */}
-        <div className="relative min-w-[200px] flex-1">
-          <svg
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search contests..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-lg border border-mist bg-canvas pl-9 pr-3 text-13 text-graphite placeholder:text-slate focus:border-graphite focus:outline-none"
-          />
-        </div>
-
-        {/* Type filter */}
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="h-9 cursor-pointer rounded-lg border border-mist bg-canvas px-3 text-13 text-graphite focus:border-graphite focus:outline-none"
+        <button
+          type="button"
+          onClick={() => setRulesOpen(!rulesOpen)}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-mist bg-canvas px-3 py-2 text-[13px] text-graphite transition-colors hover:border-graphite"
         >
-          {CONTEST_TYPES.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Status filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 cursor-pointer rounded-lg border border-mist bg-canvas px-3 text-13 text-graphite focus:border-graphite focus:outline-none"
-        >
-          {CONTEST_STATUS.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Clear */}
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="shrink-0 font-polysans text-13 text-ember hover:underline"
-          >
-            Clear
-          </button>
-        )}
+          <InfoIcon className="h-3.5 w-3.5" />
+          Contest Rules
+        </button>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════
-          4. CONTEST LIST
-          ════════════════════════════════════════════════════════════════ */}
-      <div className="mt-6">
-        {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((contest) => {
-              const isParticipated = userContests.participated.includes(
-                contest.id,
-              );
-              const result = userContests.results[contest.id];
-              const countdown = contest.status === "upcoming" ? timeUntil(contest.startDate) : null;
-
-              return (
-                <div
-                  key={contest.id}
-                  className={`group flex flex-col rounded-2xl border bg-canvas p-5 transition-all hover:shadow-sm ${
-                    contest.status === "live"
-                      ? "border-success/30 hover:border-success"
-                      : "border-mist hover:border-graphite"
-                  }`}
-                >
-                  {/* Header: Status + Type */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-tags px-2.5 py-0.5 font-polysans text-13 tracking-[-0.02em] ${STATUS_COLORS[contest.status]}`}
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT_COLORS[contest.status]}`}
-                      />
-                      {contest.status === "live"
-                        ? "Live"
-                        : contest.status === "upcoming"
-                          ? "Upcoming"
-                          : "Completed"}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-tags px-2 py-0.5 font-polysans text-13 tracking-[-0.02em] ${DIFF_COLORS[contest.difficulty]}`}
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${DIFF_DOT_COLORS[contest.difficulty]}`}
-                      />
-                      {contest.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="mt-3 font-polysans text-15 tracking-[-0.02em] text-graphite">
-                    {contest.title}
-                  </h3>
-                  <p className="mt-1 text-13 leading-[1.4] text-steel line-clamp-2">
-                    {contest.description}
-                  </p>
-
-                  {/* Tags */}
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {contest.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-tags bg-fog px-2 py-0.5 text-11 text-slate"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="mt-4 flex items-center gap-4 text-13 text-slate">
-                    <span className="inline-flex items-center gap-1">
-                      <ClockIcon className="h-3 w-3" />
-                      {contest.duration} min
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <svg
-                        className="h-3 w-3"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                        <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                      </svg>
-                      {contest.questions} Questions
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <UsersIcon className="h-3 w-3" />
-                      {contest.participants}/{contest.maxParticipants}
-                    </span>
-                  </div>
-
-                  {/* Prize */}
-                  {contest.prize && (
-                    <p className="mt-2 text-13 text-brass">
-                      🏆 {contest.prize}
-                    </p>
-                  )}
-
-                  {/* Countdown for upcoming */}
-                  {countdown && (
-                    <div className="mt-3 rounded-lg bg-ember/5 px-3 py-2">
-                      <p className="text-13 text-ember">
-                        Starts in {countdown}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* User result for completed */}
-                  {isParticipated && result && contest.status === "completed" && (
-                    <div className="mt-3 rounded-lg bg-fog px-3 py-2">
-                      <div className="flex items-center justify-between text-13">
-                        <span className="text-slate">Your Result</span>
-                        <span className="font-polysans text-graphite">
-                          Rank #{result.rank}
-                        </span>
-                      </div>
-                      <div className="mt-1 flex items-center gap-3 text-13 text-steel">
-                        <span>{result.score}/{contest.questions}</span>
-                        <span>{result.accuracy}%</span>
-                        <span>{result.time}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Action button */}
-                  <div className="mt-auto pt-4">
-                    {contest.status === "live" && (
-                      <Button variant="primary" size="sm" className="w-full bg-success hover:brightness-110">
-                        <PlayIcon className="h-3.5 w-3.5" />
-                        Join Now
-                      </Button>
-                    )}
-                    {contest.status === "upcoming" && (
-                      <Button variant="primary" size="sm" className="w-full">
-                        Register
-                      </Button>
-                    )}
-                    {contest.status === "completed" && !isParticipated && (
-                      <Button variant="secondary" size="sm" className="w-full">
-                        View Results
-                      </Button>
-                    )}
-                    {contest.status === "completed" && isParticipated && (
-                      <Button variant="secondary" size="sm" className="w-full">
-                        <RotateCcwIcon className="h-3.5 w-3.5" />
-                        Review
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="mt-16 text-center">
-            <p className="text-15 text-steel">
-              {hasActiveFilters
-                ? "No contests match your filters."
-                : "No contests available yet."}
-            </p>
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="mt-3 font-polysans text-13 text-ember hover:underline"
-              >
-                Clear all filters
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ════════════════════════════════════════════════════════════════
-          5. YOUR CONTEST HISTORY
-          ════════════════════════════════════════════════════════════════ */}
-      {userContests.participated.length > 0 && (
-        <div className="mt-10">
-          <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-            Your Contest History
-          </h2>
-
-          {/* Desktop table */}
-          <div className="mt-4 hidden overflow-hidden rounded-2xl border border-mist bg-canvas lg:block">
-            <div className="grid grid-cols-[1fr_80px_100px_80px_100px_90px] items-center gap-4 border-b border-mist bg-fog/50 px-5 py-3">
-              <span className="text-13 font-polysans text-slate">Contest</span>
-              <span className="text-13 font-polysans text-slate">Rank</span>
-              <span className="text-13 font-polysans text-slate">Score</span>
-              <span className="text-13 font-polysans text-slate">Accuracy</span>
-              <span className="text-13 font-polysans text-slate">Time</span>
-              <span className="text-13 font-polysans text-slate">Action</span>
-            </div>
-            {userContests.participated.map((contestId) => {
-              const contest = contests.find((c) => c.id === contestId);
-              const result = userContests.results[contestId];
-              if (!contest || !result) return null;
-              return (
-                <div
-                  key={contestId}
-                  className="grid grid-cols-[1fr_80px_100px_80px_100px_90px] items-center gap-4 border-b border-mist px-5 py-4 transition-colors last:border-b-0 hover:bg-fog/30"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
-                      {contest.title}
-                    </p>
-                    <p className="mt-0.5 text-13 text-slate">
-                      {formatDate(contest.startDate)}
-                    </p>
-                  </div>
-                  <span className="font-polysans text-15 text-graphite">
-                    #{result.rank}
-                  </span>
-                  <span className="font-polysans text-15 text-graphite">
-                    {result.score}/{contest.questions}
-                  </span>
-                  <span className="font-polysans text-15 text-graphite">
-                    {result.accuracy}%
-                  </span>
-                  <span className="text-13 text-steel">{result.time}</span>
-                  <Button variant="secondary" size="sm">
-                    <RotateCcwIcon className="h-3.5 w-3.5" />
-                    Review
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Mobile cards */}
-          <div className="mt-4 space-y-3 lg:hidden">
-            {userContests.participated.map((contestId) => {
-              const contest = contests.find((c) => c.id === contestId);
-              const result = userContests.results[contestId];
-              if (!contest || !result) return null;
-              return (
-                <div
-                  key={contestId}
-                  className="rounded-2xl border border-mist bg-canvas p-4"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
-                        {contest.title}
-                      </p>
-                      <p className="mt-0.5 text-13 text-slate">
-                        {formatDate(contest.startDate)}
-                      </p>
-                    </div>
-                    <span className="ml-3 shrink-0 font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                      #{result.rank}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-4 text-13 text-steel">
-                    <span>
-                      {result.score}/{contest.questions}
-                    </span>
-                    <span>{result.accuracy}%</span>
-                    <span>{result.time}</span>
-                  </div>
-                </div>
-              );
-            })}
+      {/* ── Rules panel ────────────────────────────────────────────── */}
+      {rulesOpen && (
+        <div className="mt-4 rounded-2xl border border-mist bg-ash p-6">
+          <h3 className="font-polysans text-[18px] tracking-[-0.02em] text-graphite">
+            Contest Rules
+          </h3>
+          <div className="mt-3 space-y-2 text-[14px] text-steel">
+            <p>• All contests are timed aptitude assessments.</p>
+            <p>• Questions are automatically selected from the contest topic pool.</p>
+            <p>• You cannot pause or restart a contest once started.</p>
+            <p>• Results are based on correct answers, with negative marking where applicable.</p>
+            <p>• Rankings are determined by score, then by time taken.</p>
+            <p>• Weekly contests cover all aptitude topics. Company contests focus on specific placement patterns.</p>
           </div>
         </div>
       )}
+
+      {/* ── Tab Navigation ─────────────────────────────────────────── */}
+      <div className="mt-8 flex items-center gap-1 overflow-x-auto border-b border-mist">
+        {[
+          { id: "upcoming", label: "Upcoming Contests" },
+          { id: "past", label: "Past Contests" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`shrink-0 border-b-2 px-4 py-2.5 text-[14px] font-medium transition-colors ${
+              activeTab === tab.id
+                ? "border-graphite text-graphite"
+                : "border-transparent text-slate hover:text-graphite"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          UPCOMING CONTESTS
+          ═══════════════════════════════════════════════════════════════ */}
+      {activeTab === "upcoming" && (
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Weekly Contest */}
+          <ContestCard contest={upcomingContests.weekly} />
+
+          {/* Company Contest */}
+          <ContestCard contest={upcomingContests.company} />
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          PAST CONTESTS
+          ═══════════════════════════════════════════════════════════════ */}
+      {activeTab === "past" && (
+        <div className="mt-8">
+          {pastContests.length > 0 ? (
+            <>
+              {/* Desktop table */}
+              <div className="hidden overflow-hidden rounded-2xl border border-mist bg-canvas lg:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-mist bg-fog/50">
+                      <th className="px-6 py-3 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Contest</th>
+                      <th className="px-4 py-3 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Type</th>
+                      <th className="px-4 py-3 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Date</th>
+                      <th className="px-4 py-3 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Score</th>
+                      <th className="px-4 py-3 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Rank</th>
+                      <th className="px-4 py-3 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Percentile</th>
+                      <th className="px-4 py-3 text-right text-[12px] font-normal uppercase tracking-wider text-slate">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-mist">
+                    {paginatedPast.map((c) => (
+                      <tr key={c.id} className="transition-colors hover:bg-fog/30">
+                        <td className="px-6 py-4">
+                          <p className="font-polysans text-[15px] tracking-[-0.02em] text-graphite">{c.name}</p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            c.type === "Weekly" ? "bg-ember/10 text-ember" : "bg-brass/10 text-brass"
+                          }`}>
+                            {c.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-[13px] text-steel">{formatDate(c.date)}</td>
+                        <td className="px-4 py-4">
+                          <span className="font-polysans text-[15px] text-graphite">{c.score} / {c.total}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-polysans text-[15px] text-graphite">#{c.rank} / {c.totalParticipants}</span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="font-polysans text-[15px] text-graphite">{c.percentile}%</span>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <Link
+                            href={`/contests/${c.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-mist bg-canvas px-3 py-1.5 text-[13px] text-graphite transition-colors hover:border-graphite hover:shadow-sm"
+                          >
+                            View Details
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="divide-y divide-mist rounded-2xl border border-mist bg-canvas lg:hidden">
+                {paginatedPast.map((c) => (
+                  <div key={c.id} className="px-5 py-4">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-polysans text-[15px] tracking-[-0.02em] text-graphite">{c.name}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            c.type === "Weekly" ? "bg-ember/10 text-ember" : "bg-brass/10 text-brass"
+                          }`}>
+                            {c.type}
+                          </span>
+                          <span className="text-[13px] text-slate">{formatDate(c.date)}</span>
+                        </div>
+                      </div>
+                      <Link
+                        href={`/contests/${c.id}`}
+                        className="ml-3 shrink-0 text-[13px] text-ember hover:underline"
+                      >
+                        View
+                      </Link>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-3">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-slate">Score</p>
+                        <p className="mt-0.5 font-polysans text-[14px] text-graphite">{c.score}/{c.total}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-slate">Rank</p>
+                        <p className="mt-0.5 font-polysans text-[14px] text-graphite">#{c.rank}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-slate">Percentile</p>
+                        <p className="mt-0.5 font-polysans text-[14px] text-graphite">{c.percentile}%</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPastPages > 1 && (
+                <div className="mt-6 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPastPage((p) => Math.max(1, p - 1))}
+                    disabled={pastPage === 1}
+                    className="flex h-8 items-center gap-1 rounded-lg border border-mist bg-canvas px-3 text-[13px] text-slate transition-colors hover:border-graphite hover:text-graphite disabled:opacity-40"
+                  >
+                    <ChevronLeftIcon className="h-3.5 w-3.5" />
+                    Previous
+                  </button>
+                  {pageNumbers.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPastPage(p)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg font-polysans text-[13px] transition-colors ${
+                        pastPage === p
+                          ? "border-graphite bg-graphite text-inverse"
+                          : "border border-mist bg-canvas text-slate hover:border-graphite hover:text-graphite"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setPastPage((p) => Math.min(totalPastPages, p + 1))}
+                    disabled={pastPage === totalPastPages}
+                    className="flex h-8 items-center gap-1 rounded-lg border border-mist bg-canvas px-3 text-[13px] text-slate transition-colors hover:border-graphite hover:text-graphite disabled:opacity-40"
+                  >
+                    Next
+                    <ChevronRightIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <p className="mt-4 text-center text-[13px] text-slate">
+                Showing {(pastPage - 1) * PAST_PAGE_SIZE + 1}–
+                {Math.min(pastPage * PAST_PAGE_SIZE, pastContests.length)} of {pastContests.length} contests
+              </p>
+            </>
+          ) : (
+            <div className="rounded-2xl bg-ash px-6 py-16 text-center">
+              <p className="text-[15px] text-steel">No contest history yet.</p>
+              <button
+                type="button"
+                onClick={() => setActiveTab("upcoming")}
+                className="mt-3 font-polysans text-[13px] text-ember hover:underline"
+              >
+                Explore Upcoming Contests
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Contest Card Component ────────────────────────────────────────────
+function ContestCard({ contest }) {
+  const countdown = timeUntil(contest.date);
+
+  return (
+    <div className="flex flex-col rounded-2xl border border-mist bg-canvas p-6">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <span className="inline-flex items-center rounded-full bg-ember/10 px-2.5 py-0.5 text-[11px] font-medium text-ember">
+            {contest.type}
+          </span>
+          <h3 className="mt-3 font-polysans text-[20px] tracking-[-0.02em] text-graphite">
+            {contest.title}
+          </h3>
+          <p className="mt-1 text-[14px] text-steel">{contest.description}</p>
+          <p className="mt-1 text-[13px] text-slate">{contest.secondaryDescription}</p>
+        </div>
+      </div>
+
+      {/* Info row */}
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="flex items-center gap-2 text-[13px] text-steel">
+          <CalendarIcon className="h-3.5 w-3.5" />
+          <span>{formatDate(contest.date)}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] text-steel">
+          <span className="text-[13px]">{contest.day}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] text-steel">
+          <ClockIcon className="h-3.5 w-3.5" />
+          <span>{contest.startTime}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] text-steel">
+          <ClockIcon className="h-3.5 w-3.5" />
+          <span>{contest.duration} minutes</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] text-steel">
+          <ClipboardCheckIcon className="h-3.5 w-3.5" />
+          <span>{contest.questions} Questions</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] text-steel">
+          <UsersIcon className="h-3.5 w-3.5" />
+          <span>{formatParticipants(contest.participants)} Participants</span>
+        </div>
+      </div>
+
+      {/* Countdown + Action */}
+      <div className="mt-5 flex items-center justify-between border-t border-mist pt-4">
+        {countdown ? (
+          <div className="rounded-lg bg-ember/5 px-3 py-1.5">
+            <p className="text-[13px] font-medium text-ember">
+              Starts in {countdown}
+            </p>
+          </div>
+        ) : (
+          <div />
+        )}
+
+        {contest.registered ? (
+          <Button variant="secondary" size="sm">
+            Registered
+          </Button>
+        ) : (
+          <Button variant="primary" size="sm">
+            Register Now
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

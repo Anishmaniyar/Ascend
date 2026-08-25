@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Bell, Flame, ChevronDown, LogOut, Settings, Palette, BarChart3, LayoutDashboard, Award } from "lucide-react";
+import { Bell, Flame, ChevronDown, LogOut, Settings, BarChart3, LayoutDashboard, Award } from "lucide-react";
 import { user } from "@/lib/mock/dashboard";
 import Logo from "@/components/ui/Logo";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/topics", label: "Topics" },
@@ -19,7 +20,6 @@ const PROFILE_MENU = [
   { href: "/progress", label: "Progress", icon: BarChart3 },
   { href: "/badges", label: "Badges", icon: Award },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/appearance", label: "Appearance", icon: Palette },
 ];
 
 export default function AppNavbar() {
@@ -86,6 +86,9 @@ export default function AppNavbar() {
             {/* Notification dot — show when there are unread notifications */}
             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-ember" />
           </button>
+
+          {/* Theme toggle */}
+          <ThemeToggle />
 
           {/* Streak */}
           <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-slate transition-colors hover:bg-ash">

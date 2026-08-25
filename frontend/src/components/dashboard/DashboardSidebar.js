@@ -185,14 +185,10 @@ export default function DashboardSidebar() {
         </div>
 
         {/* Action buttons */}
-        <div className="mt-4 flex gap-2">
-          <Button render={<Link href="/settings" />} variant="secondary" className="flex-1">
+        <div className="mt-4">
+          <Button render={<Link href="/settings" />} variant="secondary" className="w-full">
             <Pencil className="h-4 w-4" />
             Edit Profile
-          </Button>
-          <Button render={<Link href="/progress" />} variant="primary" className="flex-1">
-            <BarChart3 className="h-4 w-4" />
-            Progress
           </Button>
         </div>
       </section>

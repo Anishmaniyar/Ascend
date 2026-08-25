@@ -1,4 +1,5 @@
 import BadgeCard from "@/components/dashboard/BadgeCard";
+import GoBack from "@/components/ui/GoBack";
 import { badges } from "@/lib/mock/dashboard";
 
 export default function BadgesPage() {
@@ -7,6 +8,9 @@ export default function BadgesPage() {
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+      {/* Go back */}
+      <GoBack className="mb-6" />
+
       {/* Page header */}
       <div>
         <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">

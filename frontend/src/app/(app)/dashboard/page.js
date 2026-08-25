@@ -104,38 +104,52 @@ export default function DashboardPage() {
 
           {/* 2. Practice Statistics — full width horizontal row */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {/* Questions Solved — 3 segments: Easy / Medium / Hard */}
             <DonutMetricCard
               label="Questions Solved"
-              value={questionsSolved}
-              valueLabel="Solved"
-              percent={(questionsSolved / 1000) * 100}
-            >
-              <div className="space-y-2">
-                <DifficultyRow label="Easy" solved={easy.solved} total={easy.total} color="bg-success" />
-                <DifficultyRow label="Medium" solved={medium.solved} total={medium.total} color="bg-brass" />
-                <DifficultyRow label="Hard" solved={hard.solved} total={hard.total} color="bg-ember" />
-              </div>
-            </DonutMetricCard>
-
-            <DonutMetricCard
-              label="Accuracy"
-              value={`${overallAccuracy}%`}
-              valueLabel="Accuracy"
-              subtitle="Overall Performance"
-              percent={overallAccuracy}
+              centerText={questionsSolved}
+              centerLabel="Solved"
+              segments={[
+                { value: easy.solved, color: "#3f8f62", label: "Easy" },
+                { value: medium.solved, color: "#c9a348", label: "Medium" },
+                { value: hard.solved, color: "#e07a5f", label: "Hard" },
+              ]}
+              details={[
+                { label: "Easy", value: easy.solved, color: "#3f8f62", percent: Math.round((easy.solved / easy.total) * 100), subtext: "/ " + easy.total },
+                { label: "Medium", value: medium.solved, color: "#c9a348", percent: Math.round((medium.solved / medium.total) * 100), subtext: "/ " + medium.total },
+                { label: "Hard", value: hard.solved, color: "#e07a5f", percent: Math.round((hard.solved / hard.total) * 100), subtext: "/ " + hard.total },
+              ]}
             />
 
+            {/* Accuracy — 2 segments: Correct / Mistakes */}
             <DonutMetricCard
-              label="Practice Sessions"
-              value={totalSessions}
-              valueLabel="Sessions"
-              percent={(totalSessions / 50) * 100}
-            >
-              <div className="space-y-2">
-                <SessionRow label="Practice" count={practiceSessions} total={totalSessions} color="bg-ember" />
-                <SessionRow label="Test" count={testSessions} total={totalSessions} color="bg-brass" />
-              </div>
-            </DonutMetricCard>
+              label="Accuracy"
+              centerText={`${overallAccuracy}%`}
+              centerLabel="Accuracy"
+              segments={[
+                { value: overallAccuracy, color: "#3f8f62", label: "Correct" },
+                { value: 100 - overallAccuracy, color: "#c95c5c", label: "Mistakes" },
+              ]}
+              details={[
+                { label: "Correct answers", value: Math.round((overallAccuracy / 100) * questionsSolved), color: "#3f8f62", percent: overallAccuracy },
+                { label: "Incorrect / Skipped", value: questionsSolved - Math.round((overallAccuracy / 100) * questionsSolved), color: "#c95c5c", percent: 100 - overallAccuracy },
+              ]}
+            />
+
+            {/* Sessions — 2 segments: Practice / Completed */}
+            <DonutMetricCard
+              label="Sessions"
+              centerText={totalSessions}
+              centerLabel="Total"
+              segments={[
+                { value: practiceSessions, color: "#d9b45b", label: "Practice" },
+                { value: testSessions, color: "#3f8f62", label: "Test" },
+              ]}
+              details={[
+                { label: "Practice sessions", value: practiceSessions, color: "#d9b45b", percent: Math.round((practiceSessions / totalSessions) * 100), subtext: Math.round((practiceSessions / totalSessions) * 100) + "%" },
+                { label: "Test sessions", value: testSessions, color: "#3f8f62", percent: Math.round((testSessions / totalSessions) * 100), subtext: Math.round((testSessions / totalSessions) * 100) + "%" },
+              ]}
+            />
           </div>
 
           {/* 3. Activity Heatmap — full width with stats */}
@@ -165,48 +179,4 @@ export default function DashboardPage() {
   );
 }
 
-/* ── Breakdown row helpers ──────────────────────────────────────────── */
 
-function DifficultyRow({ label, solved, total, color }) {
-  const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-13">
-        <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${color}`} />
-          <span className="text-steel">{label}</span>
-        </div>
-        <span className="font-polysans text-graphite">{solved}</span>
-      </div>
-      <div className="mt-1.5 h-1.5 w-full rounded-full bg-fog">
-        <div
-          className={`h-full rounded-full ${color}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function SessionRow({ label, count, total, color }) {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-13">
-        <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${color}`} />
-          <span className="text-steel">{label}</span>
-        </div>
-        <span className="font-polysans text-graphite">
-          {count} <span className="text-slate">({pct}%)</span>
-        </span>
-      </div>
-      <div className="mt-1.5 h-1.5 w-full rounded-full bg-fog">
-        <div
-          className={`h-full rounded-full ${color}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}

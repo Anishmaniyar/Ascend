@@ -12,9 +12,15 @@ export default function LandingPage() {
     <>
       <Hero />
       <TheProblemSection />
-      <CoreLearningLoopSection />
-      <PlacementSection />
-      <CompetitionSection />
+      <div id="topics">
+        <CoreLearningLoopSection />
+      </div>
+      <div id="sheets">
+        <PlacementSection />
+      </div>
+      <div id="leaderboard">
+        <CompetitionSection />
+      </div>
       <CTASection />
     </>
   );

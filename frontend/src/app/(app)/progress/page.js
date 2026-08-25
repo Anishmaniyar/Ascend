@@ -20,6 +20,7 @@ import {
 import RingProgress from "@/components/charts/RingProgress";
 import MonoRoundedStreamChart from "@/components/charts/MonoRoundedStreamChart";
 import Button from "@/components/ui/Button";
+import GoBack from "@/components/ui/GoBack";
 import {
   radialMetrics,
   performanceTrendMonthly,
@@ -68,6 +69,9 @@ export default function ProgressPage() {
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+      {/* Go back */}
+      <GoBack className="mb-6" />
+
       {/* ═══════════════════════════════════════════════════════════════
           1. PAGE HEADER
           ═══════════════════════════════════════════════════════════════ */}
