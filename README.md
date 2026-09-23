@@ -1,540 +1,426 @@
-# LeetAptitude Backend
+# Ascend
 
-> A production-inspired backend for an aptitude preparation platform that combines structured learning, company-specific assessments, practice sessions, and detailed learning analytics.
+Ascend is a backend-focused aptitude preparation platform for placement and interview preparation. It models the practice workflow a candidate actually goes through — from browsing topics down to reviewing performance — as a relational domain, and exposes it through a layered REST API.
 
-This project is being built to learn backend engineering by implementing concepts used in real-world systems rather than limiting the application to CRUD operations. Every feature is designed with scalability, maintainability, and production architecture in mind.
+> **Status:** Functional backend implementing the core practice workflow, content management, and performance aggregation. Infrastructure concerns such as caching, background jobs, and containerization are not part of the current implementation.
+
+## Table of Contents
+
+1. [What is Ascend?](#1-what-is-leetaptitude)
+2. [Core Workflow](#2-core-workflow)
+3. [Current Implementation Status](#3-current-implementation-status)
+4. [Core Features](#4-core-features)
+5. [Architecture](#5-architecture)
+6. [Request Flow](#6-request-flow)
+7. [Domain Model](#7-domain-model)
+8. [Database Schema](#8-database-schema)
+9. [Practice Session & Attempt Workflow](#9-practice-session--attempt-workflow)
+10. [Performance Aggregation](#10-performance-aggregation)
+11. [Company Sheets](#11-company-sheets)
+12. [API Overview](#12-api-overview)
+13. [Backend Engineering Decisions](#13-backend-engineering-decisions)
+14. [Validation and Transactions](#14-validation-and-transactions)
+15. [Security](#15-security)
+16. [Project Structure](#16-project-structure)
+17. [Running Locally](#17-running-locally)
+18. [Current Limitations](#18-current-limitations)
+19. [Closing](#19-closing)
 
 ---
 
-# 🚧 Project Status
+## 1. What is Ascend?
 
-Current Stage
+Ascend organizes aptitude and placement-prep content into a topic hierarchy, lets users practice against structured question sets, and tracks their attempts so performance can be derived rather than manually recorded.
 
 ```
-Backend Development (Version 1)
+Topic → Subtopic → Practice Set → Practice Session → Attempts → Results / Progress
 ```
 
-Project Progress
+The system is built as a **backend engineering project first**: the emphasis is on REST API design, relational data modeling, layered architecture, validation, and correctness of multi-step writes — not on UI or content volume.
 
-| Feature            | Status |
-| ------------------ | ------ |
-| Database Design    | ✅     |
-| REST APIs          | 🚧     |
-| Authentication     | 🚧     |
-| Repository Pattern | 🚧     |
-| Practice Sessions  | 🚧     |
-| Analytics          | ⏳     |
-| Redis              | ⏳     |
-| Background Jobs    | ⏳     |
-| AI Features        | ⏳     |
-
----
-
-# Why This Project?
-
-Most aptitude platforms simply display questions.
-
-LeetAptitude aims to simulate an actual placement preparation workflow.
-
-Instead of only solving questions, users can:
-
-- Learn topic-by-topic
-- Practice structured question sets
-- Attempt company-specific assessments
-- Resume unfinished sessions
-- Track detailed progress
-- Receive personalized analytics
-
-The backend is intentionally designed to evolve into a production-style system by gradually introducing concepts such as caching, background jobs, event-driven architecture, WebSockets, and AI.
-
----
-
-# Core Features
-
-## Authentication
-
-- User Registration
-- Login
-- JWT Authentication
-- Protected Routes
-
----
-
-## Topic Management
-
-Learning follows a hierarchical structure.
+## 2. Core Workflow
 
 ```
 Topic
-    ↓
+  │
+  ▼
 Subtopic
-    ↓
-Questions
+  │
+  ▼
+Practice Set (Questions + Options)
+  │
+  ▼
+Practice Session
+  │
+  ▼
+Attempts
+  │
+  ▼
+Results / Progress
 ```
 
-Example
+A user selects a topic, narrows into a subtopic, and practices against a set of questions within a session. Each answer is recorded as an attempt, and a user's performance is derived by walking the relationship chain from attempt back up through question → subtopic → topic — it is not stored as a separate, independently-maintained summary.
 
-```
-Quantitative Aptitude
-        ↓
-Profit & Loss
-```
+## 3. Current Implementation Status
 
----
+| Area | Status |
+| --- | --- |
+| User accounts | Implemented |
+| Topic management | Implemented |
+| Subtopic management | Implemented |
+| Question & option management | Implemented |
+| Practice sessions | Implemented |
+| Attempts | Implemented |
+| Profile / performance aggregation | Implemented |
+| Admin content management | Implemented |
+| Company sheets & question mapping | Implemented |
+| Prisma transactions (sheet creation) | Implemented |
+| Service-layer validation | Implemented |
+| Redis / caching | Not implemented |
+| Rate limiting | Not implemented |
+| Background jobs / queues | Not implemented |
+| AI features | Not implemented |
+| Docker | Not implemented |
+| Real-time features | Not implemented |
+| Automated testing | Not implemented |
 
-## Question Management
+Only the items marked **Implemented** above should be treated as existing functionality anywhere else in this document.
 
-Supports multiple question types.
+## 4. Core Features
 
-Current
+### Content (Admin)
 
-- MCQ
-- Numerical
+- Create, update, and manage topics and subtopics
+- Create, update, and manage questions and their options
+- Create company-specific practice sheets
+- Map questions to company sheets
 
-Future
+### Practice (User)
 
-- Paragraph Based
-- Multi Select
-- Coding Questions
+- Browse topics and subtopics
+- Start a practice session against a practice set
+- Submit attempts for questions within a session
+- View session results
+- View aggregated performance across topics and subtopics
+- Browse and practice from company-specific sheets
 
----
+## 5. Architecture
 
-## Practice Sessions
+```mermaid
+flowchart TD
+    Client["Client"]
+    Route["Routes"]
+    Controller["Controller Layer"]
+    Service["Service Layer (business logic, validation)"]
+    Repository["Repository Layer (Prisma)"]
+    DB[("PostgreSQL")]
 
-Users can start structured practice sessions.
-
-Features
-
-- Resume Progress
-- Question Navigation
-- Attempt Tracking
-- Practice Mode
-- Test Mode
-
----
-
-## Company Sheets
-
-Placement-style assessments inspired by real companies.
-
-Examples
-
-- TCS NQT
-- Infosys
-- Accenture
-- Capgemini
-
----
-
-## Progress Analytics
-
-The platform records:
-
-- Practice History
-- Current Streak
-- Longest Streak
-- Topic Progress
-- Accuracy
-- Heatmap
-
----
-
-# High-Level Architecture
-
-```
-                Client
-                   │
-                   ▼
-          Express REST API
-                   │
-          Authentication Layer
-                   │
-          Request Validation
-                   │
-             Controllers
-                   │
-              Services
-                   │
-           Repository Layer
-                   │
-             Prisma ORM
-                   │
-             PostgreSQL
+    Client -- HTTP / REST --> Route
+    Route --> Controller
+    Controller --> Service
+    Service --> Repository
+    Repository --> DB
 ```
 
-Future Architecture
+Ascend uses a **layered Controller → Service → Repository architecture**:
+
+- **Controller** — parses the HTTP request and delegates to the service layer; contains no business logic.
+- **Service** — owns business logic, validation, and orchestration of multi-step operations (including transactions).
+- **Repository** — the only layer that talks to the database, via Prisma.
+
+This keeps validation and business rules out of the controllers and out of raw database access, so each layer has one responsibility.
+
+## 6. Request Flow
 
 ```
-                    Client
-                       │
-                 Express API
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-        ▼              ▼              ▼
-   PostgreSQL       Redis         BullMQ
-                                       │
-                                    Workers
-```
-
----
-
-# System Design
-
-The backend follows a layered architecture.
-
-```
-Request
-
-↓
-
+Client
+  │
+  ▼
+Route
+  │
+  ▼
 Controller
-
-↓
-
-Service
-
-↓
-
-Repository
-
-↓
-
-Database
+  │
+  ▼
+Service (validation, business logic)
+  │
+  ▼
+Repository (Prisma)
+  │
+  ▼
+PostgreSQL
+  │
+  ▼
+Response
 ```
 
-## Controller
+## 7. Domain Model
 
-Responsible for
+```mermaid
+erDiagram
+    USER ||--o{ PRACTICE_SESSION : starts
+    TOPIC ||--o{ SUBTOPIC : has
+    SUBTOPIC ||--o{ QUESTION : contains
+    QUESTION ||--o{ OPTION : has
+    PRACTICE_SESSION ||--o{ ATTEMPT : records
+    QUESTION ||--o{ ATTEMPT : answered_in
+    COMPANY_SHEET ||--o{ SHEET_QUESTION : maps
+    QUESTION ||--o{ SHEET_QUESTION : appears_in
+```
 
-- Request handling
-- Authentication
-- Validation
-- HTTP Responses
+| Entity | Represents |
+| --- | --- |
+| **User** | An account practicing on the platform |
+| **Topic** | A top-level subject area (e.g. Quantitative Aptitude) |
+| **Subtopic** | A narrower category within a topic |
+| **Question** | A single aptitude question belonging to a subtopic |
+| **Option** | An answer choice belonging to a question |
+| **PracticeSession** | A user's practice run against a set of questions |
+| **Attempt** | A user's answer to one question within a session |
+| **CompanySheet** | A curated, company-specific set of questions |
+| **SheetQuestion** | The mapping between a company sheet and its questions |
 
----
+## 8. Database Schema
 
-## Service
-
-Responsible for
-
-- Business Logic
-- Aggregation
-- Runtime Decisions
-- Data Transformation
-
----
-
-## Repository
-
-Responsible for
-
-- Database Queries
-- Filtering
-- Pagination
-- Prisma Operations
-
----
-
-# Database Design
-
-Current Models
+Ascend uses **PostgreSQL** with **Prisma** as the ORM.
 
 ```
 User
+ ├── id
+ ├── name
+ ├── email
+ └── password
 
 Topic
+ ├── id
+ └── name
 
 Subtopic
+ ├── id
+ ├── topicId ───────────► Topic
+ └── name
 
 Question
+ ├── id
+ ├── subtopicId ────────► Subtopic
+ ├── text
+ └── difficulty
 
 Option
-
-Attempt
+ ├── id
+ ├── questionId ────────► Question
+ ├── text
+ └── isCorrect
 
 PracticeSession
+ ├── id
+ ├── userId ────────────► User
+ ├── startedAt
+ └── status
 
-Sheet
-
-SheetQuestion
-```
-
-Relationship Overview
-
-```
-Topic
-   │
-   ▼
-Subtopic
-   │
-   ▼
-Question
-   │
-   ▼
 Attempt
+ ├── id
+ ├── sessionId ─────────► PracticeSession
+ ├── questionId ────────► Question
+ ├── selectedOptionId
+ └── isCorrect
 
-User
-   │
-   ▼
-PracticeSession
+CompanySheet
+ ├── id
+ └── companyName
 
-Sheet
-   │
-   ▼
 SheetQuestion
-   │
-   ▼
-Question
+ ├── id
+ ├── sheetId ───────────► CompanySheet
+ └── questionId ────────► Question
 ```
 
----
+> Replace this block with the exact contents of `schema.prisma` so the README stays in sync with the actual database.
 
-# Current Tech Stack
+## 9. Practice Session & Attempt Workflow
 
-Backend
-
-- Node.js
-- Express.js
-- Prisma ORM
-- PostgreSQL
-- JWT Authentication
-
-Development
-
-- JavaScript
-- Prisma
-- REST APIs
-
----
-
-# Planned Engineering Features
-
-This project intentionally grows in phases.
-
-## Phase 1
-
-- Authentication
-- Topics
-- Questions
-- Practice Sessions
-- Analytics
-
----
-
-## Phase 2
-
-### Redis
-
-Purpose
-
-Cache frequently requested resources.
-
-Examples
-
-- Topics
-- Subtopics
-- Company Sheets
-
----
-
-### BullMQ
-
-Purpose
-
-Move expensive operations into background workers.
-
-Examples
-
-- Heatmap Updates
-- Streak Calculation
-- Skill Analytics
-
----
-
-### Scheduled Jobs
-
-Purpose
-
-Execute recurring backend tasks.
-
-Examples
-
-- Weekly Reports
-- Leaderboard Reset
-- Session Cleanup
-
----
-
-### Event-Driven Architecture
-
-Example
-
-```
-Attempt Submitted
-
-↓
-
-Event
-
-↓
-
-Update Heatmap
-
-Update Skills
-
-Update Analytics
-
-Update Streak
+```mermaid
+flowchart LR
+    A[User selects Topic / Subtopic] --> B[Practice Set resolved]
+    B --> C[Practice Session created]
+    C --> D[User submits Attempt]
+    D --> E{More questions?}
+    E -- yes --> D
+    E -- no --> F[Session marked complete]
+    F --> G[Results derived from Attempts]
 ```
 
-Instead of tightly coupling services together, different modules react independently to events.
+A practice session is created against a resolved set of questions. Each answer the user submits is persisted as an `Attempt`, linked to both the session and the question. Whether an attempt is correct is derived by comparing the selected option against the question's correct option. Results are read from the attempts belonging to a session rather than recomputed and stored separately.
 
----
+## 10. Performance Aggregation
 
-### Rate Limiting
-
-Protect APIs from abuse.
-
-Examples
-
-- Login
-- Answer Submission
-
----
-
-### Logging
-
-Structured application logs using production-grade logging.
-
----
-
-### Authorization
-
-Support multiple user roles.
+User performance is **derived**, not pre-computed and stored:
 
 ```
-User
-
-Moderator
-
-Admin
+Attempt → Question → Subtopic → Topic
 ```
 
----
+To produce a performance view (e.g. accuracy per topic, or per subtopic), the service layer walks this relationship chain — grouping a user's attempts by the subtopic and topic their underlying questions belong to. This keeps performance data always consistent with the underlying attempts, at the cost of computing it on read rather than maintaining a separate running total.
 
-## Phase 3
+## 11. Company Sheets
 
-### WebSockets
+A company sheet is a curated set of questions, connected to questions through a mapping table (`SheetQuestion`) rather than a direct list on the sheet itself — mirroring how questions can belong to more than one sheet and how sheet membership is tracked independently of the question's subtopic.
 
-Real-time features
+Creating a sheet along with its initial question mappings is done as a single Prisma transaction, so a sheet is never left persisted without its mapped questions if a step in the creation fails partway through.
 
-- Live Leaderboards
-- Practice Timer
-- Notifications
+## 12. API Overview
 
----
+| Module | Responsibility |
+| --- | --- |
+| Topics | Topic CRUD |
+| Subtopics | Subtopic CRUD |
+| Questions | Question & option CRUD |
+| Practice Sessions | Session lifecycle |
+| Attempts | Recording answers |
+| Performance | Aggregated user performance |
+| Company Sheets | Sheet and question-mapping management |
 
-### AI Features
+Representative endpoints (verify exact routes against the codebase before publishing):
 
-Planned integrations
+### Topics & Subtopics
 
-- AI Question Explanation
-- Weak Topic Detection
-- Personalized Recommendations
+```http
+GET    /api/v1/topics
+GET    /api/v1/topics/:id
+POST   /api/v1/topics
+PATCH  /api/v1/topics/:id
 
----
+GET    /api/v1/topics/:id/subtopics
+POST   /api/v1/subtopics
+PATCH  /api/v1/subtopics/:id
+```
 
-### Docker
+### Questions
 
-Containerized deployment.
+```http
+GET    /api/v1/subtopics/:id/questions
+POST   /api/v1/questions
+PATCH  /api/v1/questions/:id
+DELETE /api/v1/questions/:id
+```
 
----
+### Practice Sessions & Attempts
 
-### CI/CD
+```http
+POST   /api/v1/practice-sessions
+GET    /api/v1/practice-sessions/:id
+POST   /api/v1/practice-sessions/:id/attempts
+GET    /api/v1/practice-sessions/:id/results
+```
 
-Automated testing and deployment pipelines.
+### Performance
 
----
+```http
+GET    /api/v1/users/me/performance
+GET    /api/v1/users/me/performance/topics/:topicId
+```
 
-# Folder Structure
+### Company Sheets
+
+```http
+GET    /api/v1/company-sheets
+POST   /api/v1/company-sheets
+GET    /api/v1/company-sheets/:id/questions
+POST   /api/v1/company-sheets/:id/questions
+```
+
+## 13. Backend Engineering Decisions
+
+| Decision | Reason |
+| --- | --- |
+| Layered Controller → Service → Repository | Separates request handling, business logic, and data access |
+| PostgreSQL | Relational domain with clear entity relationships |
+| Prisma | Type-safe database access and schema management |
+| Service-layer validation | Keeps validation rules out of controllers and repositories |
+| Prisma transactions for sheet + mapping creation | Prevents a company sheet from being persisted without its question mappings |
+| Derived performance aggregation | Keeps performance data consistent with attempts without maintaining a separate summary table |
+| Mapping table for sheet ↔ question | Allows a question to belong to multiple company sheets |
+
+## 14. Validation and Transactions
+
+- Request-level validation (required fields, types, ranges) is enforced in the **service layer**, before any database write.
+- Multi-step writes that must succeed or fail together — most notably creating a company sheet along with its initial question mappings — are wrapped in a **Prisma transaction**.
+- Other single-entity writes (creating a topic, updating a question) are not currently transactional, since they involve only one table.
+
+## 15. Security
+
+| Mechanism | Status |
+| --- | --- |
+| Password hashing | Implemented |
+| Authenticated routes | Implemented |
+| Service-layer input validation | Implemented |
+| Rate limiting | Not implemented |
+| Advanced authorization/RBAC | Unclear — confirm against actual admin-route guards |
+
+> Update this table to reflect the actual auth mechanism (session vs JWT, cookie handling, etc.) used in the codebase.
+
+## 16. Project Structure
 
 ```
-src
-
-├── config/
-├── controllers/
-├── middleware/
-├── repositories/
-├── routes/
-├── services/
+leetaptitude/
+│
+├── src/
+│   ├── controllers/
+│   ├── services/
+│   ├── repositories/
+│   ├── routes/
+│   ├── validators/
+│   └── middleware/
+│
 ├── prisma/
-├── validations/
-├── utils/
-├── cache/
-├── workers/
-├── events/
-├── sockets/
-├── ai/
-├── app.js
-└── server.js
+│   ├── schema.prisma
+│   └── migrations/
+│
+├── package.json
+└── README.md
 ```
 
----
+> Replace with the actual repository layout before publishing.
 
-# Learning Objectives
+## 17. Running Locally
 
-This project is not intended to be just another CRUD application.
+```bash
+git clone <repository-url>
+cd leetaptitude
 
-The objective is to gain practical experience with backend engineering concepts commonly found in production systems.
+npm install
 
-Concepts explored include:
+# configure environment
+cp .env.example .env
 
-- Layered Architecture
-- Authentication
-- Authorization
-- Repository Pattern
-- Service Layer
-- Database Design
-- Redis
-- Background Jobs
-- Event-Driven Systems
-- WebSockets
-- AI Integration
-- Docker
-- CI/CD
+# run database migrations
+npx prisma migrate dev
 
-Each feature will be introduced incrementally, with the goal of understanding not only _how_ it works, but also _why_ it is used in real-world software.
+# start development server
+npm run dev
+```
 
----
+> Replace with the actual scripts defined in `package.json` if they differ.
 
-# Roadmap
+## 18. Current Limitations
 
-- [x] Database Design
-- [ ] Authentication
-- [ ] Topics API
-- [ ] Subtopics API
-- [ ] Questions API
-- [ ] Practice Sessions
-- [ ] Analytics
-- [ ] Redis
-- [ ] BullMQ
-- [ ] Event-Driven Architecture
-- [ ] WebSockets
-- [ ] AI Features
-- [ ] Docker
-- [ ] CI/CD
+### Current limitations
 
----
+- No caching layer — every read hits PostgreSQL directly.
+- No rate limiting on write-heavy or auth endpoints.
+- Automated test coverage is not yet in place.
+- Performance aggregation is computed on read, with no indexing/optimization work done for large attempt volumes.
 
-# Contributing
+### Not currently required
 
-Suggestions, discussions, and improvements are always welcome.
+Intentionally out of scope for the current stage:
 
-As the project evolves, architectural decisions and implementation details will continue to be documented within the repository.
+- Redis / caching
+- Background job queues
+- AI-based features
+- Docker / containerization
+- Real-time features (websockets, live leaderboards)
 
----
+## 19. Closing
 
-# License
-
-This project is built for educational purposes and backend engineering practice.
+Ascend is a backend-focused practice-platform project centered on relational data modeling, layered service architecture, and correct handling of multi-step writes — from topic hierarchies down to individual attempts and derived performance. Infrastructure and AI features are explicitly out of scope for the current version rather than partially built.
