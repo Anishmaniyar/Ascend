@@ -1,4 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#202020"/>
-  <circle cx="32" cy="32" r="13" fill="#ff682c"/>
+<svg
+  viewBox="0 0 28 28"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <rect
+    x="2"
+    y="2"
+    width="16"
+    height="16"
+    rx="3"
+    fill="#171717"
+  />
+  <rect
+    x="10"
+    y="10"
+    width="16"
+    height="16"
+    rx="3"
+    fill="#171717"
+    opacity="0.35"
+  />
 </svg>

@@ -11,8 +11,6 @@ import {
   FilterIcon,
   PlayIcon,
   RotateCcwIcon,
-  BarChart3Icon,
-  LayersIcon,
 } from "@/components/ui/icons";
 import { companies } from "@/lib/mock/landing";
 import Button from "@/components/ui/Button";
@@ -316,26 +314,6 @@ export default function SheetsPage() {
     page * SHEETS_PER_PAGE,
   );
 
-  // Stats
-  const stats = useMemo(() => {
-    const total = companySheetRows.length;
-    const attempted = companySheetRows.filter((r) => r.solved > 0).length;
-    const completed = companySheetRows.filter(
-      (r) => r.solved === r.questions && r.questions > 0,
-    ).length;
-    const totalAttempted = companySheetRows.filter((r) => r.solved > 0);
-    const avgAccuracy =
-      totalAttempted.length > 0
-        ? Math.round(
-            totalAttempted.reduce((sum, r) => {
-              const pct = r.questions > 0 ? (r.solved / r.questions) * 100 : 0;
-              return sum + pct;
-            }, 0) / totalAttempted.length,
-          )
-        : 0;
-    return { total, attempted, completed, avgAccuracy };
-  }, []);
-
   const clearAll = () => {
     setActiveCompanyId(null);
     setDiffFilter("all");
@@ -360,38 +338,14 @@ export default function SheetsPage() {
       {/* ════════════════════════════════════════════════════════════════
           1. PAGE HEADER
           ════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
-            Company Sheets
-          </h1>
-          <p className="mt-2 max-w-[56ch] text-15 leading-[1.5] text-steel">
-            Practice curated aptitude question sets modeled on real placement
-            tests from top companies.
-          </p>
-        </div>
-
-        {/* How it works panel */}
-        <div className="shrink-0 rounded-2xl border border-mist bg-canvas p-5 sm:w-64">
-          <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-            How it works?
-          </p>
-          <div className="mt-3 space-y-2">
-            {[
-              "Choose a company",
-              "Pick a sheet",
-              "Practice",
-              "Improve your score",
-            ].map((step, i) => (
-              <div key={i} className="flex items-center gap-2.5 text-13 text-steel">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ash font-polysans text-11 text-graphite">
-                  {i + 1}
-                </span>
-                {step}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div>
+        <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+          Company Sheets
+        </h1>
+        <p className="mt-2 max-w-[56ch] text-15 leading-[1.5] text-steel">
+          Practice curated aptitude question sets modeled on real placement
+          tests from top companies.
+        </p>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
@@ -514,70 +468,7 @@ export default function SheetsPage() {
         )}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════
-          4. SHEET STATISTICS
-          ════════════════════════════════════════════════════════════════ */}
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ash">
-              <LayersIcon className="h-4 w-4 text-graphite" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.total}
-              </p>
-              <p className="text-13 text-slate">Total Sheets</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Across all companies</p>
-        </div>
 
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ash">
-              <PlayIcon className="h-4 w-4 text-graphite" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.attempted}
-              </p>
-              <p className="text-13 text-slate">Attempted</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Sheets started</p>
-        </div>
-
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ash">
-              <BarChart3Icon className="h-4 w-4 text-graphite" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.completed}
-              </p>
-              <p className="text-13 text-slate">Completed</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Sheets completed</p>
-        </div>
-
-        <div className="rounded-2xl border border-mist bg-canvas p-5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ash">
-              <BarChart3Icon className="h-4 w-4 text-graphite" />
-            </span>
-            <div>
-              <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                {stats.avgAccuracy}%
-              </p>
-              <p className="text-13 text-slate">Avg. Accuracy</p>
-            </div>
-          </div>
-          <p className="mt-2 text-13 text-slate">Across all attempts</p>
-        </div>
-      </div>
 
       {/* ════════════════════════════════════════════════════════════════
           5. SHEET LIBRARY — TABLE

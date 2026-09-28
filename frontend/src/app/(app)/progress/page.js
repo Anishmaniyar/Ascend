@@ -128,12 +128,12 @@ export default function ProgressPage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          2. PROGRESS OVERVIEW — Three Radial Rings
+          2. PROGRESS OVERVIEW — Three Radial Rings (flat, no cards)
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="mt-8 flex flex-wrap items-start justify-center gap-10 sm:justify-around">
         {/* Questions Solved */}
         <div
-          className="flex flex-col items-center rounded-2xl bg-ash px-5 py-7"
+          className="flex flex-col items-center"
           onMouseEnter={() => setHoveredRing("questions")}
           onMouseLeave={() => setHoveredRing(null)}
         >
@@ -161,7 +161,7 @@ export default function ProgressPage() {
 
         {/* Overall Accuracy */}
         <div
-          className="flex flex-col items-center rounded-2xl bg-ash px-5 py-7"
+          className="flex flex-col items-center"
           onMouseEnter={() => setHoveredRing("accuracy")}
           onMouseLeave={() => setHoveredRing(null)}
         >
@@ -188,7 +188,7 @@ export default function ProgressPage() {
 
         {/* Practice Sessions */}
         <div
-          className="flex flex-col items-center rounded-2xl bg-ash px-5 py-7"
+          className="flex flex-col items-center"
           onMouseEnter={() => setHoveredRing("sessions")}
           onMouseLeave={() => setHoveredRing(null)}
         >
@@ -216,42 +216,33 @@ export default function ProgressPage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          3. TIME / PRACTICE ANALYSIS — Compact row
+          3. TIME / PRACTICE ANALYSIS — Inline rows, not cards
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-2xl bg-ash px-5 py-4">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember/10">
-            <ClockIcon className="h-5 w-5 text-ember" />
-          </span>
-          <div>
-            <p className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-              {timeData.totalPracticeTime}
-            </p>
-            <p className="mt-0.5 text-13 text-slate">Total Practice Time</p>
+      <div className="mt-8 border-t border-mist pt-6">
+        <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+          Practice Overview
+        </h3>
+        <div className="mt-4 flex flex-wrap items-center gap-8">
+          <div className="flex items-center gap-3">
+            <ClockIcon className="h-4 w-4 text-ember" />
+            <div>
+              <span className="font-polysans text-15 font-medium text-graphite">{timeData.totalPracticeTime}</span>
+              <span className="ml-2 text-13 text-slate">Total Practice Time</span>
+            </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-2xl bg-ash px-5 py-4">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember/10">
-            <ClockIcon className="h-5 w-5 text-ember" />
-          </span>
-          <div>
-            <p className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-              {timeData.avgSessionDuration}
-            </p>
-            <p className="mt-0.5 text-13 text-slate">Avg. Session Duration</p>
+          <div className="flex items-center gap-3">
+            <ClockIcon className="h-4 w-4 text-ember" />
+            <div>
+              <span className="font-polysans text-15 font-medium text-graphite">{timeData.avgSessionDuration}</span>
+              <span className="ml-2 text-13 text-slate">Avg. Session Duration</span>
+            </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-2xl bg-ash px-5 py-4">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ember/10">
-            <CalendarIcon className="h-5 w-5 text-ember" />
-          </span>
-          <div>
-            <p className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-              {timeData.practiceFrequency.value} {timeData.practiceFrequency.unit}
-            </p>
-            <p className="mt-0.5 text-13 text-slate">Practice Frequency</p>
+          <div className="flex items-center gap-3">
+            <CalendarIcon className="h-4 w-4 text-ember" />
+            <div>
+              <span className="font-polysans text-15 font-medium text-graphite">{timeData.practiceFrequency.value} {timeData.practiceFrequency.unit}</span>
+              <span className="ml-2 text-13 text-slate">Practice Frequency</span>
+            </div>
           </div>
         </div>
       </div>
@@ -259,9 +250,9 @@ export default function ProgressPage() {
       {/* ═══════════════════════════════════════════════════════════════
           4. PERFORMANCE TREND + ACCURACY BY DIFFICULTY
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* ── Performance Trend ──────────────────────────────── */}
-        <section className="rounded-2xl bg-ash p-6">
+        <section className="border-t border-mist pt-6">
           <div className="flex items-center justify-between gap-4">
             <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
               Performance Trend
@@ -321,7 +312,7 @@ export default function ProgressPage() {
         </section>
 
         {/* ── Accuracy by Difficulty ─────────────────────────── */}
-        <section className="rounded-2xl bg-ash p-6">
+        <section className="border-t border-mist pt-6 lg:border-t-0 lg:border-l lg:pl-8">
           <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
             Accuracy by Difficulty
           </h3>
@@ -372,9 +363,9 @@ export default function ProgressPage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          5. PROGRESS BY TOPIC
+          5. PROGRESS BY TOPIC — table layout
           ═══════════════════════════════════════════════════════════════ */}
-      <section className="mt-6 rounded-2xl bg-ash p-6">
+      <section className="mt-8 border-t border-mist pt-6">
         <div className="flex items-center justify-between gap-4">
           <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
             Progress by Topic
@@ -454,7 +445,9 @@ export default function ProgressPage() {
       {/* ═══════════════════════════════════════════════════════════════
           6. STRENGTHS & WEAKNESSES — Steam Wave
           ═══════════════════════════════════════════════════════════════ */}
-      <SteamWaveSection />
+      <div className="mt-8 border-t border-mist pt-6">
+        <SteamWaveSection />
+      </div>
     </div>
   );
 }
@@ -586,7 +579,7 @@ function SteamWaveSection() {
   const { strengths, weaknesses, all } = getClassifiedSubtopics();
 
   return (
-    <section className="mt-6 rounded-2xl bg-ash p-6">
+    <section>
       <div className="flex items-center justify-between gap-4">
         <div>
           <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">

@@ -29,9 +29,11 @@ const NAV = [
 
 function Wordmark() {
   return (
-    <Link href="/" className="flex items-center gap-2.5 font-polysans text-base tracking-[-0.02em] text-graphite">
-      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-graphite">
-        <span className="h-2 w-2 rounded-full bg-ember" />
+    <Link href="/" className="flex items-center gap-2 font-inter text-[13px] font-medium tracking-[-0.01em] text-graphite">
+      <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-graphite">
+        <span className="font-inter text-[11px] font-semibold leading-none text-canvas">
+          L
+        </span>
       </span>
       LeetAptitude
     </Link>
@@ -89,8 +91,8 @@ export default function Sidebar() {
 
         <div className="space-y-3 px-3 pb-6">
           {/* Streak mini card */}
-          <div className="flex items-center gap-3 rounded-asymmetric bg-ash px-4 py-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-canvas text-ember">
+          <div className="flex items-center gap-3 rounded-cards bg-ash px-4 py-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-canvas text-graphite">
               <FlameIcon className="h-4 w-4" />
             </span>
             <div>

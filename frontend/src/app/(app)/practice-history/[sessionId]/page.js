@@ -57,8 +57,8 @@ function AccuracyRing({ accuracy, size = 120 }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-polysans text-[28px] leading-none tracking-[-0.02em] text-graphite">{accuracy}%</span>
-        <span className="mt-1 text-[11px] text-slate">Accuracy</span>
+        <span className="font-polysans text-heading tracking-[-0.02em] text-graphite">{accuracy}%</span>
+        <span className="mt-1 font-polysans text-11 text-slate">Accuracy</span>
       </div>
     </div>
   );
@@ -113,7 +113,7 @@ export default function SessionDetailPage({ params }) {
       {/* ── Back navigation ────────────────────────────────────────── */}
       <Link
         href="/practice-history"
-        className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-slate transition-colors hover:text-graphite"
+        className="mb-6 inline-flex items-center gap-1.5 text-13 text-slate transition-colors hover:text-graphite"
       >
         <ArrowLeftIcon className="h-3.5 w-3.5" />
         Back to Practice History
@@ -126,11 +126,11 @@ export default function SessionDetailPage({ params }) {
             <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
               Session #{session.sessionNumber}
             </h1>
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 font-polysans text-11 text-success">
               Completed
             </span>
           </div>
-          <p className="mt-2 text-[15px] text-steel">
+          <p className="mt-2 text-15 text-steel">
             {session.topic} • {session.subtopic} • {session.total} Questions
           </p>
         </div>
@@ -160,10 +160,10 @@ export default function SessionDetailPage({ params }) {
             <div key={m.label} className="rounded-xl bg-ash px-4 py-3">
               <div className="flex items-center gap-2">
                 <Icon className="h-3.5 w-3.5 text-slate" />
-                <span className="text-[11px] uppercase tracking-wider text-slate">{m.label}</span>
+                <span className="font-polysans text-11 uppercase tracking-wider text-slate">{m.label}</span>
               </div>
-              <p className="mt-1.5 font-polysans text-[18px] tracking-[-0.02em] text-graphite">{m.value}</p>
-              <p className="mt-0.5 text-[12px] text-slate">{m.sub}</p>
+              <p className="mt-1.5 font-polysans text-subheading tracking-[-0.02em] text-graphite">{m.value}</p>
+              <p className="mt-0.5 font-polysans text-11 text-slate">{m.sub}</p>
             </div>
           );
         })}
@@ -176,7 +176,7 @@ export default function SessionDetailPage({ params }) {
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`shrink-0 border-b-2 px-4 py-2.5 text-[13px] font-medium transition-colors ${
+            className={`shrink-0 border-b-2 px-4 py-2.5 font-polysans text-13 tracking-[-0.02em] transition-colors ${
               activeTab === tab
                 ? "border-graphite text-graphite"
                 : "border-transparent text-slate hover:text-graphite"
@@ -194,7 +194,7 @@ export default function SessionDetailPage({ params }) {
           <div className="space-y-6">
             {/* Performance Overview */}
             <section className="rounded-2xl bg-ash p-6">
-              <h2 className="font-polysans text-[18px] tracking-[-0.02em] text-graphite">
+              <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
                 Performance Overview
               </h2>
 
@@ -209,39 +209,39 @@ export default function SessionDetailPage({ params }) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-success" />
-                      <span className="text-[14px] text-steel">Correct Answers</span>
+                      <span className="text-15 text-steel">Correct Answers</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-polysans text-[15px] text-graphite">{session.correct}</span>
-                      <span className="text-[12px] text-slate">({Math.round((session.correct / session.total) * 100)}%)</span>
+                      <span className="font-polysans text-15 text-graphite">{session.correct}</span>
+                      <span className="text-11 text-slate">({Math.round((session.correct / session.total) * 100)}%)</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-ember" />
-                      <span className="text-[14px] text-steel">Incorrect Answers</span>
+                      <span className="text-15 text-steel">Incorrect Answers</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-polysans text-[15px] text-graphite">{session.incorrect}</span>
-                      <span className="text-[12px] text-slate">({incorrectPct}%)</span>
+                      <span className="font-polysans text-15 text-graphite">{session.incorrect}</span>
+                      <span className="text-11 text-slate">({incorrectPct}%)</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <span className="h-2.5 w-2.5 rounded-full bg-mist" />
-                      <span className="text-[14px] text-steel">Unattempted</span>
+                      <span className="text-15 text-steel">Unattempted</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-polysans text-[15px] text-graphite">{session.unattempted}</span>
-                      <span className="text-[12px] text-slate">({unattemptedPct}%)</span>
+                      <span className="font-polysans text-15 text-graphite">{session.unattempted}</span>
+                      <span className="text-11 text-slate">({unattemptedPct}%)</span>
                     </div>
                   </div>
 
                   {/* Insight */}
                   <div className="mt-4 rounded-lg border border-success/20 bg-success/5 px-4 py-3">
-                    <p className="text-[13px] leading-[1.5] text-success">
+                    <p className="text-13 leading-[1.5] text-success">
                       Great job! You performed better than {session.percentile}% of users who attempted this session.
                     </p>
                   </div>
@@ -251,7 +251,7 @@ export default function SessionDetailPage({ params }) {
 
             {/* Section Breakdown */}
             <section className="rounded-2xl bg-ash p-6">
-              <h2 className="font-polysans text-[18px] tracking-[-0.02em] text-graphite">
+              <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
                 Section Breakdown
               </h2>
 
@@ -259,22 +259,22 @@ export default function SessionDetailPage({ params }) {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-mist">
-                      <th className="pb-2.5 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Section</th>
-                      <th className="pb-2.5 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Questions</th>
-                      <th className="pb-2.5 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Correct</th>
-                      <th className="pb-2.5 text-left text-[12px] font-normal uppercase tracking-wider text-slate">Accuracy</th>
+                      <th className="pb-2.5 text-left font-polysans text-11 font-normal uppercase tracking-wider text-slate">Section</th>
+                      <th className="pb-2.5 text-left font-polysans text-11 font-normal uppercase tracking-wider text-slate">Questions</th>
+                      <th className="pb-2.5 text-left font-polysans text-11 font-normal uppercase tracking-wider text-slate">Correct</th>
+                      <th className="pb-2.5 text-left font-polysans text-11 font-normal uppercase tracking-wider text-slate">Accuracy</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-mist">
                     {session.sections.map((sec) => (
                       <tr key={sec.name}>
-                        <td className="py-3 text-[14px] text-graphite">{sec.name}</td>
-                        <td className="py-3 text-[14px] text-graphite">{sec.questions}</td>
-                        <td className="py-3 text-[14px] text-graphite">{sec.correct}</td>
+                        <td className="py-3 text-15 text-graphite">{sec.name}</td>
+                        <td className="py-3 text-15 text-graphite">{sec.questions}</td>
+                        <td className="py-3 text-15 text-graphite">{sec.correct}</td>
                         <td className="py-3">
                           <div className="flex items-center gap-2.5">
                             <MiniRing accuracy={sec.accuracy} />
-                            <span className="text-[14px] text-graphite">{sec.accuracy}%</span>
+                            <span className="text-15 text-graphite">{sec.accuracy}%</span>
                           </div>
                         </td>
                       </tr>
@@ -289,7 +289,7 @@ export default function SessionDetailPage({ params }) {
           <div className="space-y-6">
             {/* Session Details */}
             <section className="rounded-2xl bg-ash p-6">
-              <h2 className="font-polysans text-[18px] tracking-[-0.02em] text-graphite">
+              <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
                 Session Details
               </h2>
 
@@ -304,7 +304,7 @@ export default function SessionDetailPage({ params }) {
                   { label: "Started At", value: `${formatDate(session.startedAt)} ${formatTime(session.startedAt)}` },
                   { label: "Completed At", value: `${formatDate(session.date)} ${formatTime(session.date)}` },
                 ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between text-[13px]">
+                  <div key={row.label} className="flex items-center justify-between text-13">
                     <span className="text-slate">{row.label}</span>
                     <span className="font-polysans text-graphite">{row.value}</span>
                   </div>
@@ -314,16 +314,16 @@ export default function SessionDetailPage({ params }) {
 
             {/* Topics */}
             <section className="rounded-2xl bg-ash p-6">
-              <h2 className="font-polysans text-[18px] tracking-[-0.02em] text-graphite">
+              <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
                 Topics
               </h2>
 
               <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between text-[13px]">
+                <div className="flex items-center justify-between text-13">
                   <span className="text-slate">Primary Topic</span>
                   <span className="font-polysans text-graphite">{session.topic}</span>
                 </div>
-                <div className="flex items-center justify-between text-[13px]">
+                <div className="flex items-center justify-between text-13">
                   <span className="text-slate">Subtopic</span>
                   <span className="font-polysans text-graphite">{session.subtopic}</span>
                 </div>
@@ -336,7 +336,7 @@ export default function SessionDetailPage({ params }) {
       {/* ── Other tabs placeholder ─────────────────────────────────── */}
       {activeTab !== "Overview" && (
         <div className="mt-16 rounded-2xl bg-ash px-6 py-12 text-center">
-          <p className="text-[15px] text-steel">{activeTab} content coming soon.</p>
+          <p className="text-15 text-steel">{activeTab} content coming soon.</p>
         </div>
       )}
     </div>

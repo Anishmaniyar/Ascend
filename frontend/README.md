@@ -1,6 +1,6 @@
-# LeetAptitude — Frontend
+# Ascend — Frontend
 
-Next.js (App Router) + Tailwind CSS v4 frontend for the LeetAptitude aptitude
+Next.js (App Router) + Tailwind CSS v4 frontend for the Ascend aptitude
 preparation platform, styled with the **Ventriloc** design system
 (warm paper canvas, monospace-precision data cards, a single ember-orange
 accent) in both **light and dark mode**.

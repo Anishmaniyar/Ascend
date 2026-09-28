@@ -19,7 +19,7 @@ export default function DonutMetricCard({
   donutSize = 130,
 }) {
   return (
-    <section className="flex flex-col items-center rounded-2xl bg-ash p-6">
+    <section className="flex flex-col items-center rounded-cards border border-mist bg-canvas p-6">
       {/* Title */}
       <p className="font-polysans text-13 tracking-[0.08em] uppercase text-slate">
         {label}

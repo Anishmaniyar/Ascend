@@ -1,22 +1,30 @@
-import { Poppins } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 
-/* Poppins — the single font family for all text in LeetAptitude. */
-const poppins = Poppins({
+/* Inter Variable — all UI, body, labels, buttons. */
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+});
+
+/* Newsreader Light — editorial stand-in for Signifier (commercial).
+   Stack is declared as Signifier first so licensed installs win. */
+const signifierFallback = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-signifier-src",
+  display: "swap",
+  weight: ["300", "400"],
+  style: ["normal", "italic"],
 });
 
 export const metadata = {
-  title: "LeetAptitude — Placement prep, mastered",
+  title: "LeetAptitude — Practice with purpose",
   description:
-    "Learn topic-by-topic, practice structured question sets, attempt company-specific assessments and track detailed progress.",
+    "A focused aptitude practice platform for mastering topics, company tests, and the skills that matter.",
 };
 
-/* No-FOUC theme bootstrap: apply the saved/system theme to <html> before
-   first paint so the app never flashes the wrong theme. */
 const themeScript = `(function () {
   try {
     var stored = localStorage.getItem("theme");
@@ -33,7 +41,10 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${poppins.variable}`}>
+      <body
+        className={`${inter.variable} ${signifierFallback.variable}`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

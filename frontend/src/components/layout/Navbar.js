@@ -4,120 +4,114 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import { MenuIcon, XIcon, ArrowRightIcon } from "@/components/ui/icons";
-import Logo from "@/components/ui/Logo";
+import { MenuIcon, XIcon } from "@/components/ui/icons";
 import Button from "@/components/ui/Button";
 
 const NAV_LINKS = [
+  { href: "#practice", label: "Practice" },
   { href: "#topics", label: "Topics" },
-  { href: "#sheets", label: "Sheets" },
-  { href: "#leaderboard", label: "Leaderboards" },
-  { href: "#contests", label: "Contests" },
+  { href: "#companies", label: "Companies" },
+  { href: "#progress", label: "Progress" },
 ];
+
+function Wordmark() {
+  return (
+    <Link href="/" className="flex shrink-0 items-center gap-2">
+      <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-graphite">
+        <span className="font-inter text-[11px] font-semibold leading-none text-canvas">
+          L
+        </span>
+      </span>
+      <span className="font-inter text-[13px] font-medium tracking-[-0.01em] text-graphite">
+        LeetAptitude
+      </span>
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
-  // Close mobile menu on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  // Track scroll position for navbar background
   useEffect(() => {
     function handleScroll() {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 12);
     }
-    handleScroll(); // check on mount
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-colors duration-250 ${
+      className={`sticky top-0 z-50 transition-colors duration-200 ${
         scrolled
-          ? "border-b border-mist bg-canvas shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-          : "bg-transparent"
+          ? "border-b border-mist bg-canvas"
+          : "border-b border-transparent bg-canvas"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-[var(--page-max-width)] items-center justify-between gap-4 px-6">
-        {/* ── Left: Brand ─────────────────────────────────────────────── */}
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Logo className="h-7 w-7" />
-          <span className="font-polysans text-base tracking-[-0.02em] text-graphite">
-            LeetAptitude
-          </span>
-        </Link>
+      <div className="mx-auto flex h-[52px] max-w-[1112px] items-center justify-between gap-4 px-6">
+        <Wordmark />
 
-        {/* ── Center: Navigation ──────────────────────────────────────── */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded-nav-pills px-4 py-1.5 font-polysans text-15 tracking-[-0.02em] transition-colors ${
-                  active
-                    ? "text-graphite"
-                    : "text-slate hover:text-graphite"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <nav className="hidden items-center gap-6 md:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="font-inter text-[12px] font-normal text-steel transition-colors hover:text-graphite"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        {/* ── Right: Theme + Auth ─────────────────────────────────────── */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <ThemeToggle />
-
-          <Button render={<Link href="/register" />} variant="primary" size="sm" className="hidden sm:inline-flex">
-            Get Started
-            <ArrowRightIcon className="h-3.5 w-3.5 btn-arrow transition-transform duration-150" />
+          <Button
+            render={<Link href="/register" />}
+            variant="primary"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
+            Start Practicing
           </Button>
-
-          {/* Mobile menu toggle */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label="Toggle menu"
-            className="rounded-full p-2 text-graphite transition-colors hover:bg-ash md:hidden"
+            className="rounded-md p-1.5 text-steel transition-colors hover:bg-ash hover:text-graphite md:hidden"
           >
-            {open ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            {open ? <XIcon className="h-4 w-4" /> : <MenuIcon className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      {/* ── Mobile menu ─────────────────────────────────────────────── */}
       {open && (
-        <div className="border-t border-mist bg-canvas px-6 py-4 md:hidden">
-          <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className={`rounded-lg px-3 py-2 font-polysans text-15 tracking-[-0.02em] transition-colors ${
-                    active
-                      ? "bg-ash text-graphite"
-                      : "text-slate hover:bg-ash hover:text-graphite"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-            <div className="mt-3 border-t border-mist pt-4">
-              <Button render={<Link href="/register" onClick={() => setOpen(false)} />} variant="primary" size="sm" className="w-full">
-                Get Started
-                <ArrowRightIcon className="h-3.5 w-3.5 btn-arrow transition-transform duration-150" />
+        <div className="border-t border-mist bg-canvas px-6 py-3 md:hidden">
+          <nav className="flex flex-col">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-2 py-2 font-inter text-[13px] text-steel transition-colors hover:bg-ash hover:text-graphite"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="mt-2 border-t border-mist pt-3 pb-1">
+              <Button
+                render={<Link href="/register" onClick={() => setOpen(false)} />}
+                variant="primary"
+                size="md"
+                className="w-full"
+              >
+                Start Practicing
               </Button>
             </div>
           </nav>

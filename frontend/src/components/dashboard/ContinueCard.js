@@ -7,7 +7,7 @@ export default function ContinueCard() {
   const pct = Math.round((continueSession.done / continueSession.total) * 100);
 
   return (
-    <div className="w-fit max-w-full rounded-2xl border border-mist bg-canvas px-5 py-4 transition-all hover:border-graphite hover:shadow-sm">
+    <div className="w-fit max-w-full rounded-cards border border-mist bg-canvas px-5 py-4 transition-colors duration-150 hover:border-mist-strong">
       <div className="flex items-start justify-between gap-6">
         {/* Left: Info */}
         <div className="min-w-0">
@@ -15,7 +15,7 @@ export default function ContinueCard() {
             <p className="font-polysans text-13 tracking-[-0.02em] text-slate">
               Continue Practice
             </p>
-            <span className="rounded-tags bg-fog px-2 py-0.5 text-11 text-brass">
+            <span className="rounded-tags bg-ash px-2 py-0.5 text-11 text-steel">
               {continueSession.mode}
             </span>
           </div>
@@ -32,9 +32,9 @@ export default function ContinueCard() {
               </span>
               <span className="font-polysans text-graphite">{pct}%</span>
             </div>
-            <div className="mt-1.5 h-1.5 w-full rounded-full bg-fog">
+            <div className="mt-1.5 h-1.5 w-full rounded-full bg-mist">
               <div
-                className="h-full rounded-full bg-ember"
+                className="h-full rounded-full bg-graphite"
                 style={{ width: `${pct}%` }}
               />
             </div>

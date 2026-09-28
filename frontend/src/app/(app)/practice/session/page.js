@@ -47,18 +47,18 @@ function FlagIcon({ className, filled }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// DIFFICULTY COLORS
+// DIFFICULTY — restrained monochrome chips; correctness alone uses color.
 // ═══════════════════════════════════════════════════════════════════════
 const DIFF_COLORS = {
-  Easy: "bg-success/10 text-success",
-  Medium: "bg-brass/10 text-brass",
-  Hard: "bg-ember/10 text-ember",
+  Easy: "bg-ash text-steel",
+  Medium: "bg-ash text-steel",
+  Hard: "bg-ash text-steel",
 };
 
 const DIFF_DOT_COLORS = {
-  Easy: "bg-success",
-  Medium: "bg-brass",
-  Hard: "bg-ember",
+  Easy: "bg-faint",
+  Medium: "bg-slate",
+  Hard: "bg-graphite",
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -122,8 +122,8 @@ function SessionHeader({ onExit, showExitConfirm, setShowExitConfirm }) {
 
             {/* Timer (test mode only) */}
             {mode === "TEST" && (
-              <div className="flex items-center gap-1.5 rounded-full bg-fog px-3 py-1.5">
-                <ClockIcon className="h-3.5 w-3.5 text-ember" />
+              <div className="flex items-center gap-1.5 rounded-full bg-ash px-3 py-1.5">
+                <ClockIcon className="h-3.5 w-3.5 text-steel" />
                 <span className="font-polysans text-15 tracking-[-0.02em] text-graphite tabular-nums">
                   {formatTime(elapsedSeconds)}
                 </span>
@@ -142,8 +142,8 @@ function SessionHeader({ onExit, showExitConfirm, setShowExitConfirm }) {
 
       {/* Exit confirmation modal */}
       {showExitConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-graphite/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-2xl border border-mist bg-canvas p-6 shadow-xl">
+        <div className="modal-overlay fixed inset-0 z-[100] flex items-center justify-center bg-graphite/40">
+          <div className="modal-panel mx-4 w-full max-w-sm rounded-cards border border-mist bg-canvas p-6 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.25)]">
             <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
               Exit Practice Session?
             </h2>
@@ -211,7 +211,7 @@ function QuestionDisplay() {
             onClick={() => toggleMark(currentQuestion.id)}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-13 font-polysans transition-colors ${
               currentMarked
-                ? "bg-ember/10 text-ember"
+                ? "bg-ash font-medium text-graphite"
                 : "text-slate hover:bg-ash hover:text-graphite"
             }`}
             aria-label={currentMarked ? "Unmark for review" : "Mark for review"}
@@ -236,18 +236,18 @@ function QuestionDisplay() {
                   key={i}
                   type="button"
                   onClick={() => selectOption(currentQuestion.id, i)}
-                  className={`group flex w-full items-center gap-4 rounded-xl border px-5 py-3.5 text-left transition-all ${
+                  className={`group flex w-full items-center gap-4 rounded-xl border px-5 py-3.5 text-left transition-colors duration-150 ${
                     isSelected
-                      ? "border-ember bg-ember/5 shadow-sm"
-                      : "border-mist hover:border-graphite hover:shadow-sm"
+                      ? "border-graphite bg-canvas"
+                      : "border-mist hover:border-mist-strong"
                   }`}
                 >
                   {/* Option label */}
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-polysans text-13 ${
                       isSelected
-                        ? "bg-ember text-inverse"
-                        : "bg-fog text-slate group-hover:bg-graphite group-hover:text-inverse"
+                        ? "bg-graphite text-inverse"
+                        : "bg-ash text-slate group-hover:text-graphite"
                     }`}
                   >
                     {optionLabels[i]}
@@ -262,7 +262,7 @@ function QuestionDisplay() {
                   </span>
                   {/* Selected check */}
                   {isSelected && (
-                    <CheckIcon className="ml-auto h-4 w-4 shrink-0 text-ember" />
+                    <CheckIcon className="ml-auto h-4 w-4 shrink-0 text-graphite" />
                   )}
                 </button>
               );
@@ -333,8 +333,8 @@ function QuestionNavigator() {
   return (
     <div className="lg:sticky lg:top-20 w-full lg:w-[300px] shrink-0">
       {/* Progress card */}
-      <div className="rounded-2xl border border-mist bg-canvas p-5">
-        <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+      <div className="rounded-cards border border-mist bg-canvas p-5">
+        <h3 className="font-inter text-[13px] font-medium text-graphite">
           Session Progress
         </h3>
 
@@ -344,9 +344,9 @@ function QuestionNavigator() {
             <span className="text-slate">Progress</span>
             <span className="font-polysans text-graphite">{progress}%</span>
           </div>
-          <div className="mt-2 h-2 w-full rounded-full bg-fog">
+          <div className="mt-2 h-1.5 w-full rounded-full bg-mist">
             <div
-              className="h-full rounded-full bg-ember transition-all duration-300"
+              className="h-full rounded-full bg-graphite transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -354,20 +354,20 @@ function QuestionNavigator() {
 
         {/* Stats */}
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-fog px-2 py-2.5 text-center">
-            <p className="font-polysans text-subheading tracking-[-0.02em] text-success">
+          <div className="rounded-lg bg-ash px-2 py-2.5 text-center">
+            <p className="font-inter text-[15px] font-medium text-graphite">
               {answeredCount}
             </p>
             <p className="text-13 text-slate">Answered</p>
           </div>
-          <div className="rounded-xl bg-fog px-2 py-2.5 text-center">
-            <p className="font-polysans text-subheading tracking-[-0.02em] text-ember">
+          <div className="rounded-lg bg-ash px-2 py-2.5 text-center">
+            <p className="font-inter text-[15px] font-medium text-graphite">
               {unanswered}
             </p>
             <p className="text-13 text-slate">Remaining</p>
           </div>
-          <div className="rounded-xl bg-fog px-2 py-2.5 text-center">
-            <p className="font-polysans text-subheading tracking-[-0.02em] text-brass">
+          <div className="rounded-lg bg-ash px-2 py-2.5 text-center">
+            <p className="font-inter text-[15px] font-medium text-graphite">
               {markedCount}
             </p>
             <p className="text-13 text-slate">Marked</p>
@@ -376,8 +376,8 @@ function QuestionNavigator() {
       </div>
 
       {/* Question grid */}
-      <div className="mt-4 rounded-2xl border border-mist bg-canvas p-5">
-        <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+      <div className="mt-4 rounded-cards border border-mist bg-canvas p-5">
+        <h3 className="font-inter text-[13px] font-medium text-graphite">
           Questions
         </h3>
 
@@ -392,18 +392,18 @@ function QuestionNavigator() {
                 key={q.id}
                 type="button"
                 onClick={() => goTo(i)}
-                className={`relative flex h-9 w-full items-center justify-center rounded-lg font-polysans text-13 transition-all ${
+                className={`relative flex h-9 w-full items-center justify-center rounded-lg font-inter text-[12px] transition-colors duration-150 ${
                   isCurrent
-                    ? "bg-graphite text-inverse shadow-sm"
+                    ? "bg-graphite text-inverse"
                     : isAnswered
-                    ? "bg-success/10 text-success hover:bg-success/20"
-                    : "bg-fog text-slate hover:bg-mist"
+                    ? "bg-ash font-medium text-graphite"
+                    : "border border-mist bg-canvas text-slate hover:border-mist-strong hover:text-graphite"
                 }`}
                 aria-label={`Question ${i + 1}${isAnswered ? " (answered)" : ""}${isMarked ? " (marked)" : ""}`}
               >
                 {i + 1}
                 {isMarked && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-ember" />
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-graphite" />
                 )}
               </button>
             );
@@ -417,15 +417,15 @@ function QuestionNavigator() {
             Current
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-success/10" />
+            <span className="h-3 w-3 rounded bg-ash" />
             Answered
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-fog" />
+            <span className="h-3 w-3 rounded border border-mist bg-canvas" />
             Unanswered
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-ember" />
+            <span className="h-2 w-2 rounded-full bg-graphite" />
             Marked
           </span>
         </div>
@@ -444,8 +444,8 @@ function QuestionNavigator() {
 
       {/* Confirm submit modal */}
       {showConfirmSubmit && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-graphite/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-2xl border border-mist bg-canvas p-6 shadow-xl">
+        <div className="modal-overlay fixed inset-0 z-[100] flex items-center justify-center bg-graphite/40">
+          <div className="modal-panel mx-4 w-full max-w-sm rounded-cards border border-mist bg-canvas p-6 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.25)]">
             <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
               Submit Practice Session?
             </h2>
@@ -544,7 +544,7 @@ export default function PracticeSessionPage({ params, searchParams }) {
         <p className="text-15 text-steel">No active session.</p>
         <Link
           href="/topics"
-          className="mt-4 inline-flex items-center gap-1 font-polysans text-13 tracking-[-0.02em] text-ember hover:underline"
+          className="mt-4 inline-flex items-center gap-1 font-inter text-[12px] text-steel transition-colors hover:text-graphite"
         >
           <ArrowLeftIcon className="h-3.5 w-3.5" />
           Browse Topics

@@ -239,69 +239,65 @@ export default function SubtopicsPage({ params }) {
         </select>
       </div>
 
-      {/* ── 5. Subtopic Grid ────────────────────────────────────────────── */}
+      {/* ── 5. Subtopic List ────────────────────────────────────────────── */}
       {filtered.length > 0 ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-mist bg-canvas">
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_90px_90px_140px] gap-4 border-b border-mist bg-fog/50 px-5 py-3">
+            <span className="text-13 font-polysans text-slate">Subtopic</span>
+            <span className="text-13 font-polysans text-slate">Questions</span>
+            <span className="text-13 font-polysans text-slate">Sheets</span>
+            <span className="text-13 font-polysans text-slate">Progress</span>
+          </div>
+
+          {/* Table rows */}
           {filtered.map((subtopic) => {
             const Icon = getSubtopicIcon(subtopic.id);
             const progress = subtopicProgress[subtopic.id] ?? null;
             const solved = progress?.solved ?? 0;
             const total = progress?.total ?? subtopic.questions;
             const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
-
-            // Sheet count for this subtopic
             const sheetCount = (practiceSheets[subtopic.id] ?? []).length;
 
             return (
               <Link
                 key={subtopic.id}
                 href={`/topics/${topicId}/${subtopic.id}`}
-                className="group flex flex-col rounded-2xl border border-mist bg-canvas p-5 transition-all hover:border-graphite hover:shadow-sm"
+                className="group grid grid-cols-[1fr_90px_90px_140px] items-center gap-4 border-b border-mist px-5 py-4 transition-colors last:border-b-0 hover:bg-fog/30"
               >
-                {/* Top: Icon + Name */}
-                <div className="flex items-start gap-3">
+                {/* Subtopic info */}
+                <div className="flex items-center gap-3">
                   {Icon && (
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ash text-graphite transition-colors group-hover:bg-graphite group-hover:text-inverse">
-                      <Icon className="h-5 w-5" />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ash text-graphite transition-colors group-hover:bg-graphite group-hover:text-inverse">
+                      <Icon className="h-4 w-4" />
                     </span>
                   )}
-                  <div className="min-w-0">
-                    <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                      {subtopic.name}
-                    </p>
-                  </div>
+                  <p className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
+                    {subtopic.name}
+                  </p>
                 </div>
 
-                {/* Metadata */}
-                <div className="mt-4 flex items-center gap-4 text-13 text-slate">
-                  <span>{subtopic.questions} Questions</span>
-                  {sheetCount > 0 && (
-                    <>
-                      <span>·</span>
-                      <span>
-                        {sheetCount} Sheet{sheetCount !== 1 ? "s" : ""}
-                      </span>
-                    </>
-                  )}
-                </div>
+                {/* Questions */}
+                <span className="text-13 text-steel">
+                  {subtopic.questions}
+                </span>
 
-                {/* Bottom: Progress */}
-                <div className="mt-auto pt-4">
-                  <div className="flex items-center justify-between text-13">
-                    <span className="text-slate">Your Progress</span>
-                    <span className="font-polysans text-graphite">{pct}%</span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-fog">
+                {/* Sheets */}
+                <span className="text-13 text-steel">
+                  {sheetCount > 0 ? sheetCount : "—"}
+                </span>
+
+                {/* Progress */}
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-full rounded-full bg-fog">
                     <div
                       className="h-full rounded-full bg-ember transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                </div>
-
-                {/* Arrow */}
-                <div className="mt-4 flex justify-end">
-                  <ArrowRightIcon className="h-4 w-4 text-slate transition-colors group-hover:text-ember" />
+                  <span className="shrink-0 font-polysans text-13 text-graphite">
+                    {pct}%
+                  </span>
                 </div>
               </Link>
             );

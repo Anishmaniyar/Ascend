@@ -1,4 +1,4 @@
-# LeetAptitude Backend
+# Ascend Backend
 
 > A production-inspired backend for an aptitude preparation platform that combines structured learning, company-specific assessments, practice sessions, and detailed learning analytics.
 
@@ -34,7 +34,7 @@ Project Progress
 
 Most aptitude platforms simply display questions.
 
-LeetAptitude aims to simulate an actual placement preparation workflow.
+Ascend aims to simulate an actual placement preparation workflow.
 
 Instead of only solving questions, users can:
 

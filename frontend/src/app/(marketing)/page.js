@@ -1,27 +1,22 @@
-import Hero from "@/components/marketing/Hero";
+import Hero from "@/components/marketing/editorial/Hero";
+import { FeatureIntro, BentoGrid } from "@/components/marketing/editorial/Bento";
 import {
-  TheProblemSection,
-  CoreLearningLoopSection,
-  PlacementSection,
-  CompetitionSection,
-  CTASection,
-} from "@/components/marketing/ProductWalkthrough";
+  Showcase,
+  ContentFormats,
+  Philosophy,
+} from "@/components/marketing/editorial/Sections";
+import FinalCTA from "@/components/marketing/editorial/FinalCTA";
 
 export default function LandingPage() {
   return (
     <>
       <Hero />
-      <TheProblemSection />
-      <div id="topics">
-        <CoreLearningLoopSection />
-      </div>
-      <div id="sheets">
-        <PlacementSection />
-      </div>
-      <div id="leaderboard">
-        <CompetitionSection />
-      </div>
-      <CTASection />
+      <FeatureIntro />
+      <BentoGrid />
+      <Showcase />
+      <ContentFormats />
+      <Philosophy />
+      <FinalCTA />
     </>
   );
 }

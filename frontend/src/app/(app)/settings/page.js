@@ -126,7 +126,7 @@ export default function SettingsPage() {
                 Experience
               </h2>
               <p className="mt-1 text-13 text-slate">
-                Manage your LeetAptitude experience.
+                Manage your Ascend experience.
               </p>
             </div>
 

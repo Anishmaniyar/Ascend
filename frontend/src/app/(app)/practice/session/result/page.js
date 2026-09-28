@@ -12,9 +12,9 @@ import Button from "@/components/ui/Button";
 // DIFFICULTY COLORS
 // ═══════════════════════════════════════════════════════════════════════
 const DIFF_COLORS = {
-  Easy: "bg-success/10 text-success",
-  Medium: "bg-brass/10 text-brass",
-  Hard: "bg-ember/10 text-ember",
+  Easy: "bg-ash text-steel",
+  Medium: "bg-ash text-steel",
+  Hard: "bg-ash text-steel",
 };
 
 const DIFF_DOT_COLORS = {
@@ -100,7 +100,7 @@ export default function PracticeSessionResultPage({ searchParams }) {
         <p className="text-15 text-steel">No session results available.</p>
         <Link
           href="/topics"
-          className="mt-4 inline-flex items-center gap-1 font-polysans text-13 tracking-[-0.02em] text-ember hover:underline"
+          className="mt-4 inline-flex items-center gap-1 font-inter text-[12px] text-steel transition-colors hover:text-graphite"
         >
           <ArrowLeftIcon className="h-3.5 w-3.5" />
           Browse Topics
@@ -189,8 +189,8 @@ export default function PracticeSessionResultPage({ searchParams }) {
               </p>
               <p className="mt-1 text-13 text-slate">Unanswered</p>
             </div>
-            <div className="rounded-xl bg-ember/5 px-4 py-4 text-center border border-ember/10">
-              <p className="font-polysans text-heading tracking-[-0.02em] text-ember">
+            <div className="rounded-xl bg-ash px-4 py-4 text-center border border-mist">
+              <p className="font-polysans text-heading tracking-[-0.02em] text-graphite">
                 {result.accuracy}%
               </p>
               <p className="mt-1 text-13 text-slate">Accuracy</p>
@@ -225,7 +225,7 @@ export default function PracticeSessionResultPage({ searchParams }) {
             <button
               type="button"
               onClick={() => setShowReview((v) => !v)}
-              className="font-polysans text-13 text-ember hover:underline"
+              className="font-inter text-[12px] text-steel transition-colors hover:text-graphite"
             >
               {showReview ? "Hide Review" : "Show Review"}
             </button>

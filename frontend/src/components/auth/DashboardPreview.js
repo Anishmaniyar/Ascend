@@ -1,6 +1,6 @@
 /**
  * DashboardPreview — a static, non-interactive representation of the
- * LeetAptitude dashboard used on the sign-up page's right column.
+ * Ascend dashboard used on the sign-up page's right column.
  *
  * It communicates the product at a glance: metrics, heatmap, recent practice,
  * and topic progress — all rendered with the real design-system tokens so it
@@ -14,15 +14,15 @@ function MetricRing({ label, value, valueLabel, percent }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <RingProgress value={percent} size={72} strokeWidth={5}>
-        <span className="font-polysans text-[15px] tracking-[-0.02em] text-graphite">
+        <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">
           {value}
         </span>
       </RingProgress>
-      <span className="text-[11px] uppercase tracking-[0.06em] text-slate">
+      <span className="font-polysans text-11 uppercase tracking-[0.06em] text-slate">
         {label}
       </span>
       {valueLabel && (
-        <span className="text-[11px] text-slate">{valueLabel}</span>
+        <span className="font-polysans text-11 text-slate">{valueLabel}</span>
       )}
     </div>
   );
@@ -33,10 +33,10 @@ function StatPill({ icon, value, label }) {
     <div className="flex items-center gap-2 rounded-[8px] bg-fog px-3 py-2">
       <span className="text-ember">{icon}</span>
       <div className="flex flex-col">
-        <span className="font-polysans text-[13px] tracking-[-0.02em] text-graphite">
+        <span className="font-polysans text-13 tracking-[-0.02em] text-graphite">
           {value}
         </span>
-        <span className="text-[10px] text-slate">{label}</span>
+        <span className="font-polysans text-11 text-slate">{label}</span>
       </div>
     </div>
   );
@@ -47,11 +47,11 @@ function DifficultyBar({ label, solved, total, color }) {
   return (
     <div className="flex items-center gap-2">
       <span className={`h-1.5 w-1.5 rounded-full ${color}`} />
-      <span className="w-12 text-[10px] text-slate">{label}</span>
+      <span className="w-12 font-polysans text-11 text-slate">{label}</span>
       <div className="h-1 flex-1 rounded-full bg-fog">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="w-6 text-right font-polysans text-[10px] text-graphite">
+      <span className="w-6 text-right font-polysans text-11 text-graphite">
         {solved}
       </span>
     </div>
@@ -119,18 +119,18 @@ export default function DashboardPreview() {
         {/* Header row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-fog font-polysans text-[11px] text-graphite">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-fog font-polysans text-11 text-graphite">
               AM
             </div>
             <div>
               <p className="font-polysans text-[13px] tracking-[-0.02em] text-graphite">
                 Anish Maniyar
               </p>
-              <p className="text-[10px] text-slate">7 day streak 🔥</p>
+              <p className="font-polysans text-11 text-slate">7 day streak 🔥</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <span className="rounded-full bg-fog px-2.5 py-0.5 text-[10px] text-slate">
+            <span className="rounded-full bg-fog px-2.5 py-0.5 font-polysans text-11 text-slate">
               Dashboard
             </span>
           </div>
@@ -140,16 +140,16 @@ export default function DashboardPreview() {
         <div className="rounded-xl border border-mist bg-canvas p-3.5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.06em] text-slate">
+              <p className="font-polysans text-11 uppercase tracking-[0.06em] text-slate">
                 Continue Practice
               </p>
-              <p className="mt-1 font-polysans text-[13px] tracking-[-0.02em] text-graphite">
+              <p className="mt-1 font-polysans text-13 tracking-[-0.02em] text-graphite">
                 Profit &amp; Loss
               </p>
-              <p className="text-[10px] text-slate">Quantitative Aptitude</p>
+              <p className="font-polysans text-11 text-slate">Quantitative Aptitude</p>
             </div>
             <div className="flex flex-col items-end gap-1.5">
-              <span className="font-polysans text-[11px] text-graphite">12/20</span>
+              <span className="font-polysans text-11 text-graphite">12/20</span>
               <div className="h-1 w-16 rounded-full bg-fog">
                 <div className="h-full w-[60%] rounded-full bg-ember" />
               </div>
@@ -176,7 +176,7 @@ export default function DashboardPreview() {
         <div className="grid grid-cols-[1fr_1fr] gap-4">
           {/* Activity */}
           <div className="rounded-xl bg-fog/50 p-3">
-            <p className="mb-2 text-[11px] uppercase tracking-[0.06em] text-slate">
+            <p className="mb-2 font-polysans text-11 uppercase tracking-[0.06em] text-slate">
               Activity
             </p>
             <MiniHeatmap />
@@ -184,7 +184,7 @@ export default function DashboardPreview() {
 
           {/* Topic progress */}
           <div className="space-y-2.5 rounded-xl bg-fog/50 p-3">
-            <p className="text-[11px] uppercase tracking-[0.06em] text-slate">
+            <p className="font-polysans text-11 uppercase tracking-[0.06em] text-slate">
               Topic Progress
             </p>
             <DifficultyBar label="Quant" solved={145} total={250} color="bg-ember" />
@@ -209,10 +209,10 @@ export default function DashboardPreview() {
                 key={row.sub}
                 className="flex items-center justify-between rounded-lg bg-canvas px-2.5 py-1.5"
               >
-                <span className="font-polysans text-[11px] text-graphite">
+                <span className="font-polysans text-11 text-graphite">
                   {row.sub}
                 </span>
-                <div className="flex items-center gap-3 text-[10px] text-slate">
+                <div className="flex items-center gap-3 font-polysans text-11 text-slate">
                   <span>{row.score}</span>
                   <span className="text-success">{row.acc}</span>
                   <span>{row.when}</span>

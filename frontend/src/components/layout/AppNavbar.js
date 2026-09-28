@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Bell, Flame, ChevronDown, LogOut, Settings, BarChart3, LayoutDashboard, Award } from "lucide-react";
 import { user } from "@/lib/mock/dashboard";
-import Logo from "@/components/ui/Logo";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
@@ -46,9 +45,13 @@ export default function AppNavbar() {
         {/* Left: Brand + Nav links */}
         <div className="flex items-center gap-8">
           {/* Logo — no navigation for logged-in users */}
-          <div className="flex shrink-0 items-center gap-2.5 select-none">
-            <Logo className="h-7 w-7" />
-            <span className="font-polysans text-base tracking-[-0.02em] text-graphite">
+          <div className="flex shrink-0 items-center gap-2 select-none">
+            <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-graphite">
+              <span className="font-inter text-[11px] font-semibold leading-none text-canvas">
+                L
+              </span>
+            </span>
+            <span className="font-inter text-[13px] font-medium tracking-[-0.01em] text-graphite">
               LeetAptitude
             </span>
           </div>
@@ -61,10 +64,10 @@ export default function AppNavbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-nav-pills px-3.5 py-1.5 font-polysans text-15 tracking-[-0.02em] transition-colors ${
+                  className={`rounded-nav-pills px-3.5 py-1.5 font-inter text-[13px] transition-colors ${
                     active
-                      ? "bg-ash text-graphite"
-                      : "text-slate hover:text-graphite"
+                      ? "bg-ash font-medium text-graphite"
+                      : "text-steel hover:text-graphite"
                   }`}
                 >
                   {link.label}
@@ -119,7 +122,7 @@ export default function AppNavbar() {
 
             {/* Dropdown menu */}
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-mist bg-canvas py-1.5 shadow-lg">
+              <div className="dropdown-panel absolute right-0 top-full mt-2 w-52 rounded-cards border border-mist bg-canvas py-1.5 shadow-[0_8px_28px_-12px_rgba(0,0,0,0.18)]">
                 {/* User info header */}
                 <div className="border-b border-mist px-4 py-3">
                   <p className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
@@ -169,14 +172,14 @@ export default function AppNavbar() {
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`shrink-0 rounded-nav-pills px-3.5 py-1.5 font-polysans text-15 tracking-[-0.02em] transition-colors ${
-                  active
-                    ? "bg-ash text-graphite"
-                    : "text-slate hover:text-graphite"
-                }`}
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`shrink-0 rounded-nav-pills px-3.5 py-1.5 font-inter text-[13px] transition-colors ${
+                    active
+                      ? "bg-ash font-medium text-graphite"
+                      : "text-steel hover:text-graphite"
+                  }`}
               >
                 {link.label}
               </Link>

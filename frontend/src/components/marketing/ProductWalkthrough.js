@@ -16,6 +16,7 @@ import {
   FlameIcon,
   SearchIcon,
   SparklesIcon,
+  RotateCcwIcon,
 } from "@/components/ui/icons";
 import Button from "@/components/ui/Button";
 import { topics } from "@/lib/mock/landing";
@@ -72,25 +73,22 @@ function useCountUp(target, duration = 1200, active = false) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SECTION 1 — THE PROBLEM → THE IDEA
+   SECTION 1 — THE PROBLEM → THE SOLUTION
    ═══════════════════════════════════════════════════════════════════════ */
 
 const SCATTERED_ITEMS = [
-  { label: "Profit & Loss", type: "topic", x: 5, y: 10 },
-  { label: "24 Qs", type: "stat", x: 75, y: 6 },
-  { label: "MEDIUM", type: "tag", x: 40, y: 3 },
-  { label: "Percentage", type: "topic", x: 58, y: 26 },
-  { label: "12 Qs", type: "stat", x: 12, y: 32 },
-  { label: "HARD", type: "tag", x: 82, y: 36 },
-  { label: "Seating Arr.", type: "topic", x: 44, y: 48 },
-  { label: "81%", type: "stat", x: 70, y: 53 },
-  { label: "EASY", type: "tag", x: 3, y: 52 },
-  { label: "Probability", type: "topic", x: 30, y: 66 },
-  { label: "15 Qs", type: "stat", x: 88, y: 18 },
-  { label: "Blood Rel.", type: "topic", x: 62, y: 70 },
-  { label: "Time & Work", type: "topic", x: 15, y: 78 },
-  { label: "1200 Qs", type: "stat", x: 52, y: 83 },
-  { label: "?", type: "stat", x: 78, y: 80 },
+  { label: "Profit & Loss", type: "topic" },
+  { label: "24 Qs", type: "stat" },
+  { label: "MEDIUM", type: "tag" },
+  { label: "Percentage", type: "topic" },
+  { label: "12 Qs", type: "stat" },
+  { label: "HARD", type: "tag" },
+  { label: "Seating Arr.", type: "topic" },
+  { label: "81%", type: "stat" },
+  { label: "EASY", type: "tag" },
+  { label: "Probability", type: "topic" },
+  { label: "15 Qs", type: "stat" },
+  { label: "Blood Rel.", type: "topic" },
 ];
 
 const STRUCTURED_STEPS = ["Topic", "Subtopic", "Practice", "Result", "Improve"];
@@ -101,74 +99,90 @@ export function TheProblemSection() {
 
   useEffect(() => {
     if (!visible) return;
-    const t1 = setTimeout(() => setPhase("transitioning"), 1200);
-    const t2 = setTimeout(() => setPhase("structured"), 2400);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    const t1 = setTimeout(() => setPhase("converging"), 800);
+    const t2 = setTimeout(() => setPhase("structured"), 1800);
+    const t3 = setTimeout(() => setPhase("revealed"), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [visible]);
 
   return (
     <section className="relative overflow-hidden bg-canvas py-24 md:py-32">
       <div className="mx-auto max-w-[var(--page-max-width)] px-6">
+        {/* ── Headline ──────────────────────────────────────────────── */}
         <div
           ref={ref}
           className={`mx-auto max-w-[640px] text-center transition-all duration-700 ${
             visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <h2 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+          <h2 className="font-polysans text-heading-lg font-normal tracking-[-0.02em] text-graphite">
             Aptitude preparation becomes difficult when you don&apos;t know
             what to practice next.
           </h2>
         </div>
 
-        {/* ── Visual: Scattered → Structured → Real Topics Page ── */}
+        {/* ── Visual: Scattered → Converge → Structured → Product ──── */}
         <div className="relative mx-auto mt-16 h-[300px] max-w-[800px] overflow-hidden md:h-[340px]">
-          {/* Scattered pills */}
-          {SCATTERED_ITEMS.map((item, i) => {
-            const typeStyles = {
-              topic: "border-mist bg-ash text-graphite",
-              stat: "border-ember/30 bg-ember/5 text-ember",
-              tag: "border-brass/30 bg-brass/5 text-brass",
-            };
-            return (
-              <div
-                key={i}
-                className={`absolute rounded-lg border px-3 py-1.5 text-13 font-medium transition-all duration-1000 ease-out ${
-                  typeStyles[item.type]
-                } ${
-                  phase === "structured"
-                    ? "pointer-events-none scale-0 opacity-0"
-                    : phase === "transitioning"
-                      ? "scale-90 opacity-60"
-                      : "opacity-100"
-                }`}
-                style={{
-                  left: `${item.x}%`,
-                  top: `${item.y}%`,
-                  transitionDelay: `${i * 30}ms`,
-                }}
-              >
-                {item.label}
-              </div>
-            );
-          })}
 
-          {/* Structured flow → Real Topics Page mockup */}
+          {/* Phase 1 & 2: Scattered chips that converge */}
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ${
-              phase === "structured"
-                ? "translate-y-0 opacity-100"
-                : "translate-y-8 opacity-0"
+            className={`absolute inset-0 flex flex-wrap items-center justify-center gap-3 transition-all duration-1000 ${
+              phase === "revealed"
+                ? "scale-95 opacity-0"
+                : "scale-100 opacity-100"
             }`}
           >
-            {/* Step flow bar */}
+            {SCATTERED_ITEMS.map((item, i) => {
+              const typeStyles = {
+                topic: "border-mist bg-ash text-graphite",
+                stat: "border-ember/30 bg-ember/5 text-ember",
+                tag: "border-brass/30 bg-brass/5 text-brass",
+              };
+
+              // When converging, chips cluster to center
+              const convergeStyle = phase === "converging" || phase === "structured"
+                ? {
+                    transform: `translate(${
+                      (i % 3 - 1) * 8 - (i % 3 - 1) * 40
+                    }px, ${
+                      (Math.floor(i / 3) - 1.5) * 6 - (Math.floor(i / 3) - 1.5) * 30
+                    }px)`,
+                    opacity: phase === "structured" ? 0 : 0.7,
+                  }
+                : {};
+
+              return (
+                <div
+                  key={i}
+                  className={`rounded-lg border px-3 py-1.5 text-13 font-medium transition-all duration-700 ease-out ${
+                    typeStyles[item.type]
+                  }`}
+                  style={{
+                    ...convergeStyle,
+                    transitionDelay: `${i * 30}ms`,
+                  }}
+                >
+                  {item.label}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Phase 2 & 3: Structured flow */}
+          <div
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ${
+              phase === "structured" || phase === "revealed"
+                ? "translate-y-0 opacity-100"
+                : "translate-y-6 opacity-0"
+            }`}
+          >
             <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
               {STRUCTURED_STEPS.map((step, i) => (
                 <span key={step} className="flex items-center gap-2">
-                  <span className="rounded-xl border border-mist bg-ash px-4 py-2.5 text-15 font-medium text-graphite shadow-sm">
+                  <span
+                    className="rounded-xl border border-mist bg-ash px-4 py-2.5 font-polysans text-15 tracking-[-0.02em] text-graphite transition-all duration-500"
+                    style={{ transitionDelay: `${i * 100}ms` }}
+                  >
                     {step}
                   </span>
                   {i < STRUCTURED_STEPS.length - 1 && (
@@ -177,9 +191,54 @@ export function TheProblemSection() {
                 </span>
               ))}
             </div>
-            <p className="mt-8 max-w-[44ch] text-center text-15 leading-relaxed text-steel">
-              One clear path from topic selection to measurable progress.
-            </p>
+          </div>
+
+          {/* Phase 3: Product reveal — real topics page mockup */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ${
+              phase === "revealed"
+                ? "translate-y-0 opacity-100"
+                : "translate-y-8 opacity-0"
+            }`}
+          >
+            <div className="w-full max-w-[700px] rounded-2xl border border-mist bg-canvas p-5 shadow-sm md:p-6">
+              {/* Mini browser chrome */}
+              <div className="mb-4 flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-mist" />
+                <span className="h-2.5 w-2.5 rounded-full bg-mist" />
+                <span className="h-2.5 w-2.5 rounded-full bg-mist" />
+                <span className="ml-2 flex-1 rounded-lg bg-fog px-3 py-1 text-13 text-slate">
+                  ascend.app/topics
+                </span>
+              </div>
+
+              {/* Mini topic cards */}
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                {topics.slice(0, 3).map((t, i) => (
+                  <div
+                    key={t.id}
+                    className="rounded-xl border border-mist bg-fog p-3 transition-all duration-500"
+                    style={{ transitionDelay: `${i * 100 + 200}ms` }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-canvas text-13 text-graphite">
+                        {t.title.charAt(0)}
+                      </span>
+                      <span className="font-polysans text-13 tracking-[-0.02em] text-graphite">
+                        {t.title}
+                      </span>
+                    </div>
+                    <div className="mt-2.5 h-1 w-full rounded-full bg-canvas">
+                      <div className="h-full w-[45%] rounded-full bg-ember" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-4 text-center text-13 text-slate">
+                One clear path from topic selection to measurable progress.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -199,7 +258,6 @@ const LOOP_PHASES = [
   { step: 4, label: "Improve", desc: "Use your results to guide what to practice next." },
 ];
 
-/* Topic icon components (matching the actual app) */
 import {
   Calculator,
   Brain,
@@ -223,12 +281,7 @@ const SUBTOPIC_ICONS = {
 const MOCK_QUESTION = {
   title: "A shopkeeper buys goods at 20% discount on the marked price. He marks it 30% above the price he paid. After giving a 10% discount on the marked price, find his overall profit percent.",
   difficulty: "Hard",
-  options: [
-    "12.4%",
-    "14.4%",
-    "16.8%",
-    "18.2%",
-  ],
+  options: ["12.4%", "14.4%", "16.8%", "18.2%"],
   correctIndex: 1,
 };
 
@@ -236,17 +289,32 @@ export function CoreLearningLoopSection() {
   const { ref: headerRef, visible: headerVisible } = useScrollReveal(0.1);
   const { ref: loopRef, visible: loopVisible } = useScrollReveal(0.05);
   const [phase, setPhase] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timersRef = useRef([]);
+
+  const startLoop = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setPhase(0);
+    for (let i = 1; i <= 4; i++) {
+      timersRef.current.push(
+        setTimeout(() => {
+          if (!paused) setPhase(i);
+        }, i * 2200)
+      );
+    }
+    timersRef.current.push(
+      setTimeout(() => {
+        if (!paused) setPhase(0);
+      }, 5 * 2200)
+    );
+  }, [paused]);
 
   useEffect(() => {
     if (!loopVisible) return;
-    setPhase(0);
-    const timers = [];
-    for (let i = 1; i <= 4; i++) {
-      timers.push(setTimeout(() => setPhase(i), i * 2200));
-    }
-    timers.push(setTimeout(() => setPhase(0), 5 * 2200));
-    return () => timers.forEach(clearTimeout);
-  }, [loopVisible]);
+    startLoop();
+    return () => timersRef.current.forEach(clearTimeout);
+  }, [loopVisible, startLoop]);
 
   return (
     <section className="bg-ash py-24 md:py-32">
@@ -259,10 +327,10 @@ export function CoreLearningLoopSection() {
           }`}
         >
           <p className="text-13 uppercase tracking-[0.08em] text-brass">How it works</p>
-          <h2 className="mt-6 font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+          <h2 className="mt-6 font-polysans text-heading-lg font-normal tracking-[-0.02em] text-graphite">
             One learning loop. Every time.
           </h2>
-          <p className="mx-auto mt-5 max-w-[52ch] text-subheading leading-relaxed text-steel">
+          <p className="mx-auto mt-5 max-w-[52ch] text-subheading font-normal leading-relaxed text-steel">
             Choose a topic, focus on a concept, practice through a session, see
             your result, and know exactly what to improve next.
           </p>
@@ -280,13 +348,13 @@ export function CoreLearningLoopSection() {
               <div key={lp.step} className="flex flex-1 items-center">
                 <div className="flex flex-col items-center">
                   <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-13 font-semibold transition-all duration-500 ${
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-13 font-normal transition-all duration-500 ${
                       i <= phase ? "bg-ember text-inverse" : "bg-fog text-slate"
                     }`}
                   >
                     {i < phase ? <CheckIcon className="h-4 w-4" /> : i + 1}
                   </span>
-                  <span className={`mt-2 text-13 font-medium transition-colors duration-500 ${i <= phase ? "text-graphite" : "text-slate"}`}>
+                  <span className={`mt-2 text-13 font-normal transition-colors duration-500 ${i <= phase ? "text-graphite" : "text-slate"}`}>
                     {lp.label}
                   </span>
                 </div>
@@ -303,20 +371,22 @@ export function CoreLearningLoopSection() {
 
         {/* ── Product interface — transforms per phase ─────── */}
         <div
-          className={`mx-auto mt-12 max-w-[860px] overflow-hidden rounded-2xl border border-mist bg-canvas shadow-sm transition-all duration-700 delay-200 ${
+          className={`mx-auto mt-12 max-w-[860px] overflow-hidden rounded-2xl border border-mist bg-canvas transition-all duration-700 delay-200 ${
             loopVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
           }`}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => { setPaused(false); startLoop(); }}
         >
           {/* Browser chrome */}
           <div className="flex items-center gap-2 border-b border-mist bg-fog px-4 py-2.5">
             <span className="h-2.5 w-2.5 rounded-full bg-mist" />
             <span className="h-2.5 w-2.5 rounded-full bg-mist" />
             <span className="h-2.5 w-2.5 rounded-full bg-mist" />
-            <span className="ml-3 flex-1 rounded-lg bg-canvas px-3 py-1 text-13 text-slate">leetaptitude.com</span>
+            <span className="ml-3 flex-1 rounded-lg bg-canvas px-3 py-1 text-13 text-slate">ascend.app</span>
           </div>
 
-          {/* Phase content */}
-          <div className="min-h-[380px] transition-all duration-500 md:min-h-[440px]">
+          {/* Phase content with cross-fade */}
+          <div className="min-h-[380px] transition-opacity duration-300 md:min-h-[440px]">
             {phase === 0 && <LoopPhaseTopic />}
             {phase === 1 && <LoopPhaseSubtopic />}
             {phase === 2 && <LoopPhasePractice />}
@@ -329,7 +399,7 @@ export function CoreLearningLoopSection() {
   );
 }
 
-/* ── Phase 0: Topic Selection (real topics page cards) ────────── */
+/* ── Phase 0: Topic Selection ──────────────────────────────────────── */
 
 function LoopPhaseTopic() {
   const [selected, setSelected] = useState(0);
@@ -343,10 +413,9 @@ function LoopPhaseTopic() {
 
   return (
     <div className="p-6 md:p-8">
-      {/* Page header matching real topics page */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">Topics</p>
+          <p className="font-polysans text-subheading font-normal tracking-[-0.02em] text-graphite">Topics</p>
           <p className="mt-1 text-13 text-steel">Explore aptitude topics and start your practice journey.</p>
         </div>
         <div className="relative hidden sm:block">
@@ -355,7 +424,6 @@ function LoopPhaseTopic() {
         </div>
       </div>
 
-      {/* Filter pills */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {["All Topics", "Quantitative", "Logical", "Verbal"].map((f, i) => (
           <span key={f} className={`rounded-tags border px-3 py-1 font-polysans text-13 ${i === 0 ? "border-graphite bg-graphite text-inverse" : "border-mist bg-canvas text-slate"}`}>
@@ -364,7 +432,6 @@ function LoopPhaseTopic() {
         ))}
       </div>
 
-      {/* Topic cards — matching real app layout */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {displayTopics.map((t, i) => {
           const Icon = TOPIC_ICONS[t.id] || Calculator;
@@ -408,7 +475,7 @@ function LoopPhaseTopic() {
   );
 }
 
-/* ── Phase 1: Subtopic Selection (real subtopic page with progress ring) ── */
+/* ── Phase 1: Subtopic Selection ───────────────────────────────────── */
 
 function LoopPhaseSubtopic() {
   const [selected, setSelected] = useState(0);
@@ -420,23 +487,19 @@ function LoopPhaseSubtopic() {
 
   const topic = topics[0];
   const subtopics = topic.subtopics.slice(0, 6);
-  const totalQ = topic.subtopics.reduce((s, sub) => s + sub.questions, 0);
   const topicProg = getTopicProgress(topic);
 
   return (
     <div className="p-6 md:p-8">
-      {/* Breadcrumb + Header */}
       <p className="text-13 text-slate">← All Topics</p>
       <div className="mt-2 flex items-start justify-between">
         <div>
-          <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">{topic.title}</p>
+          <p className="font-polysans text-subheading font-normal tracking-[-0.02em] text-graphite">{topic.title}</p>
           <p className="mt-1 text-13 text-steel">Practice {topic.title.toLowerCase()} topic by topic.</p>
         </div>
       </div>
 
-      {/* Two-column layout matching real app */}
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[200px_1fr]">
-        {/* Left: Progress ring */}
         <div className="rounded-2xl border border-mist bg-fog p-4 text-center">
           <div className="relative inline-flex items-center justify-center" style={{ width: 100, height: 100 }}>
             <svg width={100} height={100} className="-rotate-90">
@@ -463,7 +526,6 @@ function LoopPhaseSubtopic() {
           </div>
         </div>
 
-        {/* Right: Subtopic cards */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {subtopics.map((st, i) => {
             const Icon = SUBTOPIC_ICONS[st.id] || Calculator;
@@ -511,7 +573,7 @@ function LoopPhaseSubtopic() {
   );
 }
 
-/* ── Phase 2: Practice Session (real practice interface with sidebar) ── */
+/* ── Phase 2: Practice Session ─────────────────────────────────────── */
 
 function LoopPhasePractice() {
   const [selected, setSelected] = useState(null);
@@ -523,19 +585,13 @@ function LoopPhasePractice() {
 
   return (
     <div className="flex flex-col lg:flex-row">
-      {/* Main: Question */}
       <div className="flex-1 p-6 lg:p-8">
         <div className="rounded-2xl border border-mist bg-fog p-5 md:p-6">
-          {/* Question header */}
           <div className="flex items-center gap-3">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-canvas font-polysans text-13 text-graphite">1</span>
             <span className="rounded-tags bg-ember/10 px-2 py-0.5 font-polysans text-11 text-ember">Hard</span>
           </div>
-
-          {/* Question text */}
           <p className="mt-4 text-15 leading-[1.6] text-graphite">{MOCK_QUESTION.title}</p>
-
-          {/* MCQ options */}
           <div className="mt-4 space-y-2">
             {MOCK_QUESTION.options.map((opt, i) => (
               <button
@@ -565,8 +621,6 @@ function LoopPhasePractice() {
               </button>
             ))}
           </div>
-
-          {/* Nav */}
           <div className="mt-4 flex items-center justify-between">
             <span className="text-13 text-slate">1 / 10 answered</span>
             <div className="flex gap-2">
@@ -581,9 +635,7 @@ function LoopPhasePractice() {
         </div>
       </div>
 
-      {/* Right sidebar: Session Progress + Question Navigator */}
       <div className="w-full shrink-0 border-t border-mist p-5 lg:w-[260px] lg:border-t-0 lg:border-l">
-        {/* Progress card */}
         <div className="rounded-2xl border border-mist bg-fog p-4">
           <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">Session Progress</p>
           <div className="mt-2">
@@ -611,7 +663,6 @@ function LoopPhasePractice() {
           </div>
         </div>
 
-        {/* Question grid */}
         <div className="mt-3 rounded-2xl border border-mist bg-fog p-4">
           <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">Questions</p>
           <div className="mt-2 grid grid-cols-5 gap-1.5">
@@ -641,29 +692,26 @@ function LoopPhasePractice() {
   );
 }
 
-/* ── Phase 3: Result (real session result page) ── */
+/* ── Phase 3: Result ───────────────────────────────────────────────── */
 
 function LoopPhaseResult() {
   return (
     <div className="p-6 md:p-8">
-      {/* Success header */}
       <div className="text-center">
         <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
           <CheckIcon className="h-7 w-7 text-success" />
         </div>
-        <p className="mt-3 font-polysans text-subheading tracking-[-0.02em] text-graphite">Session Complete!</p>
+        <p className="mt-3 font-polysans text-subheading font-normal tracking-[-0.02em] text-graphite">Session Complete!</p>
         <p className="mt-1 text-13 text-steel">Profit &amp; Loss — Session 3</p>
       </div>
 
-      {/* Score card */}
       <div className="mt-5 rounded-2xl border border-mist bg-fog p-5">
         <div className="text-center">
           <p className="text-13 uppercase tracking-wider text-slate">Your Score</p>
-          <p className="mt-1 font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+          <p className="mt-1 font-polysans text-heading-lg font-normal tracking-[-0.02em] text-graphite">
             7<span className="text-heading text-slate">/10</span>
           </p>
         </div>
-
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl bg-success/5 px-3 py-3 text-center border border-success/10">
             <p className="font-polysans text-15 tracking-[-0.02em] text-success">7</p>
@@ -684,7 +732,6 @@ function LoopPhaseResult() {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="mt-4 flex gap-3">
         <button className="flex flex-1 items-center justify-center gap-2 rounded-buttons bg-ember px-4 py-2.5 text-13 text-inverse">
           Practice Again
@@ -697,16 +744,15 @@ function LoopPhaseResult() {
   );
 }
 
-/* ── Phase 4: Improve (real recommended topics from dashboard) ── */
+/* ── Phase 4: Improve ──────────────────────────────────────────────── */
 
 function LoopPhaseImprove() {
   return (
     <div className="p-6 md:p-8">
-      <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">What to practice next</p>
+      <p className="font-polysans text-subheading font-normal tracking-[-0.02em] text-graphite">What to practice next</p>
       <p className="mt-1 text-13 text-steel">Based on your accuracy</p>
 
       <div className="mt-4 space-y-3">
-        {/* Weak topics — matching real recommended topics */}
         {[
           { topic: "Probability", accuracy: 52, solved: 15, reason: "Lowest accuracy" },
           { topic: "Syllogisms", accuracy: 58, solved: 9, reason: "Needs practice" },
@@ -740,15 +786,6 @@ function LoopPhaseImprove() {
   );
 }
 
-function RotateCcwIcon(props) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-      <path d="M3 3v5h5" />
-    </svg>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════════════════
    SECTION 3 — PREPARE FOR THE REAL TEST
    ═══════════════════════════════════════════════════════════════════════ */
@@ -764,15 +801,6 @@ const COMPANY_SHEETS = [
 export function PlacementSection() {
   const { ref: textRef, visible: textVisible } = useScrollReveal(0.15);
   const { ref: visRef, visible: visVisible } = useScrollReveal(0.08);
-  const [highlighted, setHighlighted] = useState(0);
-
-  useEffect(() => {
-    if (!visVisible) return;
-    const interval = setInterval(() => {
-      setHighlighted((prev) => (prev + 1) % COMPANY_SHEETS.length);
-    }, 1600);
-    return () => clearInterval(interval);
-  }, [visVisible]);
 
   return (
     <section className="bg-canvas py-24 md:py-32">
@@ -783,35 +811,31 @@ export function PlacementSection() {
             textVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <h2 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+          <h2 className="font-polysans text-heading-lg font-normal tracking-[-0.02em] text-graphite">
             Practice for the test that actually matters.
           </h2>
-          <p className="mx-auto mt-5 max-w-[52ch] text-subheading leading-relaxed text-steel">
+          <p className="mx-auto mt-5 max-w-[52ch] text-subheading font-normal leading-relaxed text-steel">
             Have a placement test coming up? Pick your target company and start
             practicing with patterns modeled on real assessments.
           </p>
         </div>
 
-        <div
-          ref={visRef}
-          className={`mx-auto mt-16 grid max-w-[900px] gap-4 transition-all duration-700 sm:grid-cols-2 lg:grid-cols-3 ${
-            visVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
-        >
+        <div ref={visRef} className="mx-auto mt-16 grid max-w-[900px] gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COMPANY_SHEETS.map((co, i) => (
             <div
               key={co.id}
-              className={`group flex flex-col rounded-2xl border p-5 transition-all duration-500 ${
-                highlighted === i
-                  ? "border-ember bg-ash shadow-md scale-[1.02]"
-                  : "border-mist bg-ash hover:border-graphite"
-              }`}
+              className="group flex flex-col rounded-2xl border border-mist bg-ash p-5 transition-all duration-500 hover:border-graphite"
+              style={{
+                animation: visVisible
+                  ? `content-fade-up 0.6s ease-out ${i * 100}ms both`
+                  : "none",
+              }}
             >
               <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-fog font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-fog font-polysans text-subheading font-normal tracking-[-0.02em] text-graphite">
                   {co.initial}
                 </span>
-                <span className={`rounded-full px-2 py-0.5 text-11 font-semibold ${
+                <span className={`rounded-tags px-2 py-0.5 font-polysans text-13 tracking-[-0.02em] ${
                   co.difficulty === "EASY" ? "bg-success/10 text-success" : co.difficulty === "MEDIUM" ? "bg-brass/10 text-brass" : "bg-danger/10 text-danger"
                 }`}>
                   {co.difficulty}
@@ -857,24 +881,23 @@ export function CompetitionSection() {
             textVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <h2 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+          <h2 className="font-polysans text-heading-lg font-normal tracking-[-0.02em] text-graphite">
             Practice doesn&apos;t have to happen alone.
           </h2>
-          <p className="mx-auto mt-5 max-w-[52ch] text-subheading leading-relaxed text-steel">
+          <p className="mx-auto mt-5 max-w-[52ch] text-subheading font-normal leading-relaxed text-steel">
             Compete on the leaderboard. Join timed contests. Stay consistent by
             challenging yourself and others.
           </p>
         </div>
 
         <div className="mx-auto mt-16 grid max-w-[960px] gap-6 md:grid-cols-[1fr_340px]">
-          {/* ── Leaderboard (real data + avatars) ────────── */}
+          {/* ── Leaderboard ──────────────────────────────── */}
           <div
             ref={boardRef}
-            className={`overflow-hidden rounded-2xl border border-mist bg-canvas shadow-sm transition-all duration-700 ${
+            className={`overflow-hidden rounded-2xl border border-mist bg-canvas transition-all duration-700 ${
               boardVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
             }`}
           >
-            {/* Header */}
             <div className="flex items-center gap-2 border-b border-mist px-5 py-3">
               <TrophyIcon className="h-4 w-4 text-ember" />
               <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">Leaderboard</span>
@@ -883,7 +906,6 @@ export function CompetitionSection() {
               </span>
             </div>
 
-            {/* Table header */}
             <div className="grid grid-cols-[48px_1fr_70px_60px_70px_50px] items-center gap-2 border-b border-mist bg-fog/50 px-5 py-2.5 text-13 text-slate">
               <span>#</span>
               <span>User</span>
@@ -893,7 +915,6 @@ export function CompetitionSection() {
               <span className="text-right"><FlameIcon className="inline h-3.5 w-3.5" /></span>
             </div>
 
-            {/* Rows — real leaderboard data with avatars */}
             <div>
               {LEADERBOARD_TOP5.map((row, i) => (
                 <div
@@ -906,8 +927,8 @@ export function CompetitionSection() {
                     row.rank <= 3 ? "font-semibold text-ember" : "text-slate"
                   }`}>
                     {row.rank <= 3 ? (
-                      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-11 ${
-                        row.rank === 1 ? "bg-amber-100 text-amber-700" : row.rank === 2 ? "bg-gray-100 text-gray-600" : "bg-orange-100 text-orange-700"
+                      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-11 font-polysans ${
+                        row.rank === 1 ? "bg-ember/10 text-ember" : row.rank === 2 ? "bg-fog text-graphite" : "bg-brass/10 text-brass"
                       }`}>{row.rank}</span>
                     ) : row.rank}
                   </span>
@@ -915,7 +936,7 @@ export function CompetitionSection() {
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-polysans text-11 ${row.avatarBg} ${row.avatarColor}`}>
                       {row.initials}
                     </span>
-                    <span className="truncate text-15 font-medium text-graphite">{row.name}</span>
+                    <span className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">{row.name}</span>
                   </div>
                   <span className="text-right text-13 text-graphite">{row.questionsSolved}</span>
                   <span className="text-right text-13 text-graphite">{row.accuracy}%</span>
@@ -926,40 +947,59 @@ export function CompetitionSection() {
             </div>
           </div>
 
-          {/* ── Contests (real contest data) ──────────────── */}
+          {/* ── Upcoming Contests ────────────────────────── */}
           <div
-            id="contests"
             ref={contestRef}
-            className={`flex flex-col gap-4 transition-all duration-700 ${
+            className={`rounded-2xl border border-mist bg-canvas transition-all duration-700 ${
               contestVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
             }`}
           >
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember/10">
-                <TargetIcon className="h-4 w-4 text-ember" />
-              </span>
+            <div className="flex items-center gap-2 border-b border-mist px-5 py-3">
+              <TrophyIcon className="h-4 w-4 text-ember" />
               <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">Upcoming Contests</span>
             </div>
 
-            {UPCOMING_CONTESTS.map((c) => (
-              <div key={c.id} className="rounded-2xl border border-mist bg-canvas p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-polysans text-15 font-medium tracking-[-0.02em] text-graphite">{c.title}</span>
-                  <span className="rounded-full px-2 py-0.5 text-11 font-semibold bg-brass/10 text-brass">Upcoming</span>
+            <div className="p-4">
+              {UPCOMING_CONTESTS.slice(0, 3).map((contest, i) => (
+                <div
+                  key={contest.id}
+                  className={`rounded-xl border border-mist bg-fog p-4 transition-all ${
+                    i > 0 ? "mt-3" : ""
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">{contest.title}</span>
+                    <span className={`rounded-tags px-2 py-0.5 font-polysans text-11 ${
+                      contest.difficulty === "Easy"
+                        ? "bg-success/10 text-success"
+                        : contest.difficulty === "Medium"
+                          ? "bg-brass/10 text-brass"
+                          : "bg-danger/10 text-danger"
+                    }`}>
+                      {contest.difficulty}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-13 text-slate">{contest.description}</p>
+                  <div className="mt-3 flex items-center gap-3 text-13 text-slate">
+                    <span className="flex items-center gap-1">
+                      <ClockIcon className="h-3 w-3" />
+                      {contest.duration}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <TargetIcon className="h-3 w-3" />
+                      {contest.questions} Qs
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="secondary" size="sm" className="w-full">
+                      Register
+                    </Button>
+                  </div>
                 </div>
-                <p className="mt-2 text-13 leading-[1.5] text-steel line-clamp-2">{c.description}</p>
-                <div className="mt-3 flex items-center gap-4 text-13 text-slate">
-                  <span className="flex items-center gap-1"><ClockIcon className="h-3.5 w-3.5" />{c.duration} min</span>
-                  <span className="flex items-center gap-1"><BarChart3Icon className="h-3.5 w-3.5" />{c.questions} Qs</span>
-                  <span className="flex items-center gap-1"><TargetIcon className="h-3.5 w-3.5" />{c.difficulty}</span>
-                </div>
-                <div className="mt-4">
-                  <Button variant="secondary" size="sm" className="w-full">Register</Button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
-            <div className="mt-2 flex justify-center">
+            <div className="mt-2 flex justify-center border-t border-mist px-5 py-3">
               <Link href="/contests" className="flex items-center gap-1.5 text-13 font-medium text-ember hover:text-brass transition-colors">
                 View all contests
                 <ArrowRightIcon className="h-3.5 w-3.5" />
@@ -997,12 +1037,13 @@ export function CTASection() {
         className={`relative mx-auto max-w-[var(--page-max-width)] px-6 text-center transition-all duration-700 ${
           visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
         }`}
-      >          <h2 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+      >
+        <h2 className="font-polysans text-heading-lg font-normal tracking-[-0.02em] text-graphite">
           Know what to practice.
           <br />
           Practice with purpose.
         </h2>
-        <p className="mx-auto mt-6 max-w-[48ch] text-subheading leading-relaxed text-steel">
+        <p className="mx-auto mt-6 max-w-[48ch] text-subheading font-normal leading-relaxed text-steel">
           Build your aptitude one focused session at a time.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">

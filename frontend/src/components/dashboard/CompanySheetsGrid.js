@@ -4,29 +4,33 @@ import { companySheets } from "@/lib/mock/dashboard";
 
 export default function CompanySheetsGrid() {
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="overflow-hidden rounded-2xl border border-mist bg-canvas">
+      {/* Table header */}
+      <div className="grid grid-cols-[1fr_100px_100px_90px] gap-4 border-b border-mist bg-fog/50 px-5 py-3">
+        <span className="text-13 font-polysans text-slate">Sheet</span>
+        <span className="text-13 font-polysans text-slate">Company</span>
+        <span className="text-13 font-polysans text-slate">Difficulty</span>
+        <span className="text-13 font-polysans text-slate">Questions</span>
+      </div>
+
+      {/* Table rows */}
       {companySheets.map((sheet) => (
         <Link
           key={sheet.id}
           href="/sheets"
-          className="group rounded-2xl bg-ash p-6 transition-colors hover:bg-fog"
+          className="group grid grid-cols-[1fr_100px_100px_90px] items-center gap-4 border-b border-mist px-5 py-4 transition-colors last:border-b-0 hover:bg-fog/30"
         >
-          <div className="flex items-center justify-between">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-canvas font-polysans text-base tracking-[-0.02em] text-graphite">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ash font-polysans text-13 text-graphite">
               {sheet.initial}
             </span>
-            <span className="rounded-tags bg-canvas px-2.5 py-1 text-13 text-brass">
-              {sheet.difficulty}
+            <span className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
+              {sheet.name}
             </span>
           </div>
-          <p className="mt-4 font-polysans text-base tracking-[-0.02em] text-graphite">
-            {sheet.name}
-          </p>
-          <p className="mt-1 text-13 text-slate">{sheet.questions} questions</p>
-          <span className="mt-4 inline-flex items-center gap-1.5 font-polysans text-13 tracking-[-0.02em] text-graphite transition-colors group-hover:text-ember">
-            Practice
-            <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </span>
+          <span className="text-13 text-steel">{sheet.initial}</span>
+          <span className="text-13 text-brass">{sheet.difficulty}</span>
+          <span className="text-13 text-steel">{sheet.questions}</span>
         </Link>
       ))}
     </div>

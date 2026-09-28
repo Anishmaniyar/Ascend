@@ -13,7 +13,7 @@ export default function WorkflowSection() {
         <SectionHeading
           kicker="How it works"
           title="Preparation shouldn't feel random."
-          description="Every question on LeetAptitude lives inside a clear path — topic, subtopic, question, practice. No more jumping between scattered PDFs and random question banks."
+          description="Every question on Ascend lives inside a clear path — topic, subtopic, question, practice. No more jumping between scattered PDFs and random question banks."
         />
 
         {/* Flow chips */}

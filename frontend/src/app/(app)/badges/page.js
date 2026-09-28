@@ -17,7 +17,7 @@ export default function BadgesPage() {
           Badges
         </h1>
         <p className="mt-2 text-15 text-steel">
-          Track your LeetAptitude achievements.
+          Track your Ascend achievements.
         </p>
       </div>
 

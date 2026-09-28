@@ -2,20 +2,8 @@
 
 import { forwardRef } from "react";
 
-/**
- * Shared Button component — the single source of truth for all button styles.
- *
- * Variants:
- *   primary   — solid accent (amber/gold), dark text
- *   secondary — transparent + subtle border
- *   ghost     — no border, transparent bg, subtle hover fill
- *   destructive — danger color background
- *
- * Sizes:
- *   sm — 36px height, 13px text
- *   md — 42px height, 15px text  (default)
- *   lg — 46px height, 15px text
- */
+/* Editorial buttons — quiet, 7px radius, no glow.
+   primary: solid charcoal / off-white. secondary: hairline border. */
 const Button = forwardRef(function Button(
   {
     variant = "primary",
@@ -29,23 +17,20 @@ const Button = forwardRef(function Button(
   ref
 ) {
   const base =
-    "inline-flex items-center justify-center gap-2 font-polysans font-medium tracking-[-0.02em] transition-all duration-150 ease-out cursor-pointer rounded-buttons select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember disabled:opacity-50 disabled:cursor-not-allowed group";
+    "inline-flex items-center justify-center gap-2 font-inter font-normal transition-all duration-150 ease-out cursor-pointer rounded-buttons select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed group";
 
   const sizes = {
-    sm: "h-9 px-4 text-13",
-    md: "h-[42px] px-5 text-15",
-    lg: "h-[46px] px-6 text-15",
+    sm: "h-8 px-3.5 text-[12px] leading-none",
+    md: "h-9 px-4 text-[13px] leading-none",
+    lg: "h-10 px-5 text-[13px] leading-none",
   };
 
   const variants = {
-    primary:
-      "bg-ember text-inverse hover:opacity-90 active:opacity-80",
+    primary: "bg-graphite text-canvas hover:opacity-85 active:opacity-75",
     secondary:
-      "border border-mist text-graphite bg-transparent hover:bg-ash hover:border-graphite",
-    ghost:
-      "text-graphite bg-transparent hover:bg-ash",
-    destructive:
-      "bg-danger text-inverse hover:opacity-90 active:opacity-80",
+      "border border-mist-strong text-graphite bg-transparent hover:bg-ash",
+    ghost: "text-steel bg-transparent hover:bg-ash hover:text-graphite",
+    destructive: "bg-danger text-inverse hover:opacity-90",
   };
 
   const classes = `${base} ${sizes[size]} ${variants[variant]} ${className}`;
@@ -64,12 +49,7 @@ const Button = forwardRef(function Button(
   }
 
   return (
-    <button
-      ref={ref}
-      disabled={disabled}
-      className={classes}
-      {...props}
-    >
+    <button ref={ref} disabled={disabled} className={classes} {...props}>
       {children}
     </button>
   );

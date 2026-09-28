@@ -43,20 +43,19 @@ export default function MonoRoundedStreamChart({
         compact ? "h-[220px] sm:h-[268px]" : "min-h-[290px]"
       }`}
     >
-      {/* Header */}
-      <div className="mb-1 flex items-center justify-between">
+      {/* Header */}          <div className="mb-1 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate">
+            <span className="font-polysans text-13 uppercase tracking-[0.06em] text-slate">
               Stream Wave
             </span>
-            <span className="inline-flex items-center rounded-full border border-mist bg-canvas px-1.5 py-0.5 font-mono text-[10px] text-graphite">
+            <span className="inline-flex items-center rounded-tags border border-mist bg-canvas px-1.5 py-0.5 font-polysans text-11 text-graphite">
               Fluid
             </span>
           </div>
-          <div className="mt-0.5 font-sans text-xl font-bold tracking-tight tabular-nums text-graphite">
+          <div className="mt-0.5 font-polysans text-subheading tracking-[-0.02em] tabular-nums text-graphite">
             {data.length}{" "}
-            <span className="text-xs font-normal text-slate">subtopics</span>
+            <span className="text-13 font-normal text-slate">subtopics</span>
           </div>
         </div>
       </div>
@@ -190,9 +189,9 @@ export default function MonoRoundedStreamChart({
       </div>
 
       {/* Footer */}
-      <div className="mt-3 flex items-center justify-between border-t border-mist pt-1 font-mono text-[11px]">
+      <div className="mt-3 flex items-center justify-between border-t border-mist pt-1 font-polysans text-11">
         <span className="text-slate">Rounded Natural Spline</span>
-        <span className="font-medium text-graphite">
+        <span className="text-graphite">
           Accuracy · Activity Stream
         </span>
       </div>

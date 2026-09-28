@@ -4,6 +4,7 @@
  * is an intensity level 0–4. Levels render as ember shades (light → dark).
  *
  * Optional `stats` prop: { questionsSolved, totalActiveDays, maxStreak, currentStreak }
+ * Cells render as a restrained graphite scale (light → dark).
  */
 const CELL = 11;
 const GAP = 3;
@@ -42,10 +43,10 @@ export default function Heatmap({ weeks, stats, className = "" }) {
               Max Streak:{" "}
               <span className="font-polysans text-graphite">{stats.maxStreak}</span>
             </span>
-            <span>
-              Current Streak:{" "}
-              <span className="font-polysans text-ember">{stats.currentStreak}</span>
-            </span>
+              <span>
+                Current Streak:{" "}
+                <span className="font-polysans text-graphite">{stats.currentStreak}</span>
+              </span>
           </div>
         </div>
       )}
@@ -100,7 +101,7 @@ export default function Heatmap({ weeks, stats, className = "" }) {
                     className="rounded-[3px]"
                     style={{
                       backgroundColor: level
-                        ? "var(--color-ember)"
+                        ? "var(--color-graphite)"
                         : "var(--color-fog)",
                       opacity: level ? OPACITY[level - 1] : 1,
                     }}
@@ -122,7 +123,7 @@ export default function Heatmap({ weeks, stats, className = "" }) {
             style={{
               width: CELL,
               height: CELL,
-              backgroundColor: l ? "var(--color-ember)" : "var(--color-fog)",
+              backgroundColor: l ? "var(--color-graphite)" : "var(--color-fog)",
               opacity: l ? OPACITY[l - 1] : 1,
             }}
           />

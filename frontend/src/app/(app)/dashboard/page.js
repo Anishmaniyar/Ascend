@@ -18,7 +18,8 @@ import PracticeHistoryList from "@/components/dashboard/PracticeHistoryList";
 import RecommendedTopics from "@/components/dashboard/RecommendedTopics";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import Heatmap from "@/components/charts/Heatmap";
-import { buildHeatmap, heatmapStats, performanceSummary, getDashboardBadges } from "@/lib/mock/dashboard";
+import { buildHeatmap, heatmapStats, performanceSummary, getDashboardBadges, continueSession } from "@/lib/mock/dashboard";
+import { user } from "@/lib/mock/dashboard";
 
 const BADGE_ICON_MAP = {
   FootprintIcon,
@@ -34,7 +35,7 @@ const BADGE_ICON_MAP = {
 const ViewAll = ({ href }) => (
   <Link
     href={href}
-    className="inline-flex items-center gap-1 font-polysans text-13 tracking-[-0.02em] text-slate transition-colors hover:text-ember"
+    className="inline-flex items-center gap-1 font-inter text-[12px] text-slate transition-colors hover:text-graphite"
   >
     View all
     <ArrowRightIcon className="h-3.5 w-3.5" />
@@ -55,8 +56,22 @@ export default function DashboardPage() {
   } = performanceSummary;
 
   return (
-    <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
-      <div className="flex flex-col gap-8 lg:flex-row">
+    <div className="page-enter mx-auto w-full max-w-[var(--page-max-width)] px-6 py-12 md:py-16">
+      {/* Welcome / current goal */}
+      <div className="max-w-[640px]">
+        <p className="font-inter text-[11px] uppercase tracking-[0.08em] text-slate">
+          Dashboard
+        </p>
+        <h1 className="editorial-heading mt-3 text-[32px] leading-[36px] text-graphite">
+          Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""}.
+        </h1>
+        <p className="mt-2.5 font-inter text-[14px] leading-[22px] text-steel">
+          {continueSession.subtopic} is waiting — {continueSession.done} of{" "}
+          {continueSession.total} questions done.
+        </p>
+      </div>
+
+      <div className="mt-10 flex flex-col gap-8 lg:flex-row">
         {/* ── Sidebar ───────────────────────────────────────────────── */}
         <DashboardSidebar />
 
@@ -69,7 +84,7 @@ export default function DashboardPage() {
             {/* Compact Badges — fills remaining space */}
             <Link
               href="/badges"
-              className="flex flex-1 items-center gap-4 rounded-2xl border border-mist bg-ash px-5 py-4 transition-all hover:border-graphite hover:shadow-sm"
+              className="flex flex-1 items-center gap-4 rounded-cards border border-mist bg-canvas px-5 py-4 transition-colors duration-150 hover:border-mist-strong"
             >
               <div className="flex -space-x-2">
                 {getDashboardBadges(3).map((badge) => {
@@ -77,12 +92,12 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={badge.id}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-ash ${
-                        badge.earned ? "bg-ember/10" : "bg-fog"
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-canvas ${
+                        badge.earned ? "bg-ash" : "bg-fog"
                       }`}
                     >
                       {badge.earned ? (
-                        <Icon className="h-5 w-5 text-ember" />
+                        <Icon className="h-5 w-5 text-graphite" />
                       ) : (
                         <LockIcon className="h-4 w-4 text-slate" />
                       )}
@@ -110,14 +125,14 @@ export default function DashboardPage() {
               centerText={questionsSolved}
               centerLabel="Solved"
               segments={[
-                { value: easy.solved, color: "#3f8f62", label: "Easy" },
-                { value: medium.solved, color: "#c9a348", label: "Medium" },
-                { value: hard.solved, color: "#e07a5f", label: "Hard" },
+                { value: easy.solved, color: "var(--color-graphite)", label: "Easy" },
+                { value: medium.solved, color: "var(--color-slate)", label: "Medium" },
+                { value: hard.solved, color: "var(--color-faint)", label: "Hard" },
               ]}
               details={[
-                { label: "Easy", value: easy.solved, color: "#3f8f62", percent: Math.round((easy.solved / easy.total) * 100), subtext: "/ " + easy.total },
-                { label: "Medium", value: medium.solved, color: "#c9a348", percent: Math.round((medium.solved / medium.total) * 100), subtext: "/ " + medium.total },
-                { label: "Hard", value: hard.solved, color: "#e07a5f", percent: Math.round((hard.solved / hard.total) * 100), subtext: "/ " + hard.total },
+                { label: "Easy", value: easy.solved, color: "var(--color-graphite)", percent: Math.round((easy.solved / easy.total) * 100), subtext: "/ " + easy.total },
+                { label: "Medium", value: medium.solved, color: "var(--color-slate)", percent: Math.round((medium.solved / medium.total) * 100), subtext: "/ " + medium.total },
+                { label: "Hard", value: hard.solved, color: "var(--color-faint)", percent: Math.round((hard.solved / hard.total) * 100), subtext: "/ " + hard.total },
               ]}
             />
 
@@ -127,12 +142,12 @@ export default function DashboardPage() {
               centerText={`${overallAccuracy}%`}
               centerLabel="Accuracy"
               segments={[
-                { value: overallAccuracy, color: "#3f8f62", label: "Correct" },
-                { value: 100 - overallAccuracy, color: "#c95c5c", label: "Mistakes" },
+                { value: overallAccuracy, color: "var(--color-graphite)", label: "Correct" },
+                { value: 100 - overallAccuracy, color: "var(--color-mist-strong)", label: "Mistakes" },
               ]}
               details={[
-                { label: "Correct answers", value: Math.round((overallAccuracy / 100) * questionsSolved), color: "#3f8f62", percent: overallAccuracy },
-                { label: "Incorrect / Skipped", value: questionsSolved - Math.round((overallAccuracy / 100) * questionsSolved), color: "#c95c5c", percent: 100 - overallAccuracy },
+                { label: "Correct answers", value: Math.round((overallAccuracy / 100) * questionsSolved), color: "var(--color-graphite)", percent: overallAccuracy },
+                { label: "Incorrect / Skipped", value: questionsSolved - Math.round((overallAccuracy / 100) * questionsSolved), color: "var(--color-mist-strong)", percent: 100 - overallAccuracy },
               ]}
             />
 
@@ -142,12 +157,12 @@ export default function DashboardPage() {
               centerText={totalSessions}
               centerLabel="Total"
               segments={[
-                { value: practiceSessions, color: "#d9b45b", label: "Practice" },
-                { value: testSessions, color: "#3f8f62", label: "Test" },
+                { value: practiceSessions, color: "var(--color-graphite)", label: "Practice" },
+                { value: testSessions, color: "var(--color-slate)", label: "Test" },
               ]}
               details={[
-                { label: "Practice sessions", value: practiceSessions, color: "#d9b45b", percent: Math.round((practiceSessions / totalSessions) * 100), subtext: Math.round((practiceSessions / totalSessions) * 100) + "%" },
-                { label: "Test sessions", value: testSessions, color: "#3f8f62", percent: Math.round((testSessions / totalSessions) * 100), subtext: Math.round((testSessions / totalSessions) * 100) + "%" },
+                { label: "Practice sessions", value: practiceSessions, color: "var(--color-graphite)", percent: Math.round((practiceSessions / totalSessions) * 100), subtext: Math.round((practiceSessions / totalSessions) * 100) + "%" },
+                { label: "Test sessions", value: testSessions, color: "var(--color-slate)", percent: Math.round((testSessions / totalSessions) * 100), subtext: Math.round((testSessions / totalSessions) * 100) + "%" },
               ]}
             />
           </div>

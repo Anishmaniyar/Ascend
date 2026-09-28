@@ -50,7 +50,7 @@ export default function ProfilePage() {
           <ContinueCard />
 
           {/* 2. Practice Statistics + Badges — side by side */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="border-t border-mist pt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Left: Practice Statistics */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               <DonutMetricCard
@@ -103,29 +103,42 @@ export default function ProfilePage() {
           </div>
 
           {/* 3. Activity Heatmap */}
-          <SectionCard title="Activity">
-            <Heatmap weeks={weeks} stats={heatmapStats} />
-          </SectionCard>
+          <div className="border-t border-mist pt-6">
+            <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+              Activity
+            </h3>
+            <div className="mt-5">
+              <Heatmap weeks={weeks} stats={heatmapStats} />
+            </div>
+          </div>
 
           {/* 4. Practice History */}
-          <SectionCard
-            title="Practice History"
-            action={<ViewAll href="/practice-history" />}
-          >
-            <PracticeHistoryList />
-          </SectionCard>
+          <div className="border-t border-mist pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                Practice History
+              </h3>
+              <ViewAll href="/practice-history" />
+            </div>
+            <div className="mt-5">
+              <PracticeHistoryList />
+            </div>
+          </div>
 
           {/* 5. Recommended weak topics */}
-          <SectionCard
-            title="Recommended for you"
-            action={
+          <div className="border-t border-mist pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                Recommended for you
+              </h3>
               <span className="font-polysans text-13 tracking-[-0.02em] text-slate">
                 Based on your accuracy
               </span>
-            }
-          >
-            <RecommendedTopics />
-          </SectionCard>
+            </div>
+            <div className="mt-5">
+              <RecommendedTopics />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Logo from "@/components/ui/Logo";
 import DashboardPreview from "@/components/auth/DashboardPreview";
 import Button from "@/components/ui/Button";
 
@@ -53,9 +52,13 @@ export default function RegisterPage() {
           ════════════════════════════════════════════════════════════════ */}
       <div className="relative flex w-full flex-col items-center justify-center px-8 py-12 lg:w-[480px] xl:w-[520px] lg:px-12">
         {/* Logo — top left */}
-        <div className="absolute left-8 top-8 flex items-center gap-2.5 lg:left-12 lg:top-10">
-          <Logo className="h-7 w-7" />
-          <span className="font-polysans text-[15px] tracking-[-0.02em] text-graphite">
+        <div className="absolute left-8 top-8 flex items-center gap-2 lg:left-12 lg:top-10">
+          <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-graphite">
+            <span className="font-inter text-[11px] font-semibold leading-none text-canvas">
+              L
+            </span>
+          </span>
+          <span className="font-inter text-[13px] font-medium tracking-[-0.01em] text-graphite">
             LeetAptitude
           </span>
         </div>
@@ -63,7 +66,7 @@ export default function RegisterPage() {
         {/* Go back link — below logo */}
         <Link
           href="/"
-          className="absolute left-8 top-[100px] flex items-center gap-1.5 text-[13px] text-slate transition-colors hover:text-graphite lg:left-12 lg:top-[108px]"
+          className="absolute left-8 top-[100px] flex items-center gap-1.5 text-13 text-slate transition-colors hover:text-graphite lg:left-12 lg:top-[108px]"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
             <path fillRule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clipRule="evenodd" />
@@ -73,11 +76,11 @@ export default function RegisterPage() {
 
         {/* Signup content — centered */}
         <div className="w-full max-w-[320px]">
-          <h1 className="font-polysans text-[36px] leading-[1.1] tracking-[-0.02em] text-graphite">
+          <h1 className="editorial-heading text-[34px] leading-[38px] text-graphite">
             Get started
           </h1>
-          <p className="mt-3 text-[14px] leading-[1.5] text-steel">
-            Start your aptitude preparation journey.
+          <p className="mt-3 font-inter text-[14px] leading-[22px] text-steel">
+            One workspace for topics, company tests and progress.
           </p>
 
           {/* Google sign up button */}
@@ -86,7 +89,7 @@ export default function RegisterPage() {
             onClick={handleGoogleSignUp}
             disabled={loading}
             variant="secondary"
-            className="mt-8 w-full gap-3 border border-mist bg-canvas py-2.5 text-[14px] hover:border-graphite hover:shadow-sm"
+            className="mt-8 w-full gap-3 border border-mist bg-canvas py-2.5 text-15 hover:border-graphite"
           >
             {loading ? (
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-graphite border-t-transparent" />
@@ -99,13 +102,13 @@ export default function RegisterPage() {
           </Button>
 
           {/* Subtle info line — left aligned */}
-          <p className="mt-5 text-[12px] leading-[1.5] text-slate">
+          <p className="mt-5 font-polysans text-11 leading-[1.5] text-slate">
             One click to sign up or sign in. Track your practice, progress, and preparation in one place.
           </p>
         </div>
 
         {/* Copyright — bottom center */}
-        <p className="absolute bottom-8 left-0 right-0 text-center text-[12px] text-slate lg:bottom-10">
+        <p className="absolute bottom-8 left-0 right-0 text-center font-inter text-[11px] text-slate lg:bottom-10">
           &copy; 2026 LeetAptitude
         </p>
       </div>

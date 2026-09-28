@@ -153,9 +153,18 @@ export default function TopicsPage() {
         </select>
       </div>
 
-      {/* ── 4. Topic Grid ─────────────────────────────────────────────── */}
+      {/* ── 4. Topic List ─────────────────────────────────────────────── */}
       {filtered.length > 0 ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-mist bg-canvas">
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_100px_120px_90px] gap-4 border-b border-mist bg-fog/50 px-5 py-3">
+            <span className="text-13 font-polysans text-slate">Topic</span>
+            <span className="text-13 font-polysans text-slate">Subtopics</span>
+            <span className="text-13 font-polysans text-slate">Questions</span>
+            <span className="text-13 font-polysans text-slate">Progress</span>
+          </div>
+
+          {/* Table rows */}
           {filtered.map((topic) => {
             const totalQuestions = topic.subtopics.reduce(
               (s, sub) => s + sub.questions,
@@ -168,49 +177,46 @@ export default function TopicsPage() {
               <Link
                 key={topic.id}
                 href={`/topics/${topic.id}`}
-                className="group flex flex-col rounded-2xl border border-mist bg-canvas p-5 transition-all hover:border-graphite hover:shadow-sm"
+                className="group grid grid-cols-[1fr_100px_120px_90px] items-center gap-4 border-b border-mist px-5 py-4 transition-colors last:border-b-0 hover:bg-fog/30"
               >
-                {/* Top: Icon + Topic Name + Description */}
-                <div className="flex items-start gap-3">
+                {/* Topic info */}
+                <div className="flex items-center gap-3">
                   {Icon && (
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ash text-graphite transition-colors group-hover:bg-graphite group-hover:text-inverse">
-                      <Icon className="h-5 w-5" />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ash text-graphite transition-colors group-hover:bg-graphite group-hover:text-inverse">
+                      <Icon className="h-4 w-4" />
                     </span>
                   )}
                   <div className="min-w-0">
-                    <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
+                    <p className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
                       {topic.title}
                     </p>
-                    <p className="mt-1 text-13 leading-[1.4] text-steel line-clamp-2">
+                    <p className="mt-0.5 truncate text-13 text-steel">
                       {topic.description}
                     </p>
                   </div>
                 </div>
 
-                {/* Metadata row */}
-                <p className="mt-4 text-13 text-slate">
-                  {topic.subtopics.length} Subtopics · {totalQuestions} Questions
-                </p>
+                {/* Subtopics count */}
+                <span className="text-13 text-steel">
+                  {topic.subtopics.length}
+                </span>
 
-                {/* Bottom: Progress */}
-                <div className="mt-auto pt-4">
-                  <div className="flex items-center justify-between text-13">
-                    <span className="text-slate">Your Progress</span>
-                    <span className="font-polysans text-graphite">
-                      {progress.percent}%
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-fog">
+                {/* Questions count */}
+                <span className="text-13 text-steel">
+                  {totalQuestions}
+                </span>
+
+                {/* Progress */}
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-full rounded-full bg-fog">
                     <div
                       className="h-full rounded-full bg-ember transition-all"
                       style={{ width: `${progress.percent}%` }}
                     />
                   </div>
-                </div>
-
-                {/* Arrow */}
-                <div className="mt-4 flex justify-end">
-                  <ArrowRightIcon className="h-4 w-4 text-slate transition-colors group-hover:text-ember" />
+                  <span className="shrink-0 font-polysans text-13 text-graphite">
+                    {progress.percent}%
+                  </span>
                 </div>
               </Link>
             );
