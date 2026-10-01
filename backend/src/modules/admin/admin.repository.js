@@ -36,7 +36,7 @@ export const findTopicById = (topicId) => {
 export const updateTopic = (topicId, updateData) => {
   return prisma.topic.update({
     where: {
-      id,
+      id: topicId,
     },
     data: {
       title: updateData.title,

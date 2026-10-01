@@ -30,7 +30,7 @@ export const updateTopicService = async (id, updatedData) => {
     }
   }
 
-  const updatedTopic = await AdminRepository.updatedTopic(id, updatedData);
+  const updatedTopic = await AdminRepository.updateTopic(id, updatedData);
 
   return updatedTopic;
 };
@@ -73,6 +73,13 @@ export const createSubTopicService = async (title, description, topicId) => {
 };
 
 export const updateSubTopicService = async (id, updatedData) => {
+  if (!updatedData || Object.keys(updatedData).length === 0) {
+    throw new AppError(
+      "You must provide at least one field to update (title, description, or topicId)",
+      400,
+    );
+  }
+
   const existingSubTopic = await AdminRepository.findSubTopicById(id);
   if (!existingSubTopic) {
     throw new AppError("Subtopic not found", 404);
@@ -112,13 +119,13 @@ export const updateSubTopicService = async (id, updatedData) => {
 export const deleteSubTopicService = async (id) => {
   const subtopicExists = await AdminRepository.findSubTopicById(id);
 
-  if (!subtopicExiststopicExists) {
+  if (!subtopicExists) {
     throw new AppError("Sub Topic not found", 404);
   }
 
   const deleteSubTopic = await AdminRepository.deleteSubTopicById(id);
 
-  return deleteTopic;
+  return deleteSubTopic;
 };
 
 export const createQuestionService = async (
@@ -165,9 +172,10 @@ export const createQuestionService = async (
   return createQuestion;
 };
 
-export const updateQuestionService = async (id, updatedData) => {
+export const updateQuestionService = async (questionId, updateData) => {
   const existingQuestion =
     await AdminRepository.findQuestionWithOptions(questionId);
+
   if (!existingQuestion) {
     throw new AppError("Question not found", 404);
   }
@@ -226,7 +234,8 @@ export const updateQuestionService = async (id, updatedData) => {
 
 export const deleteQuestionService = async (id) => {
   // 1. Verify that the question exists first
-  const questionExists = await AdminRepository.findQuestionById(id);
+  const questionExists =
+    await AdminRepository.findQuestionWithOptions(id);
 
   if (!questionExists) {
     throw new AppError("Question not found", 404);

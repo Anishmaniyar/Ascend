@@ -7,16 +7,16 @@ const validate = (schema) => {
         query: req.query,
       });
 
-      req.body = validatedData.body;
-      req.params = validatedData.params;
-      req.query = validatedData.query;
+      if (validatedData.body !== undefined) req.body = validatedData.body;
+      if (validatedData.params) req.params = validatedData.params;
+      if (validatedData.query) req.query = validatedData.query;
 
       next();
     } catch (error) {
       return res.status(400).json({
-        success: "false",
+        success: false,
         message: "Validation failed",
-        errors: error.errors.map((err) => ({
+        errors: (error.issues || []).map((err) => ({
           field: err.path.join("."),
           message: err.message,
         })),

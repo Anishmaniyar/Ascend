@@ -1,18 +1,26 @@
 import { Router } from "express";
 import validate from "../../middleware/validate.middleware.js";
 import { authenticate } from "../../middleware/authenticate.middleware.js";
+import { getQuestions, getQuestionDetails } from "./question.controllers.js";
 import {
-  getQuestions,
-  getQuestionDetails,
-  submitAnswer,
-} from "./question.controllers.js";
+  questionIdParamSchema,
+  questionsQuerySchema,
+} from "./question.validator.js";
 
 const router = Router();
 
-router.get("/", authenticate, getQuestions);
+router.get(
+  "/",
+  authenticate,
+  validate(questionsQuerySchema),
+  getQuestions,
+);
 
-router.get("/:questionId", getQuestionDetails);
-
-router.post("/:questionId/attempt", authenticate, submitAnswer);
+router.get(
+  "/:questionId",
+  authenticate,
+  validate(questionIdParamSchema),
+  getQuestionDetails,
+);
 
 export default router;

@@ -1,133 +1,140 @@
-import { Difficulty } from "@prisma/client";
 import { z } from "zod";
+
+const idParam = z.object({
+  id: z.uuid({ error: "Invalid ID format" }),
+});
 
 export const createTopicValidation = z.object({
   body: z.object({
     title: z
-      .string({ required_error: "Must be a string" })
-      .min(10, "Must be minimum of 10 characters")
-      .max(100, "Must be maximum of 100 characters"),
+      .string({ error: "Title is required" })
+      .trim()
+      .min(10, { error: "Must be minimum of 10 characters" })
+      .max(100, { error: "Must be maximum of 100 characters" }),
     description: z
-      .string({ required_error: "Must be a string" })
-      .min(10, "Must be minimum of 10 characters")
-      .max(1000, "Must be maximum of 1000 characters"),
+      .string({ error: "Description is required" })
+      .trim()
+      .min(10, { error: "Must be minimum of 10 characters" })
+      .max(1000, { error: "Must be maximum of 1000 characters" }),
   }),
 });
 
 export const updateTopicValidation = z.object({
   body: createTopicValidation.shape.body.partial(),
+  params: idParam,
+});
+
+export const deleteIdParamValidation = z.object({
+  params: idParam,
 });
 
 export const createSubTopicValidation = z.object({
   body: z.object({
     title: z
-      .string({ required_error: "Must be a string" })
-      .min(10, "Must be minimum of 10 characters")
-      .max(100, "Must be maximum of 100 characters"),
+      .string({ error: "Title is required" })
+      .trim()
+      .min(10, { error: "Must be minimum of 10 characters" })
+      .max(100, { error: "Must be maximum of 100 characters" }),
     description: z
-      .string({ required_error: "Must be a string" })
-      .min(10, "Must be minimum of 10 characters")
-      .max(1000, "Must be maximum of 1000 characters"),
+      .string({ error: "Description is required" })
+      .trim()
+      .min(10, { error: "Must be minimum of 10 characters" })
+      .max(1000, { error: "Must be maximum of 1000 characters" }),
 
-    topicId: z.string().uuid("Invalid topic ID format"),
+    topicId: z.uuid({ error: "Invalid topic ID format" }),
   }),
 });
 
 export const updateSubTopicValidation = z.object({
-  body: z
-    .object({
-      title: z
-        .string()
-        .min(3, "Title must be at least 3 characters")
-        .max(100)
-        .optional(),
+  body: z.object({
+    title: z
+      .string({ error: "Title must be a string" })
+      .trim()
+      .min(3, { error: "Title must be at least 3 characters" })
+      .max(100, { error: "Title cannot exceed 100 characters" })
+      .optional(),
 
-      description: z
-        .string()
-        .min(10, "Description must be at least 10 characters")
-        .max(1000)
-        .optional(),
+    description: z
+      .string({ error: "Description must be a string" })
+      .trim()
+      .min(10, { error: "Description must be at least 10 characters" })
+      .max(1000, { error: "Description cannot exceed 1000 characters" })
+      .optional(),
 
-      topicId: z.string().uuid("Invalid topic ID format").optional(),
-    })
-    .refine((data) => Object.keys(data).length > 0, {
-      message:
-        "You must provide at least one field to update (title, description, or topicId)",
-    }),
+    topicId: z.uuid({ error: "Invalid topic ID format" }).optional(),
+  }),
+  params: idParam,
+});
+
+const optionSchema = z.object({
+  text: z
+    .string({ error: "Option text is required" })
+    .min(1, { error: "Option text cannot be empty" }),
+  isCorrect: z.boolean({ error: "isCorrect must be a true/false boolean" }),
 });
 
 export const createQuestionValidation = z.object({
   body: z.object({
-    title: z.string().min(5, "Title must be at least 5 characters").max(1000),
+    title: z
+      .string({ error: "Title is required" })
+      .trim()
+      .min(5, { error: "Title must be at least 5 characters" })
+      .max(1000, { error: "Title cannot exceed 1000 characters" }),
 
     difficulty: z.enum(["EASY", "MEDIUM", "HARD"], {
-      errorMap: () => ({
-        message: "Difficulty must be either EASY, MEDIUM, or HARD",
-      }),
+      error: "Difficulty must be either EASY, MEDIUM, or HARD",
     }),
 
     type: z.enum(["MCQ", "NUMERIC"], {
-      errorMap: () => ({ message: "Type must be either MCQ or NUMERIC" }),
+      error: "Type must be either MCQ or NUMERIC",
     }),
 
     solution: z
-      .string()
-      .min(5, "Solution explanation must be at least 5 characters"),
+      .string({ error: "Solution is required" })
+      .trim()
+      .min(5, { error: "Solution explanation must be at least 5 characters" }),
 
-    subtopicId: z.string().uuid("Invalid subtopic ID format"),
+    subtopicId: z.uuid({ error: "Invalid subtopic ID format" }),
 
     options: z
-      .array(
-        z.object({
-          text: z.string().min(1, "Option text cannot be empty"),
-          isCorrect: z.boolean({
-            required_error: "isCorrect must be a true/false boolean",
-          }),
-        }),
-      )
-      .min(2, "An exam question must have at least 2 options"), // Guarantees a choice array layout
+      .array(optionSchema)
+      .min(2, { error: "An exam question must have at least 2 options" }),
   }),
 });
 
 export const updateQuestionValidation = z.object({
   body: z.object({
     title: z
-      .string()
-      .min(5, "Title must be at least 5 characters")
-      .max(1000)
+      .string({ error: "Title must be a string" })
+      .trim()
+      .min(5, { error: "Title must be at least 5 characters" })
+      .max(1000, { error: "Title cannot exceed 1000 characters" })
       .optional(),
 
     difficulty: z
       .enum(["EASY", "MEDIUM", "HARD"], {
-        errorMap: () => ({
-          message: "Difficulty must be either EASY, MEDIUM, or HARD",
-        }),
+        error: "Difficulty must be either EASY, MEDIUM, or HARD",
       })
       .optional(),
 
     type: z
       .enum(["MCQ", "NUMERIC"], {
-        errorMap: () => ({ message: "Type must be either MCQ or NUMERIC" }),
+        error: "Type must be either MCQ or NUMERIC",
       })
       .optional(),
 
     solution: z
-      .string()
-      .min(5, "Solution explanation must be at least 5 characters")
+      .string({ error: "Solution must be a string" })
+      .trim()
+      .min(5, { error: "Solution explanation must be at least 5 characters" })
       .optional(),
 
-    subtopicId: z.string().uuid("Invalid subtopic ID format").optional(),
+    subtopicId: z.uuid({ error: "Invalid subtopic ID format" }).optional(),
 
     options: z
-      .array(
-        z.object({
-          text: z.string().min(1, "Option text cannot be empty"),
-          isCorrect: z.boolean({
-            required_error: "isCorrect must be a true/false boolean",
-          }),
-        }),
-      )
-      .min(2, "An exam question must have at least 2 options")
+      .array(optionSchema)
+      .min(2, { error: "An exam question must have at least 2 options" })
       .optional(),
   }),
+  params: idParam,
 });

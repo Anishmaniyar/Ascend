@@ -5,11 +5,9 @@ export const getAllTopics = asyncHandler(async (req, res, next) => {
   const response = await topicService.getAllTopics();
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "Topics fetched successfully",
-    data: {
-      response,
-    },
+    data: response,
   });
 });
 
@@ -17,11 +15,9 @@ export const getAllSheets = asyncHandler(async (req, res, next) => {
   const response = await topicService.getAllSheets();
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "Company sheets fetched successfully",
-    data: {
-      response,
-    },
+    data: response,
   });
 });
 

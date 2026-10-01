@@ -13,8 +13,19 @@ export const findAllTopics = async () => {
   });
 };
 
+export const findTopicById = async (topicId) => {
+  return await prisma.topic.findUnique({
+    where: {
+      id: topicId,
+    },
+    select: {
+      id: true,
+    },
+  });
+};
+
 export const findAllSheets = async () => {
-  return await prisma.sheets.findMany({
+  return await prisma.sheet.findMany({
     select: {
       id: true,
       title: true,

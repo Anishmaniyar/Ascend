@@ -203,6 +203,7 @@ model Attempt {
   @@index([userId])
   @@index([sessionId])
   @@index([questionId])
+  @@unique([sessionId, questionId])
   @@map("attempts")
 }
 

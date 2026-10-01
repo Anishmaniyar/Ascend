@@ -46,7 +46,7 @@ export const findActivePracticeSession = (userId, subtopicId, mode) => {
   });
 };
 
-export const createPraticeSession = (userId, subtopicId, mode) => {
+export const createPracticeSession = (userId, subtopicId, mode) => {
   return prisma.practiceSession.create({
     data: {
       userId: userId,
@@ -108,17 +108,18 @@ export const createAttempt = (
       userId,
       sessionId,
       questionId,
-      optionId: selectedOptionId,
+      selectedOptionId,
       isCorrect,
     },
   });
 };
 
-export const updatePracticeSession = (userId, sessionId) => {
+export const updatePracticeSession = (sessionId) => {
   return prisma.practiceSession.update({
     where: {
       id: sessionId,
-      userId: userId,
+    },
+    data: {
       completed: true,
       completedAt: new Date(),
     },
@@ -132,6 +133,7 @@ export const findSessionById = (sessionId) => {
     },
     select: {
       id: true,
+      userId: true,
       startedAt: true,
       completedAt: true,
       completed: true,
@@ -142,11 +144,12 @@ export const findSessionById = (sessionId) => {
 export const findAttemptsBySession = (sessionId) => {
   return prisma.attempt.findMany({
     where: {
-      id: sessionId,
+      sessionId,
     },
     select: {
       id: true,
-      selectedOption: true,
+      questionId: true,
+      selectedOptionId: true,
       isCorrect: true,
     },
   });

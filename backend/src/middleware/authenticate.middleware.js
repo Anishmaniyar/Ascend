@@ -16,7 +16,7 @@ export const authenticate = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    throw new ApiError(401, "Not authorized, login session token is missing");
+    throw new AppError("Not authorized, login session token is missing", 401);
   }
 
   try {
@@ -33,22 +33,23 @@ export const authenticate = asyncHandler(async (req, res, next) => {
         name: true,
         avatar: true,
         bio: true,
+        role: true,
         createdAt: true,
       },
     });
 
     if (!currentUser) {
-      throw new ApiError(
-        401,
+      throw new AppError(
         "The user belonging to this token no longer exists",
+        401,
       );
     }
     req.user = currentUser;
     next();
   } catch (error) {
-    throw new ApiError(
-      401,
+    throw new AppError(
       "Session expired or token is invalid, please log in again",
+      401,
     );
   }
 });

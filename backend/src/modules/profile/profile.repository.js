@@ -1,4 +1,3 @@
-import { use } from "react";
 import prisma from "../../db.js";
 
 export const findProfileById = (userId) => {
@@ -29,17 +28,14 @@ export const findUserStats = async (userId) => {
 };
 
 export const countUniqueQuestionsSolved = async (userId) => {
-  const result = await prisma.attempt.findMany({
+  const groups = await prisma.attempt.groupBy({
+    by: ["questionId"],
     where: {
       userId,
     },
-    distinct: ["questionId"],
-    select: {
-      questionId: true,
-    },
   });
 
-  return result.length;
+  return groups.length;
 };
 
 export const countCorrectAttempts = async (userId) => {
@@ -91,14 +87,13 @@ export const findPracticeHistory = async (userId) => {
 };
 
 export const getUserDailyActivityCounts = (userId) => {
-  return prisma.practiceSession.groupBy({
-    by: ["startedAt"],
+  return prisma.practiceSession.findMany({
     where: {
       userId: userId,
       completed: true,
     },
-    _count: {
-      id: true,
+    select: {
+      startedAt: true,
     },
     orderBy: {
       startedAt: "asc",

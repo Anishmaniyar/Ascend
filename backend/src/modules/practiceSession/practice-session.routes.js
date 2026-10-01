@@ -13,7 +13,12 @@ router.post(
   PracticeController.startPracticeSession,
 );
 
-router.get("/:id", authenticate, PracticeController.getPracticeSession);
+router.get(
+  "/:id",
+  authenticate,
+  validate(PracticeValidator.validateSessionIdParam),
+  PracticeController.getPracticeSession,
+);
 
 router.post(
   "/:id/attempts",
@@ -25,9 +30,15 @@ router.post(
 router.patch(
   "/:id/complete",
   authenticate,
+  validate(PracticeValidator.validateSessionIdParam),
   PracticeController.completePracticeSession,
 );
 
-router.get("/:id/results", authenticate);
+router.get(
+  "/:id/results",
+  authenticate,
+  validate(PracticeValidator.validateSessionIdParam),
+  PracticeController.getResults,
+);
 
 export default router;

@@ -1,14 +1,14 @@
 import AppError from "../../utils/AppError.js";
 import * as topicRepository from "./topic.repository.js";
 
-export const getAllTopics = async (req, res) => {
-  const response = await topicRepository.findAllTopics();
+export const getAllTopics = async () => {
+  const topics = await topicRepository.findAllTopics();
 
   return topics;
 };
 
-export const getAllSheets = async (req, res) => {
-  const response = await topicRepository.findAllSheets();
+export const getAllSheets = async () => {
+  const sheets = await topicRepository.findAllSheets();
 
   return sheets.map((sheet) => ({
     id: sheet.id,
@@ -22,12 +22,18 @@ export const getAllSheets = async (req, res) => {
 };
 
 export const getSubTopicById = async (topicId) => {
-  const response = await topicRepository.findSubtopicById(topicId);
+  const topicExists = await topicRepository.findTopicById(topicId);
 
-  return response.map((subtopic) => ({
+  if (!topicExists) {
+    throw new AppError("Topic not found", 404);
+  }
+
+  const subtopics = await topicRepository.findSubtopicById(topicId);
+
+  return subtopics.map((subtopic) => ({
     id: subtopic.id,
     title: subtopic.title,
     description: subtopic.description,
-    questionCount: subtopic._count,
+    questionCount: subtopic._count.questions,
   }));
 };

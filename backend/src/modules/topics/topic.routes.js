@@ -6,13 +6,19 @@ import {
   getAllTopics,
   getSubtopicById,
 } from "./topic.controllers.js";
+import { topicIdParamSchema } from "./topic.validator.js";
 
 const router = Router();
 
-router.get("/", getAllTopics);
+router.get("/", authenticate, getAllTopics);
 
-router.get("/sheets", getAllSheets);
+router.get("/sheets", authenticate, getAllSheets);
 
-router.get("/:topicsId/subtopics", getSubtopicById);
+router.get(
+  "/:id/subtopics",
+  authenticate,
+  validate(topicIdParamSchema),
+  getSubtopicById,
+);
 
 export default router;

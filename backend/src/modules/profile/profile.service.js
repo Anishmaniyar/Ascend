@@ -1,13 +1,6 @@
 import AppError from "../../utils/AppError.js";
 import * as ProfileRepository from "./profile.repository.js";
 
-import {
-  findUserStats,
-  countUniqueQuestionsSolved,
-  countCorrectAttempts,
-  countPracticeSessions,
-} from "./profile.repository.js";
-
 export const getProfileService = async (userId) => {
   const data = await ProfileRepository.findProfileById(userId);
 
@@ -21,11 +14,15 @@ export const getProfileService = async (userId) => {
 export const getProfileStatsService = async (userId) => {
   const [userStats, questionsSolved, correctAnswers, practiceSessions] =
     await Promise.all([
-      findUserStats(userId),
-      countUniqueQuestionsSolved(userId),
-      countCorrectAttempts(userId),
-      countPracticeSessions(userId),
+      ProfileRepository.findUserStats(userId),
+      ProfileRepository.countUniqueQuestionsSolved(userId),
+      ProfileRepository.countCorrectAttempts(userId),
+      ProfileRepository.countPracticeSessions(userId),
     ]);
+
+  if (!userStats) {
+    throw new AppError("User profile not found", 404);
+  }
 
   const accuracy =
     questionsSolved === 0
@@ -68,7 +65,8 @@ export const getPracticeHistoryService = async (userId) => {
 };
 
 export const getUserHeatmapData = async (userId) => {
-  const rawData = await ActivityRepository.getUserDailyActivityCounts(userId);
+  const rawData =
+    await ProfileRepository.getUserDailyActivityCounts(userId);
 
   const dateMap = new Map();
 
@@ -76,7 +74,7 @@ export const getUserHeatmapData = async (userId) => {
     const dateString = item.startedAt.toISOString().split("T")[0];
 
     const currentCount = dateMap.get(dateString) || 0;
-    dateMap.set(dateString, currentCount + item._count.id);
+    dateMap.set(dateString, currentCount + 1);
   });
 
   return Array.from(dateMap.entries()).map(([date, count]) => ({

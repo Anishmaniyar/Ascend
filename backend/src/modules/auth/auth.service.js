@@ -26,7 +26,11 @@ export const registerUser = async (name, email, password) => {
   });
 
   return {
-    user: createUser,
+    user: {
+      id: createUser.id,
+      name: createUser.name,
+      email: createUser.email,
+    },
     token: accessToken,
   };
 };
@@ -38,7 +42,7 @@ export const authenticateUser = async (email, password) => {
     throw new AppError("User not found", 404);
   }
 
-  const isPasswordValid = bcrypt.compare(password, userExist.password);
+  const isPasswordValid = await bcrypt.compare(password, userExist.password);
 
   if (!isPasswordValid) {
     throw new AppError("Password is incorrect", 400);
@@ -62,11 +66,15 @@ export const authenticateUser = async (email, password) => {
 export const getCurrentUser = async (userId) => {
   const response = await authRepository.findUserById(userId);
 
+  if (!response) {
+    throw new AppError("User not found", 404);
+  }
+
   return {
     user: {
-      id: userExist.id,
-      name: userExist.name,
-      email: userExist.email,
+      id: response.id,
+      name: response.name,
+      email: response.email,
     },
   };
 };

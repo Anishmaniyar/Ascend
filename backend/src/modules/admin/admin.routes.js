@@ -25,16 +25,17 @@ router.patch(
 );
 
 router.delete(
-  "/topic/:id",
+  "/topics/:id",
   authenticate,
   authorize("ADMIN"),
+  validate(AdminValidator.deleteIdParamValidation),
   AdminController.deleteTopic,
 );
 
-//SUBTOPIC
+//SUBTOPICS
 
 router.post(
-  "/subtopic",
+  "/subtopics",
   authenticate,
   authorize("ADMIN"),
   validate(AdminValidator.createSubTopicValidation),
@@ -42,17 +43,18 @@ router.post(
 );
 
 router.patch(
-  "/subtopic/:id",
+  "/subtopics/:id",
   authenticate,
   authorize("ADMIN"),
-  validate(AdminValidator.createSubTopicValidation),
+  validate(AdminValidator.updateSubTopicValidation),
   AdminController.updateSubTopic,
 );
 
 router.delete(
-  "/subtopic/:id",
+  "/subtopics/:id",
   authenticate,
   authorize("ADMIN"),
+  validate(AdminValidator.deleteIdParamValidation),
   AdminController.deleteSubTopic,
 );
 
@@ -75,9 +77,10 @@ router.patch(
 );
 
 router.delete(
-  "/question/:id",
+  "/questions/:id",
   authenticate,
   authorize("ADMIN"),
+  validate(AdminValidator.deleteIdParamValidation),
   AdminController.deleteQuestion,
 );
 

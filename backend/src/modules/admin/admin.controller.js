@@ -2,14 +2,12 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import * as AdminService from "./admin.service.js";
 
 export const createTopic = asyncHandler(async (req, res, next) => {
-  const adminId = req.user.id;
-
   const { title, description } = req.body;
 
   const response = await AdminService.createTopicService(title, description);
 
   return res.status(201).json({
-    status: "success",
+    success: true,
     message: "Topic added successfully",
     data: response,
   });
@@ -22,7 +20,7 @@ export const updateTopic = asyncHandler(async (req, res, next) => {
   const response = await AdminService.updateTopicService(topicId, updateData);
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "Topic updated successfully",
     data: response,
   });
@@ -34,7 +32,7 @@ export const deleteTopic = asyncHandler(async (req, res, next) => {
   const response = await AdminService.deleteTopicService(topicId);
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "Topic deleted successfully",
     data: response,
   });
@@ -50,7 +48,7 @@ export const createSubTopic = asyncHandler(async (req, res, next) => {
   );
 
   return res.status(201).json({
-    status: "success",
+    success: true,
     message: "SubTopic created successfully",
     data: response,
   });
@@ -66,7 +64,7 @@ export const updateSubTopic = asyncHandler(async (req, res, next) => {
   );
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "SubTopic updated successfully",
     data: response,
   });
@@ -78,7 +76,7 @@ export const deleteSubTopic = asyncHandler(async (req, res, next) => {
   const response = await AdminService.deleteSubTopicService(subtopicId);
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "SubTopic deleted successfully",
     data: response,
   });
@@ -97,7 +95,7 @@ export const createQuestion = asyncHandler(async (req, res, next) => {
   );
 
   return res.status(201).json({
-    status: "success",
+    success: true,
     message: "Question created successfully",
     data: response,
   });
@@ -112,20 +110,21 @@ export const updateQuestion = asyncHandler(async (req, res, next) => {
     updatedData,
   );
 
-  return res.status(201).json({
-    status: "success",
+  return res.status(200).json({
+    success: true,
     message: "Question updated successfully",
     data: response,
   });
 });
 
 export const deleteQuestion = asyncHandler(async (req, res, next) => {
-  const { questionId } = req.params;
+  const questionId = req.params.id;
 
-  await AdminService.deleteQuestionService(questionId);
+  const response = await AdminService.deleteQuestionService(questionId);
 
   return res.status(200).json({
-    status: "success",
+    success: true,
     message: "Question and its options deleted successfully",
+    data: response,
   });
 });

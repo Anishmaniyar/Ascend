@@ -73,5 +73,7 @@ export const deleteSheetService = async (sheetId) => {
     throw new AppError("Sheet not found.", 404);
   }
 
-  await SheetRepository.deleteSheet(sheetId);
+  const deletedSheet = await SheetRepository.deleteSheet(sheetId);
+
+  return deletedSheet;
 };
