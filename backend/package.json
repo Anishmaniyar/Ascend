@@ -7,7 +7,9 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "db:push": "npx prisma db push --config ./src/config/prisma.config.js",
-    "db:gen": "npx prisma generate --config ./src/config/prisma.config.js"
+    "db:gen": "npx prisma generate --config ./src/config/prisma.config.js",
+    "db:seed": "node scripts/seed-authorization.js",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "keywords": [],
   "author": "",
@@ -24,6 +26,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "googleapis": "^183.0.0",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.11.0",

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authorize } from "../../middleware/authorize.middleware.js";
+import { requirePermission } from "../../middleware/requirePermission.middleware.js";
 import { authenticate } from "../../middleware/authenticate.middleware.js";
 import validate from "../../middleware/validate.middleware.js";
 import * as AdminValidator from "./admin.validator.js";
@@ -11,7 +11,7 @@ const router = Router();
 router.post(
   "/topics",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("topics:create"),
   validate(AdminValidator.createTopicValidation),
   AdminController.createTopic,
 );
@@ -19,7 +19,7 @@ router.post(
 router.patch(
   "/topics/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("topics:update"),
   validate(AdminValidator.updateTopicValidation),
   AdminController.updateTopic,
 );
@@ -27,7 +27,7 @@ router.patch(
 router.delete(
   "/topics/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("topics:delete"),
   validate(AdminValidator.deleteIdParamValidation),
   AdminController.deleteTopic,
 );
@@ -37,7 +37,7 @@ router.delete(
 router.post(
   "/subtopics",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("subtopics:create"),
   validate(AdminValidator.createSubTopicValidation),
   AdminController.createSubTopic,
 );
@@ -45,7 +45,7 @@ router.post(
 router.patch(
   "/subtopics/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("subtopics:update"),
   validate(AdminValidator.updateSubTopicValidation),
   AdminController.updateSubTopic,
 );
@@ -53,7 +53,7 @@ router.patch(
 router.delete(
   "/subtopics/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("subtopics:delete"),
   validate(AdminValidator.deleteIdParamValidation),
   AdminController.deleteSubTopic,
 );
@@ -63,7 +63,7 @@ router.delete(
 router.post(
   "/questions",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("questions:create"),
   validate(AdminValidator.createQuestionValidation),
   AdminController.createQuestion,
 );
@@ -71,7 +71,7 @@ router.post(
 router.patch(
   "/questions/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("questions:update"),
   validate(AdminValidator.updateQuestionValidation),
   AdminController.updateQuestion,
 );
@@ -79,7 +79,7 @@ router.patch(
 router.delete(
   "/questions/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("questions:delete"),
   validate(AdminValidator.deleteIdParamValidation),
   AdminController.deleteQuestion,
 );

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardPreview from "@/components/auth/DashboardPreview";
 import Button from "@/components/ui/Button";
@@ -35,14 +34,26 @@ function GoogleIcon({ className }) {
 }
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [oauthError, setOauthError] = useState(false);
+
+  // Set by the backend callback redirect on failure
+  // (/register?error=oauth_failed or ?error=oauth_state).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error")?.startsWith("oauth_")) {
+      setOauthError(true);
+      setLoading(false);
+    }
+  }, []);
 
   function handleGoogleSignUp() {
+    // Full-page redirect (not fetch/router.push): the backend sets the
+    // short-lived `oauth_state` cookie and 302-redirects to Google.
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
     setLoading(true);
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 800);
+    window.location.href = `${apiUrl}/auth/google`;
   }
 
   return (
@@ -82,6 +93,13 @@ export default function RegisterPage() {
           <p className="mt-3 font-inter text-[14px] leading-[22px] text-steel">
             One workspace for topics, company tests and progress.
           </p>
+
+          {/* OAuth failure notice (redirected back from the backend) */}
+          {oauthError && (
+            <p className="mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 font-inter text-[13px] leading-[20px] text-red-700">
+              Google sign-in didn&apos;t complete. Please try again.
+            </p>
+          )}
 
           {/* Google sign up button */}
           <Button

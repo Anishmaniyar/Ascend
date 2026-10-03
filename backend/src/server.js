@@ -1,8 +1,8 @@
-import dotenv from "dotenv";
+// Must be first: ESM hoists all imports, so dotenv has to load via a
+// side-effect import to populate process.env before app/db evaluate.
+import "dotenv/config";
 import app from "./app.js";
 import prisma from "./db.js";
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 

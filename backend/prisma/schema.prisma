@@ -6,9 +6,44 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Role {
-  ADMIN
-  USER
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId String @map("role_id")
+
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String     @map("permission_id")
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+enum AuthProvider {
+  GOOGLE
 }
 
 enum Difficulty {
@@ -28,11 +63,11 @@ enum Mode {
 }
 
 model User {
-  id       String @id @default(uuid())
-  email    String @unique @db.VarChar(200)
-  password String
-  name     String @db.VarChar(255)
-  role     Role   @default(USER)
+  id    String @id @default(uuid())
+  email String @unique @db.VarChar(200)
+  name  String @db.VarChar(255)
+  roleId String @map("role_id")
+  roleRef Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
   avatar String? @default("https://dicebear.com")
   bio    String? @default("Aptitude learner")
@@ -44,6 +79,9 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  authAccounts AuthAccount[]
+  authSessions AuthSession[]
+
   practiceSessions PracticeSession[]
   attempts         Attempt[]
   discussions      Discussion[]
@@ -51,8 +89,43 @@ model User {
   replies          Reply[]
   discussionLikes  DiscussionLike[]
 
-  @@index([role])
+  @@index([roleId])
   @@map("users")
+}
+
+model AuthAccount {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  provider       AuthProvider @map("provider")
+  providerUserId String       @map("provider_user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("auth_accounts")
+}
+
+model AuthSession {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  // SHA-256 hash of the opaque refresh token. Raw token never stored.
+  refreshTokenHash String    @unique @map("refresh_token_hash")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  lastUsedAt       DateTime? @map("last_used_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("auth_sessions")
 }
 
 model Topic {

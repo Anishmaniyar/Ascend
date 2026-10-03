@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.middleware.js";
-import { authorize } from "../../middleware/authorize.middleware.js";
+import { requirePermission } from "../../middleware/requirePermission.middleware.js";
 import validate from "../../middleware/validate.middleware.js";
 import * as SheetsController from "./companySheets.controller.js";
 import * as SheetValidator from "./companySheets.validator.js";
@@ -10,7 +10,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("sheets:create"),
   validate(SheetValidator.createSheetValidator),
   SheetsController.createSheet,
 );
@@ -18,7 +18,7 @@ router.post(
 router.patch(
   "/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("sheets:update"),
   validate(SheetValidator.updateSheetValidator),
   SheetsController.updateSheet,
 );
@@ -26,7 +26,7 @@ router.patch(
 router.delete(
   "/:id",
   authenticate,
-  authorize("ADMIN"),
+  requirePermission("sheets:delete"),
   validate(SheetValidator.sheetIdParamValidator),
   SheetsController.deleteSheet,
 );

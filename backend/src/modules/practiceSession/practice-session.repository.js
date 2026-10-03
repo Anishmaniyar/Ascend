@@ -75,6 +75,18 @@ export const findFullSessionDetails = (sessionId) => {
   });
 };
 
+export const findQuestionSubtopicById = (questionId) => {
+  return prisma.question.findUnique({
+    where: {
+      id: questionId,
+    },
+    select: {
+      id: true,
+      subtopicId: true,
+    },
+  });
+};
+
 export const findOptionById = (selectedOptionId) => {
   return prisma.option.findUnique({
     where: {

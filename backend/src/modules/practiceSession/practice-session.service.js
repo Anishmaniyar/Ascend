@@ -104,17 +104,32 @@ export const submitAttemptService = async (
     throw new AppError("Practice session not found", 404);
   }
 
-  // 4. Verify identity alignment
+  // 4. Enforce attempt.question.subtopicId === attempt.session.subtopicId.
+  // Without this, attempts for any subtopic's questions could be recorded
+  // inside this session, corrupting per-subtopic analytics.
+  const targetQuestion =
+    await PracticeRepository.findQuestionSubtopicById(questionId);
+  if (!targetQuestion) {
+    throw new AppError("Question not found", 404);
+  }
+  if (targetQuestion.subtopicId !== practiceSession.subtopicId) {
+    throw new AppError(
+      "Question does not belong to this session's subtopic",
+      400,
+    );
+  }
+
+  // 5. Verify identity alignment
   if (practiceSession.userId !== userId) {
     throw new AppError("Access Denied: You do not own this session", 403);
   }
 
-  // 5. Block inputs on finalized sessions
+  // 6. Block inputs on finalized sessions
   if (practiceSession.completed) {
     throw new AppError("Cannot submit answers to a completed session", 400);
   }
 
-  // 6. Block double submissions to ensure clean analytics and historical metrics
+  // 7. Block double submissions to ensure clean analytics and historical metrics
   const existingAttempt = await PracticeRepository.findAttempt(
     userId,
     sessionId,
@@ -124,9 +139,10 @@ export const submitAttemptService = async (
     throw new AppError("You have already attempted this question", 409); // 409 Conflict
   }
 
-  // 7. Write data once all business conditions clear safely.
+  // 8. Write data once all business conditions clear safely.
+  // Consistency boundary: single-row insert, so no transaction is needed.
   // The DB unique key on (sessionId, questionId) is the final guard:
-  // if two requests pass step 6 at the same time, the loser hits P2002.
+  // if two requests pass step 7 at the same time, the loser hits P2002.
   let newAttempt;
   try {
     newAttempt = await PracticeRepository.createAttempt(
