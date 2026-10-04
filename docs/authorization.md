@@ -94,9 +94,10 @@ impossible. Seed never deletes assignments; revocation is a separate migration.
 ## Permission vocabulary
 
 Single source: `src/modules/authorization/authorization.constants.js`
-(22 permissions). `USER` holds 10 (reads + own practice/profile);
-`ADMIN` holds all 22. `profile:update`, `users:*`, `discussions:*` do not
-exist because those APIs do not exist.
+(23 permissions). `USER` holds 11 (reads + own practice/profile + profile
+writes); `ADMIN` holds all 23. `profile:update` exists (PATCH /profile +
+DELETE /profile/avatar, self-scoped via `req.user.id`). `users:*` and
+`discussions:*` do not exist because those APIs do not exist.
 
 ## JWT decision (Phase 8)
 
@@ -141,11 +142,14 @@ Document who/when for each grant. Build `/admin/users` (`users:read`,
 
 ## Verification
 
-- `npm run db:seed` — idempotent seed + backfill + counts (fails non-zero if
-any user lacks `roleId`).
-- `npm test` — 18 tests (catalog consistency, allow/deny matrix, middleware
-401/403/404, ownership, cross-subtopic 400, option integrity, duplicates,
-session state). DB-backed with unique fixtures, self-cleaning.
+- `npm run db:seed` — idempotent seed (roles, 23 permissions, 6 badges) +
+  Profile backfill + counts (fails non-zero if any user lacks a Profile row).
+- `npm test` — 36 tests: 18 authorization (catalog consistency, allow/deny
+  matrix, middleware 401/403/404, ownership, cross-subtopic 400, option
+  integrity, duplicates, session state) + 18 profile/badges (skill-level
+  boundaries, DTO shape, PATCH allowlist + handle 409, validator strip/reject,
+  history/continue/heatmap/recommendations shapes, FIRST_SOLVE auto-grant +
+  idempotency, profile RBAC). DB-backed with unique fixtures, self-cleaning.
 - Live boot checks performed: USER 403 on all 4 write resources, 200 on
 reads/profile, 404 on missing session, 401 without token, ADMIN passes gates
 to validation (400 on empty body, nothing created).

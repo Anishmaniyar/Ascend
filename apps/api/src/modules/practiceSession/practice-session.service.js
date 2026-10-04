@@ -1,5 +1,6 @@
 import AppError from "../../utils/AppError.js";
 import * as PracticeRepository from "./practice-session.repository.js";
+import { evaluateAchievements } from "../badges/badge.service.js";
 import { PRACTICE_MODES } from "./constants.js";
 
 export const createPracticeSessionService = async (
@@ -159,6 +160,12 @@ export const submitAttemptService = async (
     throw error;
   }
 
+  // Phase 16: best-effort achievement evaluation. Runs after the attempt
+  // is persisted and never throws (see badge.service) — a badge failure
+  // must not fail the practice request. Synchronous for now; promote to a
+  // background job only if it shows up in latency profiles (no BullMQ in V1).
+  await evaluateAchievements(userId);
+
   // Return formatted resource metadata to service layout
   return {
     id: newAttempt.id,
@@ -187,6 +194,9 @@ export const completePracticeSessionService = async (userId, sessionId) => {
 
   const updatePracticeSession =
     await PracticeRepository.updatePracticeSession(sessionId);
+
+  // Completion can unlock FIRST_TEST / PERFECT_SESSION.
+  await evaluateAchievements(userId);
 
   return updatePracticeSession;
 };

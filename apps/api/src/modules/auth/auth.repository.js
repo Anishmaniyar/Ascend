@@ -82,3 +82,35 @@ export const findUserById = async (userId) => {
     },
   });
 };
+
+// ---- Profile (Phase 3: User 1 ── 1 Profile) ----
+// Find-or-create lives in the service layer; these stay thin Prisma calls.
+// Existing rows are never overwritten by callers (Google must not clobber
+// user-customized displayName/avatarUrl on later logins).
+export const findProfileByUserId = async (userId) => {
+  return await prisma.profile.findUnique({
+    where: { userId },
+  });
+};
+
+export const findProfileByHandle = async (handle) => {
+  return await prisma.profile.findUnique({
+    where: { handle },
+  });
+};
+
+export const createProfile = async ({
+  userId,
+  displayName,
+  handle,
+  avatarUrl,
+}) => {
+  return await prisma.profile.create({
+    data: {
+      userId,
+      displayName,
+      handle: handle || undefined,
+      avatarUrl: avatarUrl || undefined,
+    },
+  });
+};

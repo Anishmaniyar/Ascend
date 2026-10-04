@@ -49,6 +49,57 @@ export const getActivityHeatmap = asyncHandler(async (req, res, next) => {
   });
 });
 
+export const updateProfile = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  const response = await ProfileService.updateProfileService(userId, req.body);
+
+  return res.status(200).json({
+    success: true,
+    message: "User profile updated successfully",
+    data: response,
+  });
+});
+
+// Phase 12 (V1): avatar is a URL field on Profile. Raw image upload goes
+// Frontend → object storage → avatarUrl → PATCH /profile (see design doc).
+// This endpoint clears a custom avatar (falls back to initials/Google image).
+export const deleteAvatar = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  const response = await ProfileService.clearAvatarService(userId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Profile avatar removed successfully",
+    data: response,
+  });
+});
+
+export const getContinueSession = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  const response = await ProfileService.getContinueSessionService(userId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Continue-practice session fetched successfully",
+    data: response,
+  });
+});
+
+export const getRecommendations = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  const response = await ProfileService.getRecommendationsService(userId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Topic recommendations fetched successfully",
+    data: response,
+  });
+});
+
 export const getSkills = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
 

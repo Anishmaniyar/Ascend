@@ -285,4 +285,4 @@ describe("attempt integrity rules", () => {
   });
 });
 
-assert.ok(Object.keys(PERMISSIONS).length === 22, "catalog has 22 permissions");
+assert.ok(Object.keys(PERMISSIONS).length === 23, "catalog has 23 permissions");

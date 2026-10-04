@@ -82,8 +82,11 @@ model User {
   authAccounts AuthAccount[]
   authSessions AuthSession[]
 
+  profile Profile?
+
   practiceSessions PracticeSession[]
   attempts         Attempt[]
+  userBadges       UserBadge[]
   discussions      Discussion[]
   comments         Comment[]
   replies          Reply[]
@@ -126,6 +129,71 @@ model AuthSession {
 
   @@index([userId])
   @@map("auth_sessions")
+}
+
+model Profile {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @map("user_id")
+
+  displayName String  @db.VarChar(100)
+  handle      String? @unique @db.VarChar(50)
+  avatarUrl   String? @db.Text
+  bio         String? @db.Text
+  gender      String? @db.VarChar(20)
+  dateOfBirth DateTime? @db.Date @map("date_of_birth")
+  location    String? @db.VarChar(120)
+
+  githubUrl   String? @db.Text @map("github_url")
+  linkedinUrl String? @db.Text @map("linkedin_url")
+  leetcodeUrl String? @db.Text @map("leetcode_url")
+  xUrl        String? @db.Text @map("x_url")
+  websiteUrl  String? @db.Text @map("website_url")
+
+  targetCompanies   Json? @map("target_companies")
+  dailyQuestionGoal Int?  @default(20) @map("daily_question_goal")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+// Achievements (Phase 6). Badge = definition row seeded from code (never
+// created via API in V1). UserBadge = earned join; UNIQUE(userId, badgeId)
+// makes double-earning impossible at the DB level (P2002 is the race guard).
+model Badge {
+  id          String @id @default(uuid())
+  code        String @unique @db.VarChar(50)
+  name        String @db.VarChar(100)
+  description String @db.Text
+  icon        String? @db.VarChar(100)
+  category    String @db.VarChar(50)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  badgeId String @map("badge_id")
+
+  earnedAt DateTime @default(now()) @map("earned_at")
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+  @@map("user_badges")
 }
 
 model Topic {

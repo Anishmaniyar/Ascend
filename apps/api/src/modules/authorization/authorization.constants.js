@@ -44,11 +44,11 @@ export const PERMISSIONS = {
   "attempts:create": "Submit an attempt in own active session",
   "results:read": "Read results of own completed session",
 
-  // Profile — self-scoped.
+  // Profile — self-scoped (req.user.id → Profile.userId, no :id param).
   "profile:read": "Read own profile, stats, history, heatmap and skills",
+  "profile:update": "Update own profile fields",
 };
 
-// `profile:update` is intentionally absent: no such endpoint exists yet.
 // `users:*` and `discussions:*` are absent: no such APIs exist yet.
 
 const USER_PERMISSIONS = [
@@ -62,6 +62,7 @@ const USER_PERMISSIONS = [
   "attempts:create",
   "results:read",
   "profile:read",
+  "profile:update",
 ];
 
 export const ROLE_PERMISSIONS = {

@@ -5,6 +5,7 @@ import topicRouter from "../modules/topics/topic.routes.js";
 import questionRouter from "../modules/questions/question.routes.js";
 import practiceSessionRouter from "../modules/practiceSession/practice-session.routes.js";
 import profileRouter from "../modules/profile/profile.routes.js";
+import badgeRouter from "../modules/badges/badge.routes.js";
 import adminRouter from "../modules/admin/admin.routes.js";
 import companySheets from "../modules/companySheets/companySheets.routes.js";
 
@@ -21,6 +22,7 @@ router.use("/topic", topicRouter);
 router.use("/question", questionRouter);
 router.use("/practice-session", practiceSessionRouter);
 router.use("/profile", profileRouter);
+router.use("/profile/badges", badgeRouter);
 router.use("/admin", adminRouter);
 router.use("/admin/sheets", companySheets);
 

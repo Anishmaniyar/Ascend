@@ -1,19 +1,59 @@
 import prisma from "../../db.js";
 
-export const findProfileById = (userId) => {
+// ---------------------------------------------------------------------------
+// Identity (Phase 9: repository fetches User + Profile, Prisma only —
+// no calculations, no DTO shaping; that lives in profile.service.js).
+// ---------------------------------------------------------------------------
+
+export const findUserWithProfile = (userId) => {
   return prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
       email: true,
+      createdAt: true,
+      currentStreak: true,
+      longestStreak: true,
+      // Legacy columns kept until the backfill migration drops them.
       avatar: true,
       bio: true,
+      profile: true,
     },
   });
 };
+
+export const findProfileByHandle = (handle) => {
+  return prisma.profile.findUnique({
+    where: { handle },
+    select: { userId: true, handle: true },
+  });
+};
+
+export const createProfileForUser = (userId, data) => {
+  return prisma.profile.create({
+    data: { userId, ...data },
+  });
+};
+
+export const updateProfileByUserId = (userId, data) => {
+  return prisma.profile.update({
+    where: { userId },
+    data,
+  });
+};
+
+export const upsertProfileForUser = (userId, data) => {
+  return prisma.profile.upsert({
+    where: { userId },
+    update: data,
+    create: { userId, ...data },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// Derived-data fetchers (raw reads for the service layer).
+// ---------------------------------------------------------------------------
 
 export const findUserStats = async (userId) => {
   return await prisma.user.findUnique({
@@ -55,6 +95,37 @@ export const countPracticeSessions = async (userId) => {
   });
 };
 
+export const countSessionsByMode = async (userId, mode) => {
+  return await prisma.practiceSession.count({
+    where: { userId, mode },
+  });
+};
+
+// Curriculum totals per difficulty (denominators for the stats breakdown).
+export const countQuestionsByDifficulty = async () => {
+  const groups = await prisma.question.groupBy({
+    by: ["difficulty"],
+    _count: { _all: true },
+  });
+
+  const totals = { EASY: 0, MEDIUM: 0, HARD: 0 };
+  for (const g of groups) {
+    totals[g.difficulty] = g._count._all;
+  }
+  return totals;
+};
+
+// Attempts with their question difficulty (numerators for the breakdown).
+export const findAttemptsWithDifficulty = async (userId) => {
+  return await prisma.attempt.findMany({
+    where: { userId },
+    select: {
+      isCorrect: true,
+      question: { select: { difficulty: true } },
+    },
+  });
+};
+
 export const findPracticeHistory = async (userId) => {
   return await prisma.practiceSession.findMany({
     where: {
@@ -65,11 +136,13 @@ export const findPracticeHistory = async (userId) => {
     select: {
       id: true,
       mode: true,
+      startedAt: true,
       completedAt: true,
 
       subtopic: {
         select: {
           title: true,
+          topic: { select: { title: true } },
         },
       },
 
@@ -110,8 +183,11 @@ export const findAttemptsWithTopics = async (userId) => {
       isCorrect: true,
       question: {
         select: {
+          difficulty: true,
           subtopic: {
             select: {
+              id: true,
+              title: true,
               topic: {
                 select: {
                   id: true,
@@ -123,5 +199,34 @@ export const findAttemptsWithTopics = async (userId) => {
         },
       },
     },
+  });
+};
+
+export const countQuestionsInSubtopic = async (subtopicId) => {
+  return await prisma.question.count({
+    where: { subtopicId },
+  });
+};
+
+// Most recently started incomplete session (resume target for continue).
+export const findMostRecentActiveSession = async (userId) => {
+  return await prisma.practiceSession.findFirst({
+    where: { userId, completed: false },
+    select: {
+      id: true,
+      mode: true,
+      startedAt: true,
+      subtopic: {
+        select: {
+          id: true,
+          title: true,
+          topic: { select: { title: true } },
+        },
+      },
+      attempts: {
+        select: { isCorrect: true },
+      },
+    },
+    orderBy: { startedAt: "desc" },
   });
 };

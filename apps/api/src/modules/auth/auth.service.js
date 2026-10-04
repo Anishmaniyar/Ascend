@@ -16,6 +16,44 @@ import {
 // (signup) or an existing user (login) — both continue into the same
 // application session below.
 
+// Handle must be unique when present. Derived from the email prefix so it is
+// stable per user; collisions get a numeric suffix (anish, anish1, ...).
+const buildHandleBase = (email, fallbackName) => {
+  const raw = (email?.split("@")[0] || fallbackName || "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "_")
+    .slice(0, 20);
+  return raw || "user";
+};
+
+const generateUniqueHandle = async (email, fallbackName) => {
+  const base = buildHandleBase(email, fallbackName);
+  let candidate = base;
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const taken = await authRepository.findProfileByHandle(candidate);
+    if (!taken) return candidate;
+    candidate = `${base}${attempt + 1}`.slice(0, 50);
+  }
+
+  // Vanishingly unlikely: fall back to a time-suffixed handle.
+  return `${base}${Date.now().toString(36)}`.slice(0, 50);
+};
+
+// Ensures a Profile row exists without touching an existing one.
+// Google name/picture seed the profile ONLY at creation time.
+const ensureProfileForUser = async (user, { name, picture, email }) => {
+  const existing = await authRepository.findProfileByUserId(user.id);
+  if (existing) return existing;
+
+  return await authRepository.createProfile({
+    userId: user.id,
+    displayName: name || user.name,
+    avatarUrl: picture || user.avatar || undefined,
+    handle: await generateUniqueHandle(email || user.email, name || user.name),
+  });
+};
+
 // Find-or-create by (provider + providerUserId).
 export const handleGoogleSignup = async (googleIdentity) => {
   const { provider, providerUserId, email, name, picture } = googleIdentity;
@@ -31,6 +69,9 @@ export const handleGoogleSignup = async (googleIdentity) => {
 
   if (existing) {
     const { user } = existing;
+    // Legacy users (pre-Profile) get backfilled once; everyone else is left
+    // alone so Google never overwrites customized displayName/avatarUrl.
+    await ensureProfileForUser(user, { name, picture, email });
     return {
       user: {
         id: user.id,
@@ -61,6 +102,12 @@ export const handleGoogleSignup = async (googleIdentity) => {
     provider,
     providerUserId,
   });
+
+  // First Google login → seed Profile from Google identity (Phase 3).
+  // NOTE: sequential, not transactional — a crash between User and Profile
+  // creation self-heals via ensureProfileForUser on the next login + the
+  // seed backfill. Promote to prisma.$transaction when touching this again.
+  await ensureProfileForUser(newUser, { name, picture, email });
 
   return {
     user: {
