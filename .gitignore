@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# builds
+.next/
+dist/
+build/
+out/
+coverage/
+
+# env files (per-app rules in apps/api/.gitignore and apps/web/.gitignore remain authoritative)
+.env
+.env.local
+.env.*.local
+
+# misc
+.DS_Store
+*.pem
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
