@@ -11,6 +11,11 @@ export const findQuestionsBySubtopicId = async (subtopicId) => {
       title: true,
       difficulty: true,
       type: true,
+      // Options without isCorrect/solution: safe for the live practice
+      // runner (one request per subtopic instead of N+1 detail fetches).
+      options: {
+        select: { id: true, text: true },
+      },
     },
   });
 };

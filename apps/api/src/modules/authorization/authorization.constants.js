@@ -47,6 +47,20 @@ export const PERMISSIONS = {
   // Profile — self-scoped (req.user.id → Profile.userId, no :id param).
   "profile:read": "Read own profile, stats, history, heatmap and skills",
   "profile:update": "Update own profile fields",
+
+  // Leaderboard — read-only derived ranking.
+  "leaderboard:read": "View the leaderboard",
+
+  // Discussions — community Q&A (models predate routes; tag added later).
+  "discussions:read": "List discussions",
+  "discussions:create": "Start a discussion",
+
+  // Contests — scheduled events; taking/scoring is a later feature.
+  "contests:read": "List contests and view details",
+  "contests:register": "Register for a contest",
+  "contests:create": "Create a contest",
+  "contests:update": "Update a contest",
+  "contests:delete": "Delete a contest",
 };
 
 // `users:*` and `discussions:*` are absent: no such APIs exist yet.
@@ -63,6 +77,11 @@ const USER_PERMISSIONS = [
   "results:read",
   "profile:read",
   "profile:update",
+  "leaderboard:read",
+  "discussions:read",
+  "discussions:create",
+  "contests:read",
+  "contests:register",
 ];
 
 export const ROLE_PERMISSIONS = {

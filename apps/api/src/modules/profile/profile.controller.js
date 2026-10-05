@@ -111,3 +111,15 @@ export const getSkills = asyncHandler(async (req, res, next) => {
     data: response,
   });
 });
+
+export const getProgress = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  const response = await ProfileService.getProgressService(userId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Progress overview fetched successfully",
+    data: response,
+  });
+});

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { Bell, Flame, ChevronDown, LogOut, Settings, BarChart3, LayoutDashboard, Award } from "lucide-react";
-import { user } from "@/lib/mock/dashboard";
+import { useCurrentUser } from "@/lib/auth/useCurrentUser";
+import { logout } from "@/lib/auth/session";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
@@ -25,6 +26,18 @@ export default function AppNavbar() {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { user: live, streak } = useCurrentUser();
+  const user = {
+    name: live?.displayName || "…",
+    email: live?.email || "",
+    initials: live?.initials || "?",
+  };
+
+  const handleLogout = async () => {
+    setDropdownOpen(false);
+    await logout().catch(() => {});
+    window.location.href = "/login";
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -97,7 +110,7 @@ export default function AppNavbar() {
           <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-slate transition-colors hover:bg-ash">
             <Flame className="h-4 w-4 text-ember" />
             <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-              {user.streak}
+              {streak != null ? streak : "—"}
             </span>
           </div>
 
@@ -153,7 +166,7 @@ export default function AppNavbar() {
                 <div className="border-t border-mist pt-1.5">
                   <button
                     type="button"
-                    onClick={() => setDropdownOpen(false)}
+                    onClick={handleLogout}
                     className="flex w-full items-center gap-3 px-4 py-2 font-polysans text-15 tracking-[-0.02em] text-danger transition-colors hover:bg-ash"
                   >
                     <LogOut className="h-4 w-4" />

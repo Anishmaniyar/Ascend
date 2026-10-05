@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/icons";
-import { continueSession } from "@/lib/mock/dashboard";
+import { continueSession as mockSession } from "@/lib/mock/dashboard";
 import Button from "@/components/ui/Button";
 
-export default function ContinueCard() {
-  const pct = Math.round((continueSession.done / continueSession.total) * 100);
+// Props: `session` tri-state —
+//   undefined → mock (dashboard), object → live active session,
+//   null → no active session (renders nothing).
+export default function ContinueCard({ session } = {}) {
+  if (session === null) return null;
+
+  const data = session || mockSession;
+  const pct =
+    data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
 
   return (
     <div className="w-fit max-w-full rounded-cards border border-mist bg-canvas px-5 py-4 transition-colors duration-150 hover:border-mist-strong">
@@ -16,19 +23,19 @@ export default function ContinueCard() {
               Continue Practice
             </p>
             <span className="rounded-tags bg-ash px-2 py-0.5 text-11 text-steel">
-              {continueSession.mode}
+              {data.mode}
             </span>
           </div>
           <p className="mt-1.5 truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
-            {continueSession.subtopic}
+            {data.subtopic}
           </p>
-          <p className="mt-0.5 text-13 text-steel">{continueSession.topic}</p>
+          <p className="mt-0.5 text-13 text-steel">{data.topic}</p>
 
           {/* Progress bar */}
           <div className="mt-3 max-w-[220px]">
             <div className="flex items-center justify-between text-13">
               <span className="text-slate">
-                {continueSession.done}/{continueSession.total}
+                {data.done}/{data.total}
               </span>
               <span className="font-polysans text-graphite">{pct}%</span>
             </div>
@@ -43,7 +50,13 @@ export default function ContinueCard() {
 
         {/* Right: CTA */}
         <div className="flex shrink-0 items-center pt-1">
-          <Button render={<Link href="#" />} variant="primary" size="sm">
+          {/* Live resume needs the practice runner wired to real sessions
+              (separate task) — for now it leads back to topic browsing. */}
+          <Button
+            render={<Link href={session ? "/topics" : "#"} />}
+            variant="primary"
+            size="sm"
+          >
             Resume
             <ArrowRightIcon className="h-3.5 w-3.5" />
           </Button>

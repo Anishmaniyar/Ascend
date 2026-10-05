@@ -87,6 +87,7 @@ model User {
   practiceSessions PracticeSession[]
   attempts         Attempt[]
   userBadges       UserBadge[]
+  contestRegistrations ContestRegistration[]
   discussions      Discussion[]
   comments         Comment[]
   replies          Reply[]
@@ -275,6 +276,8 @@ model Sheet {
 
   sheetQuestions SheetQuestion[]
 
+  practiceSessions PracticeSession[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -303,6 +306,10 @@ model PracticeSession {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subtopic  Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+  // Company-sheet practice spans subtopics, so a sheet-bound session points
+  // at the sheet instead (subtopicId kept for the topic-tree grouping).
+  sheet     Sheet?   @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  sheetId   String?  @map("sheet_id")
 
   userId     String @map("user_id")
   subtopicId String @map("subtopic_id")
@@ -321,6 +328,7 @@ model PracticeSession {
 
   @@index([userId])
   @@index([subtopicId])
+  @@index([sheetId])
   @@map("practice_sessions")
 }
 
@@ -352,6 +360,7 @@ model Discussion {
   id      String @id @default(uuid())
   title   String @db.VarChar(255)
   content String @db.Text
+  tag     String? @db.VarChar(50)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id")
@@ -419,4 +428,45 @@ model DiscussionLike {
   @@index([discussionId])
   @@index([userId])
   @@map("discussion_likes")
+}
+
+// Contests (minimal real model: scheduled events users register for.
+// Live contest-taking/scoring is a later feature — see design doc).
+model Contest {
+  id          String   @id @default(uuid())
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  type        String   @default("WEEKLY") @db.VarChar(20)
+  company     String?  @db.VarChar(255)
+  difficulty  Difficulty @default(MEDIUM)
+  startsAt    DateTime @map("starts_at")
+  endsAt      DateTime @map("ends_at")
+  durationMin Int      @default(60) @map("duration_min")
+  totalQuestions Int   @default(0) @map("total_questions")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  registrations ContestRegistration[]
+
+  @@index([startsAt])
+  @@index([endsAt])
+  @@map("contests")
+}
+
+model ContestRegistration {
+  id String @id @default(uuid())
+
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  contestId String  @map("contest_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([contestId, userId])
+  @@index([contestId])
+  @@index([userId])
+  @@map("contest_registrations")
 }

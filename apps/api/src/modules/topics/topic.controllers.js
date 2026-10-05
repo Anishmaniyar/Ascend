@@ -12,11 +12,24 @@ export const getAllTopics = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllSheets = asyncHandler(async (req, res, next) => {
-  const response = await topicService.getAllSheets();
+  const response = await topicService.getAllSheets(req.user.id);
 
   return res.status(200).json({
     success: true,
     message: "Company sheets fetched successfully",
+    data: response,
+  });
+});
+
+export const getSheetQuestions = asyncHandler(async (req, res, next) => {
+  const response = await topicService.getSheetQuestions(
+    req.params.id,
+    req.user.id,
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Sheet questions fetched successfully",
     data: response,
   });
 });

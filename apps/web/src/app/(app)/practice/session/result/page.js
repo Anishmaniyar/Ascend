@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeftIcon, CheckIcon, XIcon, ClockIcon } from "@/components/ui/icons";
-import { questionOptions, calculateResult, formatTime } from "@/lib/mock/practiceSession";
-import { practiceSheets } from "@/lib/mock/dashboard";
-import { topics } from "@/lib/mock/landing";
+import { getResults, getSession, startSession } from "@/lib/api/practice";
 import Button from "@/components/ui/Button";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -23,112 +22,126 @@ const DIFF_DOT_COLORS = {
   Hard: "bg-ember",
 };
 
-// ═══════════════════════════════════════════════════════════════════════
-// FlagIcon (for mark-for-review indicator)
-// ═══════════════════════════════════════════════════════════════════════
-function FlagIcon({ className, filled }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden
-    >
-      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-      <line x1="4" y1="22" x2="4" y2="15" />
-    </svg>
-  );
+const DIFF_LABEL = { EASY: "Easy", MEDIUM: "Medium", HARD: "Hard" };
+
+function formatDuration(ms) {
+  if (ms == null || ms < 0) return "—";
+  const totalSec = Math.round(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
 // Result Page Component
 // ═══════════════════════════════════════════════════════════════════════
 export default function PracticeSessionResultPage({ searchParams }) {
+  const router = useRouter();
   const [showReview, setShowReview] = useState(false);
   const [filterReview, setFilterReview] = useState("all");
+  const [results, setResults] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [practicingAgain, setPracticingAgain] = useState(false);
 
-  // Get session data from URL params
-  const { topicId, subtopicId, sheetId } = useSearchParams();
+  const [sessionId, setSessionId] = useState(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setSessionId(new URLSearchParams(window.location.search).get("sessionId"));
+  }, []);
 
-  // Try to find the sheet and questions
-  const topic = topics.find((t) => t.id === topicId);
-  const subtopic = topic?.subtopics.find((s) => s.id === subtopicId);
-  const allSheets = practiceSheets[subtopicId] ?? [];
-  const sheet = allSheets.find((s) => s.id === sheetId);
+  const load = useCallback(async () => {
+    if (!sessionId) return;
+    setLoading(true);
+    setError("");
+    try {
+      const [res, sess] = await Promise.all([
+        getResults(sessionId),
+        getSession(sessionId),
+      ]);
+      setResults(res);
+      setSession(sess);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionId]);
 
-  // For demo purposes, use first available sheet if no params
-  const displaySheet = sheet ?? allSheets[0];
-  const displayTopic = topic ?? topics[0];
-  const displaySubtopic = subtopic ?? displayTopic?.subtopics[0];
+  useEffect(() => {
+    if (sessionId) load();
+    else setLoading(false);
+  }, [sessionId, load]);
 
-  // Mock results for demo (since we don't have actual session state in results page)
-  const mockAnswers = useMemo(() => {
-    if (!displaySheet) return {};
-    const answers = {};
-    displaySheet.questions.forEach((q, i) => {
-      // Simulate: answer first 70% correctly
-      if (i < Math.floor(displaySheet.questions.length * 0.7)) {
-        const opts = questionOptions[q.id];
-        if (opts) {
-          answers[q.id] = opts.correctIndex;
-        }
-      } else if (i < Math.floor(displaySheet.questions.length * 0.85)) {
-        // Some incorrect
-        const opts = questionOptions[q.id];
-        if (opts) {
-          answers[q.id] = (opts.correctIndex + 1) % 4;
-        }
-      }
-      // Rest unanswered
-    });
-    return answers;
-  }, [displaySheet]);
+  const handlePracticeAgain = async () => {
+    if (!session || practicingAgain) return;
+    setPracticingAgain(true);
+    try {
+      const created = await startSession(
+        session.sheetId
+          ? { sheetId: session.sheetId, mode: session.mode }
+          : { subtopicId: session.subtopic.id, mode: session.mode },
+      );
+      router.push(`/practice/session?sessionId=${created.id}`);
+    } catch {
+      setPracticingAgain(false);
+    }
+  };
 
-  const result = useMemo(() => {
-    if (!displaySheet) return null;
-    return calculateResult(displaySheet.questions, mockAnswers);
-  }, [displaySheet, mockAnswers]);
+  const backHref = !session
+    ? "/topics"
+    : session.sheetId
+      ? `/sheets/${session.sheetId}`
+      : `/topics`;
 
-  if (!displaySheet || !result) {
+  const filteredReview = useMemo(() => {
+    const review = results?.review || [];
+    if (filterReview === "correct") return review.filter((r) => r.isCorrect);
+    if (filterReview === "incorrect")
+      return review.filter((r) => !r.isCorrect);
+    if (filterReview === "unanswered") return [];
+    return review;
+  }, [results, filterReview]);
+
+  if (loading) {
     return (
       <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
-        <p className="text-15 text-steel">No session results available.</p>
-        <Link
-          href="/topics"
-          className="mt-4 inline-flex items-center gap-1 font-inter text-[12px] text-steel transition-colors hover:text-graphite"
-        >
-          <ArrowLeftIcon className="h-3.5 w-3.5" />
-          Browse Topics
-        </Link>
+        <p className="text-13 text-slate">Loading results…</p>
       </div>
     );
   }
 
-  // Mock time for demo
-  const timeTaken = 420; // 7 minutes
-  const mockMode = "PRACTICE";
+  if (!sessionId || error || !results) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <p className="text-15 text-steel">
+          {error ? `Couldn't load results: ${error}` : "No session results available."}
+        </p>
+        <div className="mt-4 flex items-center gap-4">
+          <Link
+            href="/topics"
+            className="inline-flex items-center gap-1 font-inter text-[12px] text-steel transition-colors hover:text-graphite"
+          >
+            <ArrowLeftIcon className="h-3.5 w-3.5" />
+            Browse Topics
+          </Link>
+          {error && sessionId && (
+            <button
+              type="button"
+              onClick={load}
+              className="font-polysans text-13 text-graphite underline underline-offset-2 hover:text-ember"
+            >
+              Try again
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-  // Filter questions for review
-  const filteredQuestions = displaySheet.questions.filter((q) => {
-    if (filterReview === "all") return true;
-    const selected = mockAnswers[q.id];
-    const opts = questionOptions[q.id];
-    if (filterReview === "correct") {
-      return opts && selected === opts.correctIndex;
-    }
-    if (filterReview === "incorrect") {
-      return opts && selected !== undefined && selected !== opts.correctIndex;
-    }
-    if (filterReview === "unanswered") {
-      return selected === undefined || selected === null;
-    }
-    return true;
-  });
+  const unanswered =
+    (session?.questions.length || results.totalQuestion) - results.totalQuestion;
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -136,11 +149,11 @@ export default function PracticeSessionResultPage({ searchParams }) {
       <header className="border-b border-mist bg-canvas/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-[var(--page-max-width)] items-center px-6">
           <Link
-            href={`/topics/${displayTopic?.id}/${displaySubtopic?.id}`}
+            href={backHref}
             className="flex items-center gap-2 font-polysans text-15 tracking-[-0.02em] text-slate transition-colors hover:text-graphite"
           >
             <ArrowLeftIcon className="h-4 w-4" />
-            Back to Sheet
+            Back
           </Link>
         </div>
       </header>
@@ -155,7 +168,7 @@ export default function PracticeSessionResultPage({ searchParams }) {
             Session Complete!
           </h1>
           <p className="mt-2 text-15 text-steel">
-            {displaySubtopic?.name} — Session {displaySheet.session}
+            {results.subtopic} — {results.topic}
           </p>
         </div>
 
@@ -164,8 +177,8 @@ export default function PracticeSessionResultPage({ searchParams }) {
           <div className="text-center">
             <p className="text-13 text-slate uppercase tracking-wider">Your Score</p>
             <p className="mt-2 font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
-              {result.score}
-              <span className="text-heading text-slate">/{result.total}</span>
+              {results.score}
+              <span className="text-heading text-slate">/{results.totalQuestion}</span>
             </p>
           </div>
 
@@ -173,46 +186,44 @@ export default function PracticeSessionResultPage({ searchParams }) {
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-xl bg-success/5 px-4 py-4 text-center border border-success/10">
               <p className="font-polysans text-heading tracking-[-0.02em] text-success">
-                {result.correct}
+                {results.correctAnswers}
               </p>
               <p className="mt-1 text-13 text-slate">Correct</p>
             </div>
             <div className="rounded-xl bg-danger/5 px-4 py-4 text-center border border-danger/10">
               <p className="font-polysans text-heading tracking-[-0.02em] text-danger">
-                {result.incorrect}
+                {results.wrongAnswers}
               </p>
               <p className="mt-1 text-13 text-slate">Incorrect</p>
             </div>
             <div className="rounded-xl bg-fog px-4 py-4 text-center border border-mist">
               <p className="font-polysans text-heading tracking-[-0.02em] text-slate">
-                {result.unanswered}
+                {unanswered}
               </p>
               <p className="mt-1 text-13 text-slate">Unanswered</p>
             </div>
             <div className="rounded-xl bg-ash px-4 py-4 text-center border border-mist">
               <p className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-                {result.accuracy}%
+                {results.accuracy}%
               </p>
               <p className="mt-1 text-13 text-slate">Accuracy</p>
             </div>
           </div>
 
-          {/* Time taken (test mode) */}
-          {mockMode === "TEST" && (
-            <div className="mt-6 flex items-center justify-center gap-2 text-15 text-steel">
-              <ClockIcon className="h-4 w-4" />
-              Time taken: <span className="font-polysans text-graphite">{formatTime(timeTaken)}</span>
-            </div>
-          )}
+          {/* Time taken */}
+          <div className="mt-6 flex items-center justify-center gap-2 text-15 text-steel">
+            <ClockIcon className="h-4 w-4" />
+            Time taken: <span className="font-polysans text-graphite">{formatDuration(results.timeTaken)}</span>
+          </div>
         </div>
 
         {/* Action buttons */}
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <Button render={<Link href={`/practice/session?topicId=${displayTopic?.id}&subtopicId=${displaySubtopic?.id}&sheetId=${displaySheet.id}&mode=PRACTICE`} />} variant="primary" className="flex-1">
-            Practice Again
+          <Button variant="primary" className="flex-1" onClick={handlePracticeAgain}>
+            {practicingAgain ? "Starting…" : "Practice Again"}
           </Button>
-          <Button render={<Link href={`/topics/${displayTopic?.id}/${displaySubtopic?.id}`} />} variant="secondary" className="flex-1">
-            Back to Sheet
+          <Button render={<Link href={backHref} />} variant="secondary" className="flex-1">
+            Back
           </Button>
         </div>
 
@@ -236,10 +247,10 @@ export default function PracticeSessionResultPage({ searchParams }) {
               {/* Filter pills */}
               <div className="mt-4 flex items-center gap-2">
                 {[
-                  { value: "all", label: "All", count: result.total },
-                  { value: "correct", label: "Correct", count: result.correct },
-                  { value: "incorrect", label: "Incorrect", count: result.incorrect },
-                  { value: "unanswered", label: "Unanswered", count: result.unanswered },
+                  { value: "all", label: "All", count: results.review.length },
+                  { value: "correct", label: "Correct", count: results.correctAnswers },
+                  { value: "incorrect", label: "Incorrect", count: results.wrongAnswers },
+                  { value: "unanswered", label: "Unanswered", count: unanswered },
                 ].map((opt) => (
                   <button
                     key={opt.value}
@@ -258,41 +269,33 @@ export default function PracticeSessionResultPage({ searchParams }) {
 
               {/* Questions list */}
               <div className="mt-4 space-y-3">
-                {filteredQuestions.map((q, i) => {
-                  const selected = mockAnswers[q.id];
-                  const opts = questionOptions[q.id];
-                  const isCorrect = opts && selected === opts.correctIndex;
-                  const isIncorrect = opts && selected !== undefined && selected !== opts.correctIndex;
-                  const isUnanswered = selected === undefined || selected === null;
-
-                  return (
+                {filteredReview.length === 0 ? (
+                  <p className="text-13 text-slate">
+                    {filterReview === "unanswered"
+                      ? "Unanswered questions aren't listed — every question below was attempted."
+                      : "Nothing in this filter."}
+                  </p>
+                ) : (
+                  filteredReview.map((q) => (
                     <div
-                      key={q.id}
+                      key={q.questionId}
                       className={`rounded-2xl border bg-canvas p-5 ${
-                        isCorrect
-                          ? "border-success/20"
-                          : isIncorrect
-                          ? "border-danger/20"
-                          : "border-mist"
+                        q.isCorrect ? "border-success/20" : "border-danger/20"
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         {/* Status icon */}
                         <span
                           className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                            isCorrect
+                            q.isCorrect
                               ? "bg-success/10 text-success"
-                              : isIncorrect
-                              ? "bg-danger/10 text-danger"
-                              : "bg-fog text-slate"
+                              : "bg-danger/10 text-danger"
                           }`}
                         >
-                          {isCorrect ? (
+                          {q.isCorrect ? (
                             <CheckIcon className="h-3.5 w-3.5" />
-                          ) : isIncorrect ? (
-                            <XIcon className="h-3.5 w-3.5" />
                           ) : (
-                            <span className="text-13">—</span>
+                            <XIcon className="h-3.5 w-3.5" />
                           )}
                         </span>
 
@@ -303,52 +306,50 @@ export default function PracticeSessionResultPage({ searchParams }) {
                           </p>
 
                           {/* Options (show correct/selected) */}
-                          {opts && (
-                            <div className="mt-3 space-y-2">
-                              {opts.options.map((option, oi) => {
-                                const isThisCorrect = oi === opts.correctIndex;
-                                const isThisSelected = oi === selected;
-                                return (
-                                  <div
-                                    key={oi}
-                                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-13 ${
-                                      isThisCorrect
-                                        ? "bg-success/5 text-success"
-                                        : isThisSelected && !isThisCorrect
-                                        ? "bg-danger/5 text-danger"
-                                        : "text-slate"
-                                    }`}
-                                  >
-                                    <span className="font-polysans">
-                                      {String.fromCharCode(65 + oi)}.
-                                    </span>
-                                    <span className="flex-1">{option}</span>
-                                    {isThisCorrect && (
-                                      <CheckIcon className="h-3.5 w-3.5 text-success" />
-                                    )}
-                                    {isThisSelected && !isThisCorrect && (
-                                      <XIcon className="h-3.5 w-3.5 text-danger" />
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
+                          <div className="mt-3 space-y-2">
+                            {q.options.map((option, oi) => {
+                              const isThisCorrect = option.id === q.correctOptionId;
+                              const isThisSelected = option.id === q.selectedOptionId;
+                              return (
+                                <div
+                                  key={option.id}
+                                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-13 ${
+                                    isThisCorrect
+                                      ? "bg-success/5 text-success"
+                                      : isThisSelected && !isThisCorrect
+                                      ? "bg-danger/5 text-danger"
+                                      : "text-slate"
+                                  }`}
+                                >
+                                  <span className="font-polysans">
+                                    {String.fromCharCode(65 + oi)}.
+                                  </span>
+                                  <span className="flex-1">{option.text}</span>
+                                  {isThisCorrect && (
+                                    <CheckIcon className="h-3.5 w-3.5 text-success" />
+                                  )}
+                                  {isThisSelected && !isThisCorrect && (
+                                    <XIcon className="h-3.5 w-3.5 text-danger" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
 
-                          {/* Explanation */}
-                          {opts?.explanation && (
+                          {/* Solution */}
+                          {q.solution && (
                             <div className="mt-3 rounded-lg bg-fog px-3 py-2">
                               <p className="text-13 text-steel leading-[1.5]">
-                                <span className="font-polysans text-graphite">Explanation:</span>{" "}
-                                {opts.explanation}
+                                <span className="font-polysans text-graphite">Solution:</span>{" "}
+                                {q.solution}
                               </p>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  ))
+                )}
               </div>
             </>
           )}
@@ -356,24 +357,4 @@ export default function PracticeSessionResultPage({ searchParams }) {
       </div>
     </div>
   );
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// Helper hook: useSearchParams (simple client-side parse)
-// ═══════════════════════════════════════════════════════════════════════
-function useSearchParams() {
-  const [params, setParams] = useState({});
-
-  if (typeof window !== "undefined" && Object.keys(params).length === 0) {
-    const sp = new URLSearchParams(window.location.search);
-    const obj = {};
-    for (const [k, v] of sp.entries()) {
-      obj[k] = v;
-    }
-    if (Object.keys(obj).length > 0) {
-      setParams(obj);
-    }
-  }
-
-  return params;
 }

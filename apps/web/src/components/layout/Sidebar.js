@@ -15,7 +15,8 @@ import {
   XIcon,
   FlameIcon,
 } from "@/components/ui/icons";
-import { user } from "@/lib/mock/dashboard";
+import { useCurrentUser } from "@/lib/auth/useCurrentUser";
+import { logout } from "@/lib/auth/session";
 import Button from "@/components/ui/Button";
 
 const NAV = [
@@ -43,6 +44,17 @@ function Wordmark() {
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { user: live, streak } = useCurrentUser();
+  const user = {
+    name: live?.displayName || "…",
+    email: live?.email || "",
+    initials: live?.initials || "?",
+  };
+
+  const handleLogout = async () => {
+    await logout().catch(() => {});
+    window.location.href = "/login";
+  };
 
   const navList = (onNavigate) =>
     NAV.map((item) => {
@@ -97,7 +109,7 @@ export default function Sidebar() {
             </span>
             <div>
               <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                {user.streak} day streak
+                {streak != null ? `${streak} day streak` : "—"}
               </p>
               <p className="text-13 text-slate">Keep it up!</p>
             </div>
@@ -112,8 +124,7 @@ export default function Sidebar() {
               <p className="truncate text-15 text-graphite">{user.name}</p>
               <p className="truncate text-13 text-slate">{user.email}</p>
             </div>
-            {/* TODO: wire to logout */}
-            <button type="button" aria-label="Log out" className="text-slate transition-colors hover:text-graphite">
+            <button type="button" aria-label="Log out" onClick={handleLogout} className="text-slate transition-colors hover:text-graphite">
               <LogOutIcon className="h-4 w-4" />
             </button>
           </div>

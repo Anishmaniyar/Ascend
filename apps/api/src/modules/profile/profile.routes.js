@@ -58,6 +58,13 @@ router.get(
   ProfileController.getRecommendations,
 );
 
+router.get(
+  "/progress",
+  authenticate,
+  requirePermission("profile:read"),
+  ProfileController.getProgress,
+);
+
 // Phase 11: profile update. Ownership is structural — the target is always
 // req.user.id → Profile.userId, never a /:userId param, so a user can only
 // ever modify their own row.

@@ -208,6 +208,61 @@ export const countQuestionsInSubtopic = async (subtopicId) => {
   });
 };
 
+// Curriculum tree with per-subtopic question counts (progress denominators).
+export const findCurriculumTree = async () => {
+  return await prisma.topic.findMany({
+    select: {
+      id: true,
+      title: true,
+      subtopics: {
+        select: {
+          id: true,
+          title: true,
+          _count: { select: { questions: true } },
+        },
+        orderBy: { title: "asc" },
+      },
+    },
+    orderBy: { title: "asc" },
+  });
+};
+
+// All attempts with topic/subtopic/difficulty context (progress numerators).
+export const findAttemptsForProgress = async (userId) => {
+  return await prisma.attempt.findMany({
+    where: { userId },
+    select: {
+      isCorrect: true,
+      createdAt: true,
+      questionId: true,
+      question: {
+        select: {
+          difficulty: true,
+          subtopic: {
+            select: {
+              id: true,
+              title: true,
+              topic: { select: { id: true, title: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const findCompletedSessionsForProgress = async (userId) => {
+  return await prisma.practiceSession.findMany({
+    where: { userId, completed: true },
+    select: { mode: true, startedAt: true, completedAt: true },
+    orderBy: { completedAt: "asc" },
+  });
+};
+
+export const countAllSessions = async (userId) => {
+  return await prisma.practiceSession.count({ where: { userId } });
+};
+
 // Most recently started incomplete session (resume target for continue).
 export const findMostRecentActiveSession = async (userId) => {
   return await prisma.practiceSession.findFirst({

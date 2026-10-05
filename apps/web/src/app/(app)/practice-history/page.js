@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ChevronLeftIcon,
@@ -28,12 +28,9 @@ function EyeIcon(props) {
 }
 import GoBack from "@/components/ui/GoBack";
 import Button from "@/components/ui/Button";
-import { practiceHistory } from "@/lib/mock/dashboard";
+import { getPracticeHistory } from "@/lib/api/profile";
 
 // ─── Constants ─────────────────────────────────────────────────────────
-const TOPICS = ["All Topics", "Quantitative Aptitude", "Logical Reasoning", "Verbal Ability", "Data Interpretation"];
-const SUBTOPICS = ["All Subtopics", "Profit & Loss", "Time & Work", "Number System", "Probability", "Seating Arrangement", "Coding-Decoding", "Synonyms & Antonyms", "Sentence Correction", "Bar Graphs", "Pie Charts", "Averages", "Syllogisms", "Simple & Compound Interest", "Time, Speed & Distance", "Reading Comprehension", "Ratio & Proportion", "Blood Relations", "Percentages", "Error Spotting", "Permutation & Combination", "Direction Sense", "Mixtures & Alligations", "Tables", "Fill in the Blanks", "HCF & LCM", "Puzzles", "Algebra", "Para Jumbles"];
-const DIFFICULTIES = ["All Difficulty", "Easy", "Medium", "Hard"];
 const ROWS_PER_PAGE = 8;
 
 // ─── Helpers ───────────────────────────────────────────────────────────
@@ -78,36 +75,90 @@ function MiniAccuracyRing({ accuracy, size = 28 }) {
   );
 }
 
+function formatDuration(ms) {
+  if (ms == null || ms < 0) return "—";
+  const totalSec = Math.round(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m === 0) return `${s}s`;
+  return `${m}m ${String(s).padStart(2, "0")}s`;
+}
+
 // ─── Component ─────────────────────────────────────────────────────────
 export default function PracticeHistoryPage() {
+  const [rows, setRows] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [topicFilter, setTopicFilter] = useState("All Topics");
   const [subtopicFilter, setSubtopicFilter] = useState("All Subtopics");
-  const [difficultyFilter, setDifficultyFilter] = useState("All Difficulty");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const history = await getPracticeHistory();
+      setRows(
+        history.map((h) => ({
+          id: h.sessionId,
+          topic: h.topic,
+          subtopic: h.subtopic,
+          mode: h.mode,
+          score: h.score,
+          total: h.questionsAttempted,
+          accuracy: h.accuracy,
+          timeTaken: formatDuration(h.durationMs),
+          date: h.completedAt,
+        })),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Filter options derive from the user's own data — never a fixed list.
+  const topics = useMemo(
+    () => ["All Topics", ...new Set((rows || []).map((r) => r.topic))],
+    [rows],
+  );
+  const subtopics = useMemo(
+    () => [
+      "All Subtopics",
+      ...new Set(
+        (rows || [])
+          .filter((r) => topicFilter === "All Topics" || r.topic === topicFilter)
+          .map((r) => r.subtopic),
+      ),
+    ],
+    [rows, topicFilter],
+  );
+
   const filtered = useMemo(() => {
-    let rows = [...practiceHistory];
+    let list = [...(rows || [])];
 
     if (topicFilter !== "All Topics") {
-      rows = rows.filter((r) => r.topic === topicFilter);
+      list = list.filter((r) => r.topic === topicFilter);
     }
     if (subtopicFilter !== "All Subtopics") {
-      rows = rows.filter((r) => r.subtopic === subtopicFilter);
-    }
-    if (difficultyFilter !== "All Difficulty") {
-      rows = rows.filter((r) => r.difficulty === difficultyFilter);
+      list = list.filter((r) => r.subtopic === subtopicFilter);
     }
     if (dateFrom) {
-      rows = rows.filter((r) => new Date(r.date) >= new Date(dateFrom));
+      list = list.filter((r) => new Date(r.date) >= new Date(dateFrom));
     }
     if (dateTo) {
-      rows = rows.filter((r) => new Date(r.date) <= new Date(dateTo + "T23:59:59"));
+      list = list.filter((r) => new Date(r.date) <= new Date(dateTo + "T23:59:59"));
     }
 
-    return rows;
-  }, [topicFilter, subtopicFilter, difficultyFilter, dateFrom, dateTo]);
+    return list;
+  }, [rows, topicFilter, subtopicFilter, dateFrom, dateTo]);
 
   const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
   const paginatedRows = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
@@ -125,13 +176,39 @@ export default function PracticeHistoryPage() {
   const clearFilters = () => {
     setTopicFilter("All Topics");
     setSubtopicFilter("All Subtopics");
-    setDifficultyFilter("All Difficulty");
     setDateFrom("");
     setDateTo("");
     setPage(1);
   };
 
-  const hasFilters = topicFilter !== "All Topics" || subtopicFilter !== "All Subtopics" || difficultyFilter !== "All Difficulty" || dateFrom || dateTo;
+  const hasFilters = topicFilter !== "All Topics" || subtopicFilter !== "All Subtopics" || dateFrom || dateTo;
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <GoBack className="mb-6" />
+        <p className="text-13 text-slate">Loading practice history…</p>
+      </div>
+    );
+  }
+
+  if (error || !rows) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <GoBack className="mb-6" />
+        <div className="rounded-2xl bg-ash p-6 text-13 text-steel">
+          <p>Couldn&apos;t load practice history: {error}</p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-3 font-polysans text-graphite underline underline-offset-2 hover:text-ember"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
@@ -155,10 +232,10 @@ export default function PracticeHistoryPage() {
           {/* Topic */}
           <select
             value={topicFilter}
-            onChange={(e) => { setTopicFilter(e.target.value); setPage(1); }}
+            onChange={(e) => { setTopicFilter(e.target.value); setSubtopicFilter("All Subtopics"); setPage(1); }}
             className="h-9 cursor-pointer rounded-lg border border-mist bg-fog px-3 text-13 text-graphite focus:border-graphite focus:outline-none"
           >
-            {TOPICS.map((t) => (
+            {topics.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
@@ -169,19 +246,8 @@ export default function PracticeHistoryPage() {
             onChange={(e) => { setSubtopicFilter(e.target.value); setPage(1); }}
             className="h-9 cursor-pointer rounded-lg border border-mist bg-fog px-3 text-13 text-graphite focus:border-graphite focus:outline-none"
           >
-            {SUBTOPICS.map((s) => (
+            {subtopics.map((s) => (
               <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-
-          {/* Difficulty */}
-          <select
-            value={difficultyFilter}
-            onChange={(e) => { setDifficultyFilter(e.target.value); setPage(1); }}
-            className="h-9 cursor-pointer rounded-lg border border-mist bg-fog px-3 text-13 text-graphite focus:border-graphite focus:outline-none"
-          >
-            {DIFFICULTIES.map((d) => (
-              <option key={d} value={d}>{d}</option>
             ))}
           </select>
 
@@ -244,7 +310,7 @@ export default function PracticeHistoryPage() {
                             </span>
                             <div>
                               <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                                Session #{session.sessionNumber}
+                                {session.mode === "TEST" ? "Test" : "Practice"} Session
                               </p>
                               <p className="text-13 text-slate">{session.total} Questions</p>
                             </div>
@@ -319,7 +385,7 @@ export default function PracticeHistoryPage() {
                         </span>
                         <div>
                           <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                            Session #{session.sessionNumber}
+                            {session.mode === "TEST" ? "Test" : "Practice"} Session
                           </p>
                           <p className="text-13 text-slate">{session.total} Questions</p>
                         </div>

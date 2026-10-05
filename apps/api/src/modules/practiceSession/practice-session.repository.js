@@ -22,12 +22,18 @@ export const findSubTopic = (subtopicId) => {
   });
 };
 
-export const findActivePracticeSession = (userId, subtopicId, mode) => {
+export const findActivePracticeSession = (
+  userId,
+  subtopicId,
+  mode,
+  sheetId = null,
+) => {
   return prisma.practiceSession.findFirst({
     where: {
       userId: userId,
       mode: mode,
       subtopicId: subtopicId,
+      sheetId: sheetId,
       completed: false,
     },
 
@@ -46,11 +52,17 @@ export const findActivePracticeSession = (userId, subtopicId, mode) => {
   });
 };
 
-export const createPracticeSession = (userId, subtopicId, mode) => {
+export const createPracticeSession = (
+  userId,
+  subtopicId,
+  mode,
+  sheetId = null,
+) => {
   return prisma.practiceSession.create({
     data: {
       userId: userId,
       subtopicId: subtopicId,
+      sheetId: sheetId,
       mode: mode,
     },
   });
@@ -64,6 +76,7 @@ export const findFullSessionDetails = (sessionId) => {
     include: {
       subtopic: {
         include: {
+          topic: { select: { id: true, title: true } },
           questions: {
             include: {
               options: true,
@@ -71,7 +84,49 @@ export const findFullSessionDetails = (sessionId) => {
           },
         },
       },
+      sheet: {
+        include: {
+          sheetQuestions: {
+            include: {
+              question: { include: { options: true } },
+            },
+          },
+        },
+      },
     },
+  });
+};
+
+export const findSheetQuestionsById = (sheetId) => {
+  return prisma.sheet.findUnique({
+    where: { id: sheetId },
+    select: {
+      id: true,
+      title: true,
+      companyName: true,
+      sheetQuestions: {
+        select: {
+          question: {
+            select: {
+              id: true,
+              subtopicId: true,
+              title: true,
+              difficulty: true,
+              type: true,
+              options: { select: { id: true, text: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+};
+
+export const findSheetMembership = (sheetId, questionId) => {
+  return prisma.sheetQuestion.findUnique({
+    where: { sheetId_questionId: { sheetId, questionId } },
+    select: { id: true },
   });
 };
 
@@ -146,9 +201,17 @@ export const findSessionById = (sessionId) => {
     select: {
       id: true,
       userId: true,
+      mode: true,
       startedAt: true,
       completedAt: true,
       completed: true,
+      subtopic: {
+        select: {
+          id: true,
+          title: true,
+          topic: { select: { id: true, title: true } },
+        },
+      },
     },
   });
 };
@@ -164,5 +227,32 @@ export const findAttemptsBySession = (sessionId) => {
       selectedOptionId: true,
       isCorrect: true,
     },
+  });
+};
+
+// Full review payload: attempt + question (with solution + all options so
+// the correct one can be shown post-completion).
+export const findAttemptsWithReview = (sessionId) => {
+  return prisma.attempt.findMany({
+    where: { sessionId },
+    select: {
+      id: true,
+      questionId: true,
+      selectedOptionId: true,
+      isCorrect: true,
+      question: {
+        select: {
+          id: true,
+          title: true,
+          difficulty: true,
+          type: true,
+          solution: true,
+          options: {
+            select: { id: true, text: true, isCorrect: true },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
   });
 };

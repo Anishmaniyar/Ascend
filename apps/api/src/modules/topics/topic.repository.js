@@ -6,6 +6,16 @@ export const findAllTopics = async () => {
       id: true,
       title: true,
       description: true,
+      // Subtopic shell for topic cards (counts only; solved counts come
+      // from GET /profile/progress so this stays a cheap curriculum read).
+      subtopics: {
+        select: {
+          id: true,
+          title: true,
+          _count: { select: { questions: true } },
+        },
+        orderBy: { title: "asc" },
+      },
     },
     orderBy: {
       title: "asc",
@@ -36,13 +46,54 @@ export const findAllSheets = async () => {
 
       _count: {
         select: {
-          questions: true,
+          sheetQuestions: true,
         },
+      },
+
+      sheetQuestions: {
+        select: { questionId: true },
       },
     },
 
     orderBy: {
       companyName: "asc",
+    },
+  });
+};
+
+// Distinct questionIds the user has attempted (progress denominator reads).
+export const findAttemptedQuestionIds = async (userId) => {
+  const groups = await prisma.attempt.groupBy({
+    by: ["questionId"],
+    where: { userId },
+  });
+  return groups.map((g) => g.questionId);
+};
+
+export const findSheetWithQuestions = async (sheetId) => {
+  return await prisma.sheet.findUnique({
+    where: { id: sheetId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      companyName: true,
+      difficulty: true,
+      estimatedTime: true,
+      sheetQuestions: {
+        select: {
+          question: {
+            select: {
+              id: true,
+              title: true,
+              difficulty: true,
+              type: true,
+              options: { select: { id: true, text: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 };

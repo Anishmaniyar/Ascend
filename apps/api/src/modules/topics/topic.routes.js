@@ -5,6 +5,7 @@ import { requirePermission } from "../../middleware/requirePermission.middleware
 import {
   getAllSheets,
   getAllTopics,
+  getSheetQuestions,
   getSubtopicById,
 } from "./topic.controllers.js";
 import { topicIdParamSchema } from "./topic.validator.js";
@@ -18,6 +19,14 @@ router.get(
   authenticate,
   requirePermission("sheets:read"),
   getAllSheets,
+);
+
+router.get(
+  "/sheets/:id/questions",
+  authenticate,
+  requirePermission("sheets:read"),
+  validate(topicIdParamSchema),
+  getSheetQuestions,
 );
 
 router.get(

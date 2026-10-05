@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -10,11 +10,13 @@ import {
   FlameIcon,
   ZapIcon,
 } from "@/components/ui/icons";
-import { leaderboardData, currentUserRank, resetInfo, LEADERBOARD_PAGE_SIZE } from "@/lib/mock/leaderboard";
+import { getLeaderboard } from "@/lib/api/leaderboard";
 
-// ─── Ranking filter tabs ──────────────────────────────────────────────
+const LEADERBOARD_PAGE_SIZE = 10;
+
+// ─── Ranking filter tabs (ids match the API sort values) ───────────────
 const RANKING_FILTERS = [
-  { id: "overall", label: "Overall", icon: TrophyIcon },
+  { id: "score", label: "Overall", icon: TrophyIcon },
   { id: "questions", label: "Questions Solved", icon: ZapIcon },
   { id: "accuracy", label: "Accuracy", icon: TargetIcon },
   { id: "streak", label: "Streak", icon: FlameIcon },
@@ -30,38 +32,42 @@ const TIME_PERIODS = [
 // ─── Component ────────────────────────────────────────────────────────
 export default function LeaderboardPage() {
   const [timePeriod, setTimePeriod] = useState("weekly");
-  const [activeFilter, setActiveFilter] = useState("overall");
+  const [activeFilter, setActiveFilter] = useState("score");
   const [page, setPage] = useState(1);
+  const [board, setBoard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Sort leaderboard based on active filter
-  const sortedData = useMemo(() => {
-    const data = [...leaderboardData];
-    switch (activeFilter) {
-      case "questions":
-        data.sort((a, b) => b.questionsSolved - a.questionsSolved || b.score - a.score);
-        break;
-      case "accuracy":
-        data.sort((a, b) => b.accuracy - a.accuracy || b.score - a.score);
-        break;
-      case "streak":
-        data.sort((a, b) => b.streak - a.streak || b.score - a.score);
-        break;
-      default:
-        data.sort((a, b) => b.score - a.score);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setBoard(
+        await getLeaderboard({ period: timePeriod, sort: activeFilter }),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    data.forEach((e, i) => (e.rank = i + 1));
-    return data;
-  }, [activeFilter]);
+  }, [timePeriod, activeFilter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const entries = board?.entries || [];
+  const currentUserRank = board?.currentUserRank || null;
 
   // Pagination
-  const totalPages = Math.ceil(sortedData.length / LEADERBOARD_PAGE_SIZE);
-  const paginatedData = sortedData.slice(
+  const totalPages = Math.ceil(entries.length / LEADERBOARD_PAGE_SIZE);
+  const paginatedData = entries.slice(
     (page - 1) * LEADERBOARD_PAGE_SIZE,
     page * LEADERBOARD_PAGE_SIZE,
   );
 
   // Generate visible page numbers
-  const pageNumbers = useMemo(() => {
+  const pageNumbers = (() => {
     const pages = [];
     const maxVisible = 5;
     let start = Math.max(1, page - Math.floor(maxVisible / 2));
@@ -69,13 +75,11 @@ export default function LeaderboardPage() {
     start = Math.max(1, end - maxVisible + 1);
     for (let i = start; i <= end; i++) pages.push(i);
     return pages;
-  }, [page, totalPages]);
+  })();
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
-      {/* ════════════════════════════════════════════════════════════════
-          1. PAGE HEADER
-          ════════════════════════════════════════════════════════════════ */}
+      {/* 1. PAGE HEADER */}
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
@@ -107,13 +111,11 @@ export default function LeaderboardPage() {
             </select>
             <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate" />
           </div>
-          <p className="mt-2 text-13 text-slate">{resetInfo[timePeriod]}</p>
+          <p className="mt-2 text-13 text-slate">{board?.resetInfo || ""}</p>
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════
-          2. RANKING FILTERS
-          ════════════════════════════════════════════════════════════════ */}
+      {/* 2. RANKING FILTERS */}
       <div className="mt-8 flex flex-wrap items-center gap-2">
         {RANKING_FILTERS.map((filter) => {
           const Icon = filter.icon;
@@ -138,11 +140,22 @@ export default function LeaderboardPage() {
         })}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════
-          3. MAIN LEADERBOARD TABLE
-          ════════════════════════════════════════════════════════════════ */}
+      {/* 3. MAIN LEADERBOARD TABLE */}
       <div className="mt-6">
-        {sortedData.length > 0 ? (
+        {loading ? (
+          <p className="text-13 text-slate">Loading leaderboard…</p>
+        ) : error ? (
+          <div className="rounded-2xl bg-ash p-6 text-13 text-steel">
+            <p>Couldn&apos;t load the leaderboard: {error}</p>
+            <button
+              type="button"
+              onClick={load}
+              className="mt-3 font-polysans text-graphite underline underline-offset-2 hover:text-ember"
+            >
+              Try again
+            </button>
+          </div>
+        ) : entries.length > 0 ? (
           <>
             {/* Desktop table */}
             <div className="hidden overflow-hidden rounded-2xl border border-mist bg-canvas lg:block">
@@ -160,7 +173,7 @@ export default function LeaderboardPage() {
               {/* Table rows */}
               {paginatedData.map((entry) => (
                 <div
-                  key={entry.rank}
+                  key={entry.userId}
                   className={`group grid grid-cols-[60px_1fr_120px_100px_100px_80px_100px] items-center gap-4 border-b border-mist px-5 py-4 transition-colors last:border-b-0 hover:bg-fog/30 ${
                     entry.isCurrentUser ? "bg-ember/5" : ""
                   }`}
@@ -188,9 +201,7 @@ export default function LeaderboardPage() {
 
                   {/* User */}
                   <div className="flex items-center gap-3">
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-polysans text-13 ${entry.avatarBg} ${entry.avatarColor}`}
-                    >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ash font-polysans text-13 text-graphite">
                       {entry.initials}
                     </span>
                     <div className="min-w-0">
@@ -238,7 +249,7 @@ export default function LeaderboardPage() {
             <div className="space-y-3 lg:hidden">
               {paginatedData.map((entry) => (
                 <div
-                  key={entry.rank}
+                  key={entry.userId}
                   className={`rounded-2xl border border-mist bg-canvas p-4 ${
                     entry.isCurrentUser ? "border-ember/30 bg-ember/5" : ""
                   }`}
@@ -266,9 +277,7 @@ export default function LeaderboardPage() {
 
                       {/* Avatar + Name */}
                       <div className="flex items-center gap-3">
-                        <span
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-polysans text-13 ${entry.avatarBg} ${entry.avatarColor}`}
-                        >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ash font-polysans text-13 text-graphite">
                           {entry.initials}
                         </span>
                         <div>
@@ -307,9 +316,7 @@ export default function LeaderboardPage() {
               ))}
             </div>
 
-            {/* ══════════════════════════════════════════════════════════
-                5. PAGINATION
-                ══════════════════════════════════════════════════════════ */}
+            {/* 5. PAGINATION */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-center gap-2">
                 <button
@@ -348,20 +355,20 @@ export default function LeaderboardPage() {
             {/* Count */}
             <p className="mt-4 text-center text-13 text-slate">
               Showing {(page - 1) * LEADERBOARD_PAGE_SIZE + 1}–
-              {Math.min(page * LEADERBOARD_PAGE_SIZE, sortedData.length)} of{" "}
-              {sortedData.length} users
+              {Math.min(page * LEADERBOARD_PAGE_SIZE, entries.length)} of{" "}
+              {entries.length} users
             </p>
           </>
         ) : (
           <div className="mt-16 text-center">
-            <p className="text-15 text-steel">No leaderboard data available.</p>
+            <p className="text-15 text-steel">
+              No rankings in this period yet — solve questions to join the board.
+            </p>
           </div>
         )}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════
-          4. YOUR RANK SECTION
-          ════════════════════════════════════════════════════════════════ */}
+      {/* 4. YOUR RANK SECTION */}
       <div className="mt-8 overflow-hidden rounded-2xl border border-ember/30 bg-ember/5">
         <div className="px-6 py-4">
           <h2 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
@@ -369,60 +376,66 @@ export default function LeaderboardPage() {
           </h2>
         </div>
         <div className="border-t border-ember/20 px-6 py-5">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            {/* Left: Rank + User */}
-            <div className="flex items-center gap-4">
-              <span className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
-                #{currentUserRank.rank}
-              </span>
-              <span
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-polysans text-15 ${currentUserRank.avatarBg} ${currentUserRank.avatarColor}`}
-              >
-                {currentUserRank.initials}
-              </span>
-              <div>
-                <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                  {currentUserRank.name}
-                </p>
-                <p className="mt-0.5 text-13 text-slate">Your current position</p>
+          {currentUserRank ? (
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              {/* Left: Rank + User */}
+              <div className="flex items-center gap-4">
+                <span className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
+                  #{currentUserRank.rank}
+                </span>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ash font-polysans text-15 text-graphite">
+                  {currentUserRank.initials}
+                </span>
+                <div>
+                  <p className="font-polysans text-15 tracking-[-0.02em] text-graphite">
+                    {currentUserRank.name}
+                  </p>
+                  <p className="mt-0.5 text-13 text-slate">Your current position</p>
+                </div>
               </div>
-            </div>
 
-            {/* Right: Stats */}
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="text-center">
-                <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                  {currentUserRank.questionsSolved}
-                </p>
-                <p className="text-13 text-slate">Questions</p>
-              </div>
-              <div className="text-center">
-                <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                  {currentUserRank.accuracy}%
-                </p>
-                <p className="text-13 text-slate">Accuracy</p>
-              </div>
-              <div className="text-center">
-                <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                  {currentUserRank.sessions}
-                </p>
-                <p className="text-13 text-slate">Sessions</p>
-              </div>
-              <div className="text-center">
-                <p className="inline-flex items-center gap-1 font-polysans text-subheading tracking-[-0.02em] text-graphite">
-                  <FlameIcon className="h-4 w-4 text-ember" />
-                  {currentUserRank.streak}
-                </p>
-                <p className="text-13 text-slate">Streak</p>
-              </div>
-              <div className="ml-4 border-l border-mist pl-6">
-                <p className="font-polysans text-heading tracking-[-0.02em] text-ember">
-                  {currentUserRank.score.toLocaleString()}
-                </p>
-                <p className="text-13 text-slate">Score</p>
+              {/* Right: Stats */}
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="text-center">
+                  <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                    {currentUserRank.questionsSolved}
+                  </p>
+                  <p className="text-13 text-slate">Questions</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                    {currentUserRank.accuracy}%
+                  </p>
+                  <p className="text-13 text-slate">Accuracy</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                    {currentUserRank.sessions}
+                  </p>
+                  <p className="text-13 text-slate">Sessions</p>
+                </div>
+                <div className="text-center">
+                  <p className="inline-flex items-center gap-1 font-polysans text-subheading tracking-[-0.02em] text-graphite">
+                    <FlameIcon className="h-4 w-4 text-ember" />
+                    {currentUserRank.streak}
+                  </p>
+                  <p className="text-13 text-slate">Streak</p>
+                </div>
+                <div className="ml-4 border-l border-mist pl-6">
+                  <p className="font-polysans text-heading tracking-[-0.02em] text-ember">
+                    {currentUserRank.score.toLocaleString()}
+                  </p>
+                  <p className="text-13 text-slate">Score</p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-13 text-steel">
+              {loading
+                ? "…"
+                : "Not ranked in this period yet — solve questions to join the board."}
+            </p>
+          )}
         </div>
       </div>
     </div>

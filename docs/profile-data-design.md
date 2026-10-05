@@ -369,3 +369,71 @@ User ─┬─ Profile (1-1)      Role ─ RolePermission ─ Permission
   recommendations shapes, FIRST_SOLVE auto-grant + idempotency, RBAC.
 - Step 19 (practice integrity `question.subtopicId === session.subtopicId`)
   was already enforced + tested; unchanged and still passing.
+
+---
+
+## Full frontend wiring — mocks to live data (2026-10-04)
+
+Goal: every app page reads the backend so real values can be entered
+(content entry documented separately in `docs/content-guide.md`).
+Marketing pages (`(marketing)/*`) intentionally stay mock — static copy, not
+user data. Dead dashboard-only widgets with no page consumers
+(`WelcomeHeader`, `DailyGoal`, `StreakCard`, `SkillsOverview`,
+`PerformanceCard`, `CompanySheetsGrid`, `RecentDiscussions`) left untouched.
+
+### New backend surface (all tested, `npm test` → 50 pass)
+
+- Schema (`db push`): `PracticeSession.sheetId?` (sheet-bound practice),
+  `Discussion.tag?`, `Contest` + `ContestRegistration`
+  (`@@unique([contestId, userId])`). Fixed a latent bug the new tests caught:
+  `findAllSheets` selected `_count.questions`, which is not a Sheet relation
+  (correct: `sheetQuestions`).
+- Permissions 23 → 31. USER 11 → 16
+  (+`leaderboard:read`, `discussions:read/create`, `contests:read/register`);
+  contest writes are ADMIN-only.
+- Reads: `GET /topic/sheets/:id/questions` (+ user progress),
+  topics list now embeds subtopic shells, question lists include options
+  (still no solution/isCorrect).
+- Practice: start accepts `subtopicId` OR `sheetId` (empty sheet → 400);
+  sheet sessions validate membership instead of subtopic; `GET /:id` is
+  readable while active (runner needs its questions; options carry no
+  answers); results gain `topic/subtopic/mode/timestamps` + per-question
+  `review[]` (options, selected/correct ids, solution — post-completion only).
+- `GET /profile/progress` composite: radial, 6-month trend, difficulty,
+  per-topic + per-subtopic tables, strengths/weaknesses (≥3 attempts),
+  time analysis.
+- New modules: `leaderboard` (period/sort, score = correct attempts,
+  null rank when unranked), `discussions` (list + create),
+  `contests` (list/detail/register + `/admin/contests` CRUD; status derives
+  from the clock; taking/scoring is the next feature).
+- Seed: badges + profiles as before; verification now on `usersWithoutProfile`.
+
+### Frontend (`npm run build` green)
+
+- Clients: `lib/api/{topics,questions,practice,leaderboard,discussions,
+  contests}.js` (+ existing `profile.js` + `getProgress`).
+- Shared: `lib/profileView.js` (safePct, formatters, toSidebarUser,
+  daysToWeeks) used by profile + dashboard; `useCurrentUser()` hook feeds
+  Sidebar/AppNavbar (live name/initials/streak) and wires both logouts.
+- Live pages: dashboard, profile, settings, badges, practice-history list
+  (filters derive from own data; no difficulty filter — sessions span
+  difficulties) + detail (Overview + real Question Review; percentile/
+  sections/negative-marking dropped — they don't exist), topics tree
+  (category pills dropped — no backend taxonomy; progress from the composite),
+  subtopic (questions + Start Practice with PRACTICE/TEST toggle),
+  company sheets list + NEW `/sheets/[sheetId]` detail, live practice runner
+  (`?sessionId=`: POST attempt per answer with lock-on-recorded semantics —
+  backend allows one attempt per question — complete → `result?sessionId=`
+  with real review), progress (all-time time analysis; weekly trend dropped —
+  was never implemented even in mock), leaderboard (server sort + period),
+  discussions (list + working create form), contests (list/detail/register;
+  past table shows participation, never fabricated scores).
+- Removed: per-subtopic mock `sheet/[sheetId]` route (concept replaced by the
+  live runner; sheet practice lives on company sheets).
+
+### Deliberately not built (honest placeholders, no fake data)
+
+- Live contest-taking + per-contest scoring/leaderboards.
+- Comment/reply/like writes (models exist, no routes).
+- Avatar file upload (URL field + clear endpoint; storage later).
+- Marketing copy (static by design).

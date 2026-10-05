@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import SectionCard from "@/components/dashboard/SectionCard";
@@ -9,10 +12,20 @@ import RecommendedTopics from "@/components/dashboard/RecommendedTopics";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import Heatmap from "@/components/charts/Heatmap";
 import {
-  buildHeatmap,
-  heatmapStats,
-  performanceSummary,
-} from "@/lib/mock/dashboard";
+  getProfile,
+  getProfileStats,
+  getContinueSession,
+  getPracticeHistory,
+  getHeatmap,
+  getSkills,
+  getRecommendations,
+  getBadges,
+} from "@/lib/api/profile";
+import {
+  safePct,
+  toSidebarUser,
+  daysToWeeks,
+} from "@/lib/profileView";
 
 const ViewAll = ({ href }) => (
   <Link
@@ -24,30 +37,125 @@ const ViewAll = ({ href }) => (
   </Link>
 );
 
+// ── Page ──────────────────────────────────────────────────────────────
+
 export default function ProfilePage() {
-  const weeks = buildHeatmap(52);
-  const {
-    questionsSolved,
-    totalSessions,
-    overallAccuracy,
-    easy,
-    medium,
-    hard,
-    practiceSessions,
-    testSessions,
-  } = performanceSummary;
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [
+        profile,
+        stats,
+        cont,
+        history,
+        heatmap,
+        skills,
+        recommendations,
+        badges,
+      ] = await Promise.all([
+        getProfile(),
+        getProfileStats(),
+        getContinueSession(),
+        getPracticeHistory(),
+        getHeatmap(),
+        getSkills(),
+        getRecommendations(),
+        getBadges(),
+      ]);
+      setData({
+        profile,
+        stats,
+        cont,
+        history,
+        heatmap,
+        skills,
+        recommendations,
+        badges,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <p className="text-13 text-slate">Loading your profile…</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <div className="rounded-2xl bg-ash p-6 text-13 text-steel">
+          <p>Couldn&apos;t load your profile: {error}</p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-3 font-polysans text-graphite underline underline-offset-2 hover:text-ember"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { profile, stats, cont, history, heatmap, skills, recommendations, badges } = data;
+
+  const solved = stats.questionsSolved;
+  const accuracy = stats.accuracy;
+  const correct = Math.round((accuracy / 100) * solved);
+  const totalSessions = stats.practiceSessions;
+  const practiceCount = stats.byMode?.practice ?? totalSessions;
+  const testCount = stats.byMode?.test ?? 0;
+  const diff = stats.byDifficulty || {};
+  const easy = diff.easy || { attempted: 0, total: 0 };
+  const medium = diff.medium || { attempted: 0, total: 0 };
+  const hard = diff.hard || { attempted: 0, total: 0 };
+
+  const weeks = daysToWeeks(heatmap.days || []);
+  const heatStats = {
+    questionsSolved: solved,
+    totalActiveDays: heatmap.totalActiveDays,
+    maxStreak: heatmap.maxStreak,
+    currentStreak: stats.currentStreak,
+  };
+
+  const historyItems = history.map((h) => ({
+    id: h.sessionId,
+    subtopic: h.subtopic,
+    topic: h.topic,
+    mode: h.mode,
+    score: h.score,
+    total: h.questionsAttempted,
+    accuracy: h.accuracy,
+    date: h.completedAt,
+  }));
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
       {/* ── Two-column layout ──────────────────────────────────────── */}
       <div className="flex flex-col gap-8 lg:flex-row">
         {/* ── Left: Profile sidebar (sticky) ──────────────────────── */}
-        <DashboardSidebar />
+        <DashboardSidebar user={toSidebarUser(profile)} skills={skills} />
 
         {/* ── Right: Main content ─────────────────────────────────── */}
         <div className="min-w-0 flex-1 space-y-6">
-          {/* 1. Resume Practice — full width */}
-          <ContinueCard />
+          {/* 1. Resume Practice — full width (hidden when none active) */}
+          <ContinueCard session={cont} />
 
           {/* 2. Practice Statistics + Badges — side by side */}
           <div className="border-t border-mist pt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -55,31 +163,31 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               <DonutMetricCard
                 label="Questions Solved"
-                centerText={questionsSolved}
+                centerText={solved}
                 centerLabel="Solved"
                 segments={[
-                  { value: easy.solved, color: "#3f8f62", label: "Easy" },
-                  { value: medium.solved, color: "#c9a348", label: "Medium" },
-                  { value: hard.solved, color: "#e07a5f", label: "Hard" },
+                  { value: easy.attempted, color: "#3f8f62", label: "Easy" },
+                  { value: medium.attempted, color: "#c9a348", label: "Medium" },
+                  { value: hard.attempted, color: "#e07a5f", label: "Hard" },
                 ]}
                 details={[
-                  { label: "Easy", value: easy.solved, color: "#3f8f62", percent: Math.round((easy.solved / easy.total) * 100), subtext: "/ " + easy.total },
-                  { label: "Medium", value: medium.solved, color: "#c9a348", percent: Math.round((medium.solved / medium.total) * 100), subtext: "/ " + medium.total },
-                  { label: "Hard", value: hard.solved, color: "#e07a5f", percent: Math.round((hard.solved / hard.total) * 100), subtext: "/ " + hard.total },
+                  { label: "Easy", value: easy.attempted, color: "#3f8f62", percent: safePct(easy.attempted, easy.total), subtext: "/ " + easy.total },
+                  { label: "Medium", value: medium.attempted, color: "#c9a348", percent: safePct(medium.attempted, medium.total), subtext: "/ " + medium.total },
+                  { label: "Hard", value: hard.attempted, color: "#e07a5f", percent: safePct(hard.attempted, hard.total), subtext: "/ " + hard.total },
                 ]}
               />
 
               <DonutMetricCard
                 label="Accuracy"
-                centerText={`${overallAccuracy}%`}
+                centerText={`${accuracy}%`}
                 centerLabel="Accuracy"
                 segments={[
-                  { value: overallAccuracy, color: "#3f8f62", label: "Correct" },
-                  { value: 100 - overallAccuracy, color: "#c95c5c", label: "Mistakes" },
+                  { value: accuracy, color: "#3f8f62", label: "Correct" },
+                  { value: 100 - accuracy, color: "#c95c5c", label: "Mistakes" },
                 ]}
                 details={[
-                  { label: "Correct answers", value: Math.round((overallAccuracy / 100) * questionsSolved), color: "#3f8f62", percent: overallAccuracy },
-                  { label: "Incorrect / Skipped", value: questionsSolved - Math.round((overallAccuracy / 100) * questionsSolved), color: "#c95c5c", percent: 100 - overallAccuracy },
+                  { label: "Correct answers", value: correct, color: "#3f8f62", percent: accuracy },
+                  { label: "Incorrect / Skipped", value: solved - correct, color: "#c95c5c", percent: 100 - accuracy },
                 ]}
               />
 
@@ -88,18 +196,18 @@ export default function ProfilePage() {
                 centerText={totalSessions}
                 centerLabel="Total"
                 segments={[
-                  { value: practiceSessions, color: "#d9b45b", label: "Practice" },
-                  { value: testSessions, color: "#3f8f62", label: "Test" },
+                  { value: practiceCount, color: "#d9b45b", label: "Practice" },
+                  { value: testCount, color: "#3f8f62", label: "Test" },
                 ]}
                 details={[
-                  { label: "Practice sessions", value: practiceSessions, color: "#d9b45b", percent: Math.round((practiceSessions / totalSessions) * 100), subtext: Math.round((practiceSessions / totalSessions) * 100) + "%" },
-                  { label: "Test sessions", value: testSessions, color: "#3f8f62", percent: Math.round((testSessions / totalSessions) * 100), subtext: Math.round((testSessions / totalSessions) * 100) + "%" },
+                  { label: "Practice sessions", value: practiceCount, color: "#d9b45b", percent: safePct(practiceCount, totalSessions), subtext: safePct(practiceCount, totalSessions) + "%" },
+                  { label: "Test sessions", value: testCount, color: "#3f8f62", percent: safePct(testCount, totalSessions), subtext: safePct(testCount, totalSessions) + "%" },
                 ]}
               />
             </div>
 
             {/* Right: Badges */}
-            <DashboardBadges />
+            <DashboardBadges badges={badges} />
           </div>
 
           {/* 3. Activity Heatmap */}
@@ -108,7 +216,7 @@ export default function ProfilePage() {
               Activity
             </h3>
             <div className="mt-5">
-              <Heatmap weeks={weeks} stats={heatmapStats} />
+              <Heatmap weeks={weeks} stats={heatStats} />
             </div>
           </div>
 
@@ -121,7 +229,7 @@ export default function ProfilePage() {
               <ViewAll href="/practice-history" />
             </div>
             <div className="mt-5">
-              <PracticeHistoryList />
+              <PracticeHistoryList sessions={historyItems} />
             </div>
           </div>
 
@@ -136,7 +244,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <div className="mt-5">
-              <RecommendedTopics />
+              <RecommendedTopics topics={recommendations} />
             </div>
           </div>
         </div>
@@ -144,4 +252,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

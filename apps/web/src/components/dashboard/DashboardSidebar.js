@@ -15,7 +15,7 @@ import {
   Target,
   BarChart3,
 } from "lucide-react";
-import { user, profileSkills } from "@/lib/mock/dashboard";
+import { user as mockUser, profileSkills as mockSkills } from "@/lib/mock/dashboard";
 import Button from "@/components/ui/Button";
 
 const VISIBLE_COUNT = 3;
@@ -34,10 +34,10 @@ const LEVEL_META = {
   fundamental: { label: "Fundamental", color: "bg-graphite" },
 };
 
-function SkillGroup({ level }) {
+function SkillGroup({ level, skills }) {
   const [expanded, setExpanded] = useState(false);
   const meta = LEVEL_META[level];
-  const all = profileSkills.filter((s) => s.level === level);
+  const all = skills.filter((s) => s.level === level);
   const visible = expanded ? all : all.slice(0, VISIBLE_COUNT);
   const hasMore = all.length > VISIBLE_COUNT;
 
@@ -51,12 +51,11 @@ function SkillGroup({ level }) {
         </p>
       </div>
 
-      {/* Skill tags */}
+          {/* Skill tags */}
       <div className="flex flex-wrap gap-1.5">
         {visible.map((skill) => (
           <span
-            key={skill.name}
-            className="inline-flex items-center gap-1 rounded-tags bg-fog px-3 py-1 font-polysans text-13 tracking-[-0.02em] text-graphite"
+            key={skill.name}            className="inline-flex items-center gap-1 rounded-tags bg-fog px-3 py-1 font-polysans text-13 tracking-[-0.02em] text-graphite"
           >
             {skill.name}
             <span className="text-slate">×{skill.solved}</span>
@@ -86,7 +85,16 @@ function SkillGroup({ level }) {
   );
 }
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ user: liveUser, skills: liveSkills } = {}) {
+  // Live props win when provided; dashboard (no props) keeps mock data.
+  const user = liveUser || mockUser;
+  // API skills are { topic, solved, accuracy, level }; mocks are { name, ... }.
+  const rawSkills = liveSkills || mockSkills;
+  const profileSkills = rawSkills.map((s) => ({
+    name: s.name || s.topic,
+    solved: s.solved,
+    level: s.level,
+  }));
   return (
     <aside className="w-full space-y-6 lg:sticky lg:top-20 lg:w-72 lg:shrink-0">
       {/* ── Profile Card ──────────────────────────────────────────────── */}
@@ -160,8 +168,14 @@ export default function DashboardSidebar() {
             if (!value) return null;
 
             const Icon = link.icon;
-            const display = link.prefix ? `${link.prefix}${value}` : value;
-            const url = `${link.baseUrl}${value}`;
+            // Live API stores full URLs; mocks store bare handles.
+            const isFullUrl = /^https?:\/\//i.test(value);
+            const display = isFullUrl
+              ? value
+              : link.prefix
+                ? `${link.prefix}${value}`
+                : value;
+            const url = isFullUrl ? value : `${link.baseUrl}${value}`;
 
             return (
               <a
@@ -200,9 +214,17 @@ export default function DashboardSidebar() {
         </h2>
 
         <div className="mt-5 space-y-5">
-          <SkillGroup level="advanced" />
-          <SkillGroup level="intermediate" />
-          <SkillGroup level="fundamental" />
+          {profileSkills.length === 0 ? (
+            <p className="text-13 leading-[1.5] text-slate">
+              No skills yet — solve questions and they&apos;ll show up here.
+            </p>
+          ) : (
+            <>
+              <SkillGroup level="advanced" skills={profileSkills} />
+              <SkillGroup level="intermediate" skills={profileSkills} />
+              <SkillGroup level="fundamental" skills={profileSkills} />
+            </>
+          )}
         </div>
       </section>
     </aside>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -15,13 +15,12 @@ import {
   PracticeProvider,
   usePracticeSession,
 } from "@/context/PracticeContext";
+import { formatTime } from "@/lib/mock/practiceSession";
 import {
-  questionOptions,
-  formatTime,
-  calculateResult,
-} from "@/lib/mock/practiceSession";
-import { practiceSheets } from "@/lib/mock/dashboard";
-import { topics } from "@/lib/mock/landing";
+  getSession,
+  submitAttempt,
+  completeSession,
+} from "@/lib/api/practice";
 import Button from "@/components/ui/Button";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -48,7 +47,10 @@ function FlagIcon({ className, filled }) {
 
 // ═══════════════════════════════════════════════════════════════════════
 // DIFFICULTY — restrained monochrome chips; correctness alone uses color.
+// (API sends EASY/MEDIUM/HARD; display labels stay capitalized.)
 // ═══════════════════════════════════════════════════════════════════════
+const DIFF_LABEL = { EASY: "Easy", MEDIUM: "Medium", HARD: "Hard" };
+const diffLabel = (d) => DIFF_LABEL[d] || d;
 const DIFF_COLORS = {
   Easy: "bg-ash text-steel",
   Medium: "bg-ash text-steel",
@@ -94,12 +96,12 @@ function SessionHeader({ onExit, showExitConfirm, setShowExitConfirm }) {
                   {meta?.sheetName ?? "Practice Session"}
                 </h1>
                 <span
-                  className={`hidden sm:inline-flex items-center gap-1.5 rounded-tags px-2 py-0.5 font-polysans text-13 tracking-[-0.02em] ${DIFF_COLORS[meta?.difficulty] ?? ""}`}
+                  className={`hidden sm:inline-flex items-center gap-1.5 rounded-tags px-2 py-0.5 font-polysans text-13 tracking-[-0.02em] ${DIFF_COLORS[diffLabel(meta?.difficulty)] ?? ""}`}
                 >
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${DIFF_DOT_COLORS[meta?.difficulty] ?? ""}`}
+                    className={`h-1.5 w-1.5 rounded-full ${DIFF_DOT_COLORS[diffLabel(meta?.difficulty)] ?? ""}`}
                   />
-                  {meta?.difficulty}
+                  {diffLabel(meta?.difficulty)}
                 </span>
               </div>
               <p className="text-13 text-slate hidden sm:block">
@@ -148,7 +150,7 @@ function SessionHeader({ onExit, showExitConfirm, setShowExitConfirm }) {
               Exit Practice Session?
             </h2>
             <p className="mt-2 text-15 text-steel leading-[1.6]">
-              Your progress has been saved. You can resume this session later from the sheet page.
+              Your progress has been saved. You can resume this session later from your profile or dashboard.
             </p>
             <div className="mt-6 flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={() => setShowExitConfirm(false)}>
@@ -173,6 +175,7 @@ function QuestionDisplay() {
     currentQuestion,
     currentAnswer,
     currentMarked,
+    isLocked,
     selectOption,
     toggleMark,
     clearAnswer,
@@ -187,10 +190,12 @@ function QuestionDisplay() {
 
   if (!currentQuestion) return null;
 
-  const opts = questionOptions[currentQuestion.id];
+  // Live options come with the question (id/text, never answers).
+  const opts = currentQuestion.options || [];
   const optionLabels = ["A", "B", "C", "D"];
   const isLast = currentIndex === total - 1;
   const hasAnswer = currentAnswer !== undefined && currentAnswer !== null;
+  const locked = isLocked(currentQuestion.id);
 
   return (
     <div className="flex-1 min-w-0">
@@ -203,7 +208,7 @@ function QuestionDisplay() {
               {currentIndex + 1}
             </span>
             <span className="text-13 text-slate">
-              {currentQuestion.difficulty}
+              {diffLabel(currentQuestion.difficulty)}
             </span>
           </div>
           <button
@@ -227,15 +232,16 @@ function QuestionDisplay() {
         </p>
 
         {/* MCQ options */}
-        {opts && (
+        {opts.length > 0 && (
           <div className="mt-6 space-y-3">
-            {opts.options.map((option, i) => {
+            {opts.map((option, i) => {
               const isSelected = currentAnswer === i;
               return (
                 <button
-                  key={i}
+                  key={option.id}
                   type="button"
                   onClick={() => selectOption(currentQuestion.id, i)}
+                  disabled={locked}
                   className={`group flex w-full items-center gap-4 rounded-xl border px-5 py-3.5 text-left transition-colors duration-150 ${
                     isSelected
                       ? "border-graphite bg-canvas"
@@ -258,7 +264,7 @@ function QuestionDisplay() {
                       isSelected ? "font-polysans text-graphite" : "text-graphite"
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </span>
                   {/* Selected check */}
                   {isSelected && (
@@ -270,15 +276,21 @@ function QuestionDisplay() {
           </div>
         )}
 
-        {/* Clear answer */}
-        {hasAnswer && (
-          <button
-            type="button"
-            onClick={() => clearAnswer(currentQuestion.id)}
-            className="mt-4 font-polysans text-13 text-slate hover:text-graphite"
-          >
-            Clear selection
-          </button>
+        {/* Recorded note / Clear answer */}
+        {locked ? (
+          <p className="mt-4 font-polysans text-13 text-success">
+            Answer recorded
+          </p>
+        ) : (
+          hasAnswer && (
+            <button
+              type="button"
+              onClick={() => clearAnswer(currentQuestion.id)}
+              className="mt-4 font-polysans text-13 text-slate hover:text-graphite"
+            >
+              Clear selection
+            </button>
+          )
         )}
       </div>
 
@@ -290,7 +302,7 @@ function QuestionDisplay() {
         </Button>
 
         {isLast ? (
-          <Button variant="primary" onClick={submit}>
+          <Button variant="primary" onClick={() => submit().catch(() => {})}>
             Submit Session
             <CheckIcon className="h-4 w-4" />
           </Button>
@@ -474,8 +486,9 @@ function QuestionNavigator() {
                 variant="primary"
                 className="flex-1"
                 onClick={() => {
-                  submit();
-                  setShowConfirmSubmit(false);
+                  submit()
+                    .then(() => setShowConfirmSubmit(false))
+                    .catch(() => {});
                 }}
               >
                 Confirm Submit
@@ -491,17 +504,17 @@ function QuestionNavigator() {
 // ═══════════════════════════════════════════════════════════════════════
 // PracticeSessionPage (inner — needs provider)
 // ═══════════════════════════════════════════════════════════════════════
-function PracticeSessionInner() {
+function PracticeSessionInner({ apiError }) {
   const router = useRouter();
-  const { exit, isSubmitted } = usePracticeSession();
+  const { exit, isSubmitted, sessionId } = usePracticeSession();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // If session was submitted, redirect to results
   useEffect(() => {
     if (isSubmitted) {
-      router.push(`/practice/session/result`);
+      router.push(`/practice/session/result?sessionId=${sessionId}`);
     }
-  }, [isSubmitted, router]);
+  }, [isSubmitted, router, sessionId]);
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -510,6 +523,14 @@ function PracticeSessionInner() {
         showExitConfirm={showExitConfirm}
         setShowExitConfirm={setShowExitConfirm}
       />
+
+      {apiError && (
+        <div className="mx-auto max-w-[var(--page-max-width)] px-4 sm:px-6 pt-4">
+          <div className="rounded-xl border border-ember/40 bg-ash px-5 py-3 text-13 text-ember">
+            {apiError}
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto max-w-[var(--page-max-width)] px-4 sm:px-6 py-6">
         <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
@@ -525,23 +546,71 @@ function PracticeSessionInner() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Exported page — sets up session from URL params
+// Exported page — loads a live session from ?sessionId=
 // ═══════════════════════════════════════════════════════════════════════
 export default function PracticeSessionPage({ params, searchParams }) {
-  // Parse sheet info from query string
-  // URL: /practice/session?topicId=quant&subtopicId=quant-1&sheetId=q1-s1&mode=PRACTICE
-  const { topicId, subtopicId, sheetId, mode } = useSearchParams();
+  const router = useRouter();
+  const { sessionId } = useSearchParams();
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [apiError, setApiError] = useState("");
 
-  const topic = topics.find((t) => t.id === topicId);
-  const subtopic = topic?.subtopics.find((s) => s.id === subtopicId);
-  const allSheets = practiceSheets[subtopicId] ?? [];
-  const sheet = allSheets.find((s) => s.id === sheetId);
+  useEffect(() => {
+    if (!sessionId) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getSession(sessionId);
+        if (cancelled) return;
+        if (data.completed) {
+          router.replace(`/practice/session/result?sessionId=${sessionId}`);
+          return;
+        }
+        setSession(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, router]);
 
-  // Fallback: if no search params, show a "start session" page
-  if (!sheet || !topic || !subtopic) {
+  const handleAnswer = useCallback(
+    (questionId, optionId) => submitAttempt(sessionId, questionId, optionId),
+    [sessionId],
+  );
+
+  const handleSubmit = useCallback(async () => {
+    await completeSession(sessionId);
+    router.push(`/practice/session/result?sessionId=${sessionId}`);
+  }, [sessionId, router]);
+
+  const handleError = useCallback((err) => {
+    setApiError(err?.message || "Something went wrong. Please try again.");
+  }, []);
+
+  if (loading) {
     return (
       <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
-        <p className="text-15 text-steel">No active session.</p>
+        <p className="text-13 text-slate">Loading session…</p>
+      </div>
+    );
+  }
+
+  // No session in URL — point at real entry points.
+  if (!sessionId || error || !session) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <p className="text-15 text-steel">
+          {error ? `Couldn't load this session: ${error}` : "No active session."}
+        </p>
         <Link
           href="/topics"
           className="mt-4 inline-flex items-center gap-1 font-inter text-[12px] text-steel transition-colors hover:text-graphite"
@@ -553,21 +622,39 @@ export default function PracticeSessionPage({ params, searchParams }) {
     );
   }
 
-  const sessionId = `${sheetId}-${Date.now()}`;
+  if (session.questions.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <p className="text-15 text-steel">This session has no questions.</p>
+        <Link
+          href="/topics"
+          className="mt-4 inline-flex items-center gap-1 font-inter text-[12px] text-steel transition-colors hover:text-graphite"
+        >
+          <ArrowLeftIcon className="h-3.5 w-3.5" />
+          Browse Topics
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <PracticeProvider
-      sessionId={sessionId}
-      questions={sheet.questions}
+      sessionId={session.id}
+      questions={session.questions}
       meta={{
-        sheetName: `${subtopic.name} — Session ${sheet.session}`,
-        topicName: topic.title,
-        subtopicName: subtopic.name,
-        difficulty: sheet.difficulty,
-        mode: mode ?? "PRACTICE",
+        sheetName: session.sheet
+          ? `${session.sheet.title} — ${session.sheet.companyName}`
+          : `${session.subtopic.title} Practice`,
+        topicName: session.subtopic.topic?.title || "",
+        subtopicName: session.subtopic.title,
+        difficulty: undefined,
+        mode: session.mode,
       }}
+      onAnswer={handleAnswer}
+      onSubmit={handleSubmit}
+      onError={handleError}
     >
-      <PracticeSessionInner />
+      <PracticeSessionInner apiError={apiError} />
     </PracticeProvider>
   );
 }

@@ -1,80 +1,102 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
-  ChevronDownIcon,
   TrendingUpIcon,
   BrainIcon,
-  LightbulbIcon,
-  BarChart3Icon,
-  ChatIcon,
-  GlobeIcon,
-  PencilIcon,
-  DownloadIcon,
   ClockIcon,
   CalendarIcon,
   TargetIcon,
 } from "@/components/ui/icons";
 import RingProgress from "@/components/charts/RingProgress";
 import MonoRoundedStreamChart from "@/components/charts/MonoRoundedStreamChart";
-import Button from "@/components/ui/Button";
 import GoBack from "@/components/ui/GoBack";
-import {
-  radialMetrics,
-  performanceTrendMonthly,
-  difficultyAccuracy,
-  topicProgress,
-  getClassifiedSubtopics,
-  timePracticeAnalysis,
-} from "@/lib/mock/progress";
+import { getProgress } from "@/lib/api/profile";
+import { getTopicIcon } from "@/lib/subtopicIcons";
 
-// ── Icon map for topic icons ──────────────────────────────────────────
-const TOPIC_ICON_MAP = {
-  BrainIcon,
-  LightbulbIcon,
-  BarChart3Icon,
-  ChatIcon,
-  GlobeIcon,
-  PencilIcon,
-};
-
-const TIME_RANGES = [
-  { id: "6m", label: "Last 6 Months" },
-  { id: "1y", label: "Last Year" },
-  { id: "3m", label: "Last 3 Months" },
-  { id: "all", label: "All Time" },
-];
-
-const TREND_PERIODS = [
-  { id: "monthly", label: "Monthly" },
-  { id: "weekly", label: "Weekly" },
-];
+function formatDurationMs(ms) {
+  if (!ms || ms <= 0) return "0m";
+  const totalMin = Math.round(ms / 60000);
+  if (totalMin < 60) return `${totalMin}m`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════
 
 export default function ProgressPage() {
-  const [timeRange, setTimeRange] = useState("6m");
+  const [progress, setProgress] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [trendMetric, setTrendMetric] = useState("accuracy");
-  const [trendPeriod, setTrendPeriod] = useState("monthly");
-  const [timeRangeOpen, setTimeRangeOpen] = useState(false);
   const [hoveredRing, setHoveredRing] = useState(null);
 
-  const selectedRange = TIME_RANGES.find((r) => r.id === timeRange);
-  const timeData = timePracticeAnalysis[timeRange];
-  const { strengths, weaknesses, all: allSubtopics } = getClassifiedSubtopics();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setProgress(await getProgress());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <GoBack className="mb-6" />
+        <p className="text-13 text-slate">Loading progress…</p>
+      </div>
+    );
+  }
+
+  if (error || !progress) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <GoBack className="mb-6" />
+        <div className="rounded-2xl bg-ash p-6 text-13 text-steel">
+          <p>Couldn&apos;t load progress: {error}</p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-3 font-polysans text-graphite underline underline-offset-2 hover:text-ember"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { radial, monthlyTrend, difficulty, topics, subtopics, strengths, weaknesses, time } = progress;
+  const solvedPct =
+    radial.questionsSolved.total > 0
+      ? (radial.questionsSolved.solved / radial.questionsSolved.total) * 100
+      : 0;
+  const sessionPct =
+    radial.practiceSessions.total > 0
+      ? (radial.practiceSessions.completed / radial.practiceSessions.total) * 100
+      : 0;
+  const trend = monthlyTrend.map((m) => ({ ...m, month: m.label }));
+  const practiced = subtopics.filter((s) => s.attempted > 0);
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
       {/* Go back */}
       <GoBack className="mb-6" />
 
-      {/* ═══════════════════════════════════════════════════════════════
-          1. PAGE HEADER
-          ═══════════════════════════════════════════════════════════════ */}
+      {/* 1. PAGE HEADER */}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-polysans text-heading-lg tracking-[-0.02em] text-graphite">
@@ -84,52 +106,9 @@ export default function ProgressPage() {
             Track your learning journey and improvement
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          {/* Time-range selector */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setTimeRangeOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-lg border border-mist bg-canvas px-4 py-2 font-polysans text-13 tracking-[-0.02em] text-graphite transition-colors hover:border-graphite"
-            >
-              {selectedRange?.label}
-              <ChevronDownIcon className="h-3.5 w-3.5 text-slate" />
-            </button>
-            {timeRangeOpen && (
-              <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-lg border border-mist bg-canvas py-1.5 shadow-lg">
-                {TIME_RANGES.map((range) => (
-                  <button
-                    key={range.id}
-                    type="button"
-                    onClick={() => {
-                      setTimeRange(range.id);
-                      setTimeRangeOpen(false);
-                    }}
-                    className={`flex w-full items-center px-4 py-2 text-left font-polysans text-13 tracking-[-0.02em] transition-colors ${
-                      timeRange === range.id
-                        ? "bg-ash text-graphite"
-                        : "text-slate hover:bg-ash hover:text-graphite"
-                    }`}
-                  >
-                    {range.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Download Report */}
-          <Button variant="secondary" size="sm">
-            <DownloadIcon className="h-3.5 w-3.5" />
-            Download Report
-          </Button>
-        </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          2. PROGRESS OVERVIEW — Three Radial Rings (flat, no cards)
-          ═══════════════════════════════════════════════════════════════ */}
+      {/* 2. PROGRESS OVERVIEW — Three Radial Rings (flat, no cards) */}
       <div className="mt-8 flex flex-wrap items-start justify-center gap-10 sm:justify-around">
         {/* Questions Solved */}
         <div
@@ -138,15 +117,15 @@ export default function ProgressPage() {
           onMouseLeave={() => setHoveredRing(null)}
         >
           <RingProgress
-            value={(radialMetrics.questionsSolved.solved / radialMetrics.questionsSolved.total) * 100}
+            value={solvedPct}
             size={140}
             strokeWidth={10}
           >
             <div className="flex flex-col items-center">
               <span className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-                {radialMetrics.questionsSolved.solved}
+                {radial.questionsSolved.solved}
               </span>
-              <span className="text-13 text-slate">/ {radialMetrics.questionsSolved.total}</span>
+              <span className="text-13 text-slate">/ {radial.questionsSolved.total}</span>
             </div>
           </RingProgress>
           <p className="mt-4 font-polysans text-15 tracking-[-0.02em] text-graphite">
@@ -154,7 +133,7 @@ export default function ProgressPage() {
           </p>
           {hoveredRing === "questions" && (
             <p className="mt-1 text-13 text-slate">
-              {radialMetrics.questionsSolved.solved} of {radialMetrics.questionsSolved.total} available
+              {radial.questionsSolved.solved} of {radial.questionsSolved.total} available
             </p>
           )}
         </div>
@@ -166,13 +145,13 @@ export default function ProgressPage() {
           onMouseLeave={() => setHoveredRing(null)}
         >
           <RingProgress
-            value={radialMetrics.accuracy}
+            value={radial.accuracy}
             size={140}
             strokeWidth={10}
           >
             <div className="flex flex-col items-center">
               <span className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-                {radialMetrics.accuracy}%
+                {radial.accuracy}%
               </span>
             </div>
           </RingProgress>
@@ -193,15 +172,15 @@ export default function ProgressPage() {
           onMouseLeave={() => setHoveredRing(null)}
         >
           <RingProgress
-            value={(radialMetrics.practiceSessions.completed / radialMetrics.practiceSessions.total) * 100}
+            value={sessionPct}
             size={140}
             strokeWidth={10}
           >
             <div className="flex flex-col items-center">
               <span className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-                {radialMetrics.practiceSessions.completed}
+                {radial.practiceSessions.completed}
               </span>
-              <span className="text-13 text-slate">/ {radialMetrics.practiceSessions.total}</span>
+              <span className="text-13 text-slate">/ {radial.practiceSessions.total}</span>
             </div>
           </RingProgress>
           <p className="mt-4 font-polysans text-15 tracking-[-0.02em] text-graphite">
@@ -215,9 +194,7 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          3. TIME / PRACTICE ANALYSIS — Inline rows, not cards
-          ═══════════════════════════════════════════════════════════════ */}
+      {/* 3. TIME / PRACTICE ANALYSIS — Inline rows, not cards */}
       <div className="mt-8 border-t border-mist pt-6">
         <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
           Practice Overview
@@ -226,30 +203,28 @@ export default function ProgressPage() {
           <div className="flex items-center gap-3">
             <ClockIcon className="h-4 w-4 text-ember" />
             <div>
-              <span className="font-polysans text-15 font-medium text-graphite">{timeData.totalPracticeTime}</span>
+              <span className="font-polysans text-15 font-medium text-graphite">{formatDurationMs(time.totalPracticeTimeMs)}</span>
               <span className="ml-2 text-13 text-slate">Total Practice Time</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <ClockIcon className="h-4 w-4 text-ember" />
             <div>
-              <span className="font-polysans text-15 font-medium text-graphite">{timeData.avgSessionDuration}</span>
+              <span className="font-polysans text-15 font-medium text-graphite">{formatDurationMs(time.avgSessionDurationMs)}</span>
               <span className="ml-2 text-13 text-slate">Avg. Session Duration</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <CalendarIcon className="h-4 w-4 text-ember" />
             <div>
-              <span className="font-polysans text-15 font-medium text-graphite">{timeData.practiceFrequency.value} {timeData.practiceFrequency.unit}</span>
+              <span className="font-polysans text-15 font-medium text-graphite">{time.sessionsPerWeek} / week</span>
               <span className="ml-2 text-13 text-slate">Practice Frequency</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          4. PERFORMANCE TREND + ACCURACY BY DIFFICULTY
-          ═══════════════════════════════════════════════════════════════ */}
+      {/* 4. PERFORMANCE TREND + ACCURACY BY DIFFICULTY */}
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* ── Performance Trend ──────────────────────────────── */}
         <section className="border-t border-mist pt-6">
@@ -257,23 +232,9 @@ export default function ProgressPage() {
             <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
               Performance Trend
             </h3>
-            {/* Period selector */}
-            <div className="flex items-center gap-1 rounded-lg border border-mist bg-canvas p-0.5">
-              {TREND_PERIODS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setTrendPeriod(p.id)}
-                  className={`rounded-md px-3 py-1 font-polysans text-13 tracking-[-0.02em] transition-colors ${
-                    trendPeriod === p.id
-                      ? "bg-graphite text-inverse"
-                      : "text-slate hover:text-graphite"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            <span className="font-polysans text-13 tracking-[-0.02em] text-slate">
+              Monthly
+            </span>
           </div>
 
           {/* Metric toggle */}
@@ -305,7 +266,7 @@ export default function ProgressPage() {
           {/* Chart area */}
           <div className="mt-5">
             <PerformanceChart
-              data={performanceTrendMonthly}
+              data={trend}
               metric={trendMetric}
             />
           </div>
@@ -321,13 +282,13 @@ export default function ProgressPage() {
             {/* Donut visualization */}
             <div className="flex flex-col items-center">
               <RingProgress
-                value={difficultyAccuracy.overall}
+                value={difficulty.overall}
                 size={140}
                 strokeWidth={10}
               >
                 <div className="flex flex-col items-center">
                   <span className="font-polysans text-heading tracking-[-0.02em] text-graphite">
-                    {difficultyAccuracy.overall}%
+                    {difficulty.overall}%
                   </span>
                   <span className="text-13 text-slate">Overall</span>
                 </div>
@@ -338,23 +299,23 @@ export default function ProgressPage() {
             <div className="flex flex-1 flex-col gap-5">
               <DifficultyRow
                 label="Easy"
-                accuracy={difficultyAccuracy.easy.accuracy}
-                attempted={difficultyAccuracy.easy.attempted}
-                total={difficultyAccuracy.easy.total}
+                accuracy={difficulty.easy.accuracy}
+                attempted={difficulty.easy.attempted}
+                total={difficulty.easy.total}
                 color="bg-success"
               />
               <DifficultyRow
                 label="Medium"
-                accuracy={difficultyAccuracy.medium.accuracy}
-                attempted={difficultyAccuracy.medium.attempted}
-                total={difficultyAccuracy.medium.total}
+                accuracy={difficulty.medium.accuracy}
+                attempted={difficulty.medium.attempted}
+                total={difficulty.medium.total}
                 color="bg-brass"
               />
               <DifficultyRow
                 label="Hard"
-                accuracy={difficultyAccuracy.hard.accuracy}
-                attempted={difficultyAccuracy.hard.attempted}
-                total={difficultyAccuracy.hard.total}
+                accuracy={difficulty.hard.accuracy}
+                attempted={difficulty.hard.attempted}
+                total={difficulty.hard.total}
                 color="bg-ember"
               />
             </div>
@@ -362,9 +323,7 @@ export default function ProgressPage() {
         </section>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          5. PROGRESS BY TOPIC — table layout
-          ═══════════════════════════════════════════════════════════════ */}
+      {/* 5. PROGRESS BY TOPIC — table layout */}
       <section className="mt-8 border-t border-mist pt-6">
         <div className="flex items-center justify-between gap-4">
           <h3 className="font-polysans text-subheading tracking-[-0.02em] text-graphite">
@@ -372,63 +331,71 @@ export default function ProgressPage() {
           </h3>
         </div>
 
-        {/* Table header */}
-        <div className="mt-5 grid grid-cols-[1fr_80px_70px_90px] gap-2 text-13 text-slate">
-          <span>Topic</span>
-          <span className="text-right">Progress</span>
-          <span className="text-right">Accuracy</span>
-          <span className="text-right">Questions</span>
-        </div>
+        {topics.length > 0 ? (
+          <>
+            {/* Table header */}
+            <div className="mt-5 grid grid-cols-[1fr_80px_70px_90px] gap-2 text-13 text-slate">
+              <span>Topic</span>
+              <span className="text-right">Progress</span>
+              <span className="text-right">Accuracy</span>
+              <span className="text-right">Questions</span>
+            </div>
 
-        {/* Topic rows */}
-        <div className="mt-3 divide-y divide-mist">
-          {topicProgress.map((topic) => {
-            const Icon = TOPIC_ICON_MAP[topic.icon] ?? BrainIcon;
-            return (
-              <Link
-                key={topic.id}
-                href={`/topics/${topic.id}`}
-                className="group grid grid-cols-[1fr_80px_70px_90px] items-center gap-2 py-3 transition-colors hover:bg-fog/50"
-              >
-                {/* Topic name + icon */}
-                <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-canvas text-graphite">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
-                    {topic.name}
-                  </span>
-                </div>
+            {/* Topic rows */}
+            <div className="mt-3 divide-y divide-mist">
+              {topics.map((topic) => {
+                const Icon = getTopicIcon(topic.id) ?? BrainIcon;
+                return (
+                  <Link
+                    key={topic.id}
+                    href={`/topics/${topic.id}`}
+                    className="group grid grid-cols-[1fr_80px_70px_90px] items-center gap-2 py-3 transition-colors hover:bg-fog/50"
+                  >
+                    {/* Topic name + icon */}
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-canvas text-graphite">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="truncate font-polysans text-15 tracking-[-0.02em] text-graphite">
+                        {topic.name}
+                      </span>
+                    </div>
 
-                {/* Progress */}
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-full rounded-full bg-fog">
-                    <div
-                      className="h-full rounded-full bg-ember transition-all"
-                      style={{ width: `${topic.progress}%` }}
-                    />
-                  </div>
-                  <span className="shrink-0 font-polysans text-13 text-graphite">
-                    {topic.progress}%
-                  </span>
-                </div>
+                    {/* Progress */}
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-full rounded-full bg-fog">
+                        <div
+                          className="h-full rounded-full bg-ember transition-all"
+                          style={{ width: `${topic.progress}%` }}
+                        />
+                      </div>
+                      <span className="shrink-0 font-polysans text-13 text-graphite">
+                        {topic.progress}%
+                      </span>
+                    </div>
 
-                {/* Accuracy */}
-                <span className="text-right font-polysans text-13 text-graphite">
-                  {topic.accuracy}%
-                </span>
+                    {/* Accuracy */}
+                    <span className="text-right font-polysans text-13 text-graphite">
+                      {topic.accuracy}%
+                    </span>
 
-                {/* Questions */}
-                <div className="flex items-center justify-end gap-1">
-                  <span className="font-polysans text-13 text-graphite">
-                    {topic.solved}/{topic.total}
-                  </span>
-                  <ArrowRightIcon className="h-3.5 w-3.5 text-slate opacity-0 transition-opacity group-hover:opacity-100" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                    {/* Questions */}
+                    <div className="flex items-center justify-end gap-1">
+                      <span className="font-polysans text-13 text-graphite">
+                        {topic.solved}/{topic.total}
+                      </span>
+                      <ArrowRightIcon className="h-3.5 w-3.5 text-slate opacity-0 transition-opacity group-hover:opacity-100" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <p className="mt-5 text-13 text-slate">
+            No curriculum yet — add topics from the admin API (see docs/content-guide.md).
+          </p>
+        )}
 
         {/* View all */}
         <div className="mt-4 flex justify-end">
@@ -442,11 +409,13 @@ export default function ProgressPage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          6. STRENGTHS & WEAKNESSES — Steam Wave
-          ═══════════════════════════════════════════════════════════════ */}
+      {/* 6. STRENGTHS & WEAKNESSES — Steam Wave */}
       <div className="mt-8 border-t border-mist pt-6">
-        <SteamWaveSection />
+        <SteamWaveSection
+          strengths={strengths}
+          weaknesses={weaknesses}
+          all={practiced}
+        />
       </div>
     </div>
   );
@@ -575,9 +544,7 @@ function PerformanceChart({ data, metric }) {
 // STEAM WAVE — Strengths & Weaknesses
 // ═══════════════════════════════════════════════════════════════════════
 
-function SteamWaveSection() {
-  const { strengths, weaknesses, all } = getClassifiedSubtopics();
-
+function SteamWaveSection({ strengths, weaknesses, all }) {
   return (
     <section>
       <div className="flex items-center justify-between gap-4">
@@ -603,7 +570,13 @@ function SteamWaveSection() {
 
       {/* ── MonoRoundedStreamChart ──────────────────────────── */}
       <div className="mt-6">
-        <MonoRoundedStreamChart data={all} />
+        {all.length > 0 ? (
+          <MonoRoundedStreamChart data={all} />
+        ) : (
+          <p className="rounded-2xl bg-ash px-6 py-8 text-center text-13 text-slate">
+            Practice a few sessions and your performance stream will appear here.
+          </p>
+        )}
       </div>
 
       {/* ── Strengths & Weaknesses Lists ────────────────────── */}
@@ -618,35 +591,41 @@ function SteamWaveSection() {
               Top Strengths
             </p>
           </div>
-          <div className="space-y-3">
-            {strengths.map((item, idx) => (
-              <div key={item.name}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/10 font-polysans text-13 font-medium text-success">
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                        {item.name}
+          {strengths.length > 0 ? (
+            <div className="space-y-3">
+              {strengths.map((item, idx) => (
+                <div key={item.name}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/10 font-polysans text-13 font-medium text-success">
+                        {idx + 1}
                       </span>
-                      <span className="ml-2 font-polysans text-13 font-medium text-success">
-                        {item.accuracy}%
-                      </span>
+                      <div>
+                        <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">
+                          {item.name}
+                        </span>
+                        <span className="ml-2 font-polysans text-13 font-medium text-success">
+                          {item.accuracy}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 ml-10">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-fog">
+                      <div
+                        className="h-full rounded-full bg-success transition-all duration-500"
+                        style={{ width: `${item.accuracy}%` }}
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 ml-10">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-fog">
-                    <div
-                      className="h-full rounded-full bg-success transition-all duration-500"
-                      style={{ width: `${item.accuracy}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-13 text-slate">
+              Solve at least 3 questions in a subtopic to unlock strengths.
+            </p>
+          )}
         </div>
 
         {/* Needs Practice */}
@@ -659,35 +638,41 @@ function SteamWaveSection() {
               Needs Practice
             </p>
           </div>
-          <div className="space-y-3">
-            {weaknesses.map((item, idx) => (
-              <div key={item.name}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ember/10 font-polysans text-13 font-medium text-ember">
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">
-                        {item.name}
+          {weaknesses.length > 0 ? (
+            <div className="space-y-3">
+              {weaknesses.map((item, idx) => (
+                <div key={item.name}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ember/10 font-polysans text-13 font-medium text-ember">
+                        {idx + 1}
                       </span>
-                      <span className="ml-2 font-polysans text-13 font-medium text-ember">
-                        {item.accuracy}%
-                      </span>
+                      <div>
+                        <span className="font-polysans text-15 tracking-[-0.02em] text-graphite">
+                          {item.name}
+                        </span>
+                        <span className="ml-2 font-polysans text-13 font-medium text-ember">
+                          {item.accuracy}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 ml-10">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-fog">
+                      <div
+                        className="h-full rounded-full bg-ember transition-all duration-500"
+                        style={{ width: `${item.accuracy}%` }}
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 ml-10">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-fog">
-                    <div
-                      className="h-full rounded-full bg-ember transition-all duration-500"
-                      style={{ width: `${item.accuracy}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-13 text-slate">
+              Solve at least 3 questions in a subtopic to unlock weaknesses.
+            </p>
+          )}
         </div>
       </div>
     </section>

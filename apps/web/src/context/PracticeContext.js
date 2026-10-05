@@ -5,7 +5,6 @@ import {
   saveSessionState,
   loadSessionState,
   clearSessionState,
-  questionOptions,
 } from "@/lib/mock/practiceSession";
 
 const PracticeContext = createContext(null);
@@ -25,6 +24,13 @@ export function PracticeProvider({
   sessionId,
   questions,
   meta, // { sheetName, topicName, subtopicName, difficulty, mode }
+  // Live hooks (optional — when omitted the provider is a pure local mock).
+  // onAnswer(questionId, optionId): POST the attempt; 409 (already recorded)
+  // is treated as success. onSubmit(): complete the session (must throw on
+  // failure so local submitted state stays untouched). onError(err): surface.
+  onAnswer,
+  onSubmit,
+  onError,
 }) {
   const total = questions.length;
 
@@ -34,6 +40,14 @@ export function PracticeProvider({
   const [currentIndex, setCurrentIndex] = useState(persisted?.currentIndex ?? 0);
   const [answers, setAnswers] = useState(persisted?.answers ?? {});
   const [marks, setMarks] = useState(persisted?.marks ?? {}); // questionId → true
+  // Locked = recorded server-side (backend allows one attempt per question).
+  // Restored answers were posted when first selected, so they start locked.
+  const [locked, setLocked] = useState(() => ({
+    ...Object.fromEntries(
+      Object.keys(persisted?.answers ?? {}).map((k) => [k, true]),
+    ),
+    ...(persisted?.locked ?? {}),
+  }));
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(persisted?.elapsedSeconds ?? 0);
   const [mode, setMode] = useState(meta?.mode ?? "PRACTICE");
@@ -48,9 +62,10 @@ export function PracticeProvider({
       currentIndex,
       answers,
       marks,
+      locked,
       elapsedSeconds,
     });
-  }, [currentIndex, answers, marks, elapsedSeconds, sessionId, isSubmitted]);
+  }, [currentIndex, answers, marks, locked, elapsedSeconds, sessionId, isSubmitted]);
 
   // ── Timer (runs in TEST mode) ────────────────────────────────────────
   useEffect(() => {
@@ -72,11 +87,45 @@ export function PracticeProvider({
   const goNext = useCallback(() => goTo(currentIndex + 1), [currentIndex, goTo]);
   const goPrev = useCallback(() => goTo(currentIndex - 1), [currentIndex, goTo]);
 
+  // Refs for stable callbacks (questions/hooks arrive from the page).
+  const questionsRef = useRef(questions);
+  questionsRef.current = questions;
+  const onAnswerRef = useRef(onAnswer);
+  onAnswerRef.current = onAnswer;
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
+
+  const lockQuestion = useCallback((questionId) => {
+    setLocked((prev) =>
+      prev[questionId] ? prev : { ...prev, [questionId]: true },
+    );
+  }, []);
+
   const selectOption = useCallback(
     (questionId, optionIndex) => {
+      if (lockedRef.current[questionId]) return; // recorded — immutable
       setAnswers((prev) => ({ ...prev, [questionId]: optionIndex }));
+      if (!onAnswerRef.current) return;
+      const q = questionsRef.current.find((item) => item.id === questionId);
+      const optionId = q?.options?.[optionIndex]?.id;
+      if (!optionId) return;
+      onAnswerRef.current(questionId, optionId).then(
+        () => lockQuestion(questionId),
+        (err) => {
+          // Already recorded server-side (e.g. restored state) → lock.
+          if (/already attempted/i.test(err?.message || "")) {
+            lockQuestion(questionId);
+          } else {
+            onErrorRef.current?.(err);
+          }
+        },
+      );
     },
-    [],
+    [lockQuestion],
   );
 
   const toggleMark = useCallback(
@@ -95,6 +144,7 @@ export function PracticeProvider({
   );
 
   const clearAnswer = useCallback((questionId) => {
+    if (lockedRef.current[questionId]) return; // recorded — immutable
     setAnswers((prev) => {
       const next = { ...prev };
       delete next[questionId];
@@ -102,7 +152,17 @@ export function PracticeProvider({
     });
   }, []);
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
+    // Live completion first: a failure leaves local state untouched so the
+    // user can retry instead of losing the session.
+    if (onSubmitRef.current) {
+      try {
+        await onSubmitRef.current();
+      } catch (err) {
+        onErrorRef.current?.(err);
+        throw err;
+      }
+    }
     setIsSubmitted(true);
     clearInterval(timerRef.current);
     clearSessionState(sessionId);
@@ -131,6 +191,8 @@ export function PracticeProvider({
     currentMarked,
     answers,
     marks,
+    locked,
+    isLocked: (questionId) => !!locked[questionId],
     answeredCount,
     markedCount,
     progress,

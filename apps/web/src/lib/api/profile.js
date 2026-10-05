@@ -53,3 +53,6 @@ export const getRecommendations = async () =>
 
 export const getBadges = async () =>
   unwrap(await apiFetch("/profile/badges"), "Load badges");
+
+export const getProgress = async () =>
+  unwrap(await apiFetch("/profile/progress"), "Load progress");

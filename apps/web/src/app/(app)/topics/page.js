@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -8,70 +8,103 @@ import {
   SparklesIcon,
 } from "@/components/ui/icons";
 import { getTopicIcon } from "@/lib/subtopicIcons";
-import { topics } from "@/lib/mock/landing";
-import { getTopicProgress } from "@/lib/mock/dashboard";
+import { getTopics } from "@/lib/api/topics";
+import { getProgress } from "@/lib/api/profile";
 import Button from "@/components/ui/Button";
 
-// All filterable topic labels (for the nav pills)
-const TOPIC_FILTERS = [
-  { id: "all", label: "All Topics" },
-  { id: "quant", label: "Quantitative" },
-  { id: "logical", label: "Logical" },
-  { id: "verbal", label: "Verbal" },
-  { id: "di", label: "Data Interpretation" },
-  { id: "ga", label: "General Awareness" },
-  { id: "english", label: "English Language" },
-];
-
 export default function TopicsPage() {
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [topics, setTopics] = useState(null);
+  const [progressByTopic, setProgressByTopic] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("az");
 
-  const filtered = useMemo(() => {
-    let list = topics;
-
-    // Filter by category pill
-    if (activeFilter !== "all") {
-      list = list.filter((t) => t.id === activeFilter);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [list, progress] = await Promise.all([
+        getTopics(),
+        getProgress().catch(() => null),
+      ]);
+      setTopics(list);
+      const map = {};
+      for (const t of progress?.topics || []) map[t.id] = t;
+      setProgressByTopic(map);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    // Search across title, description, and subtopic names
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const rows = useMemo(() => {
+    const enriched = (topics || []).map((t) => {
+      const totalQuestions = t.subtopics.reduce(
+        (s, sub) => s + (sub._count?.questions ?? 0),
+        0,
+      );
+      const p = progressByTopic[t.id];
+      const percent = p ? p.progress : 0;
+      return { ...t, totalQuestions, percent };
+    });
+
+    let list = enriched;
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (t) =>
           t.title.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q) ||
-          t.subtopics.some((s) => s.name.toLowerCase().includes(q)),
+          (t.description || "").toLowerCase().includes(q) ||
+          t.subtopics.some((s) => s.title.toLowerCase().includes(q)),
       );
     }
 
-    // Sort
     switch (sort) {
       case "za":
         list = [...list].sort((a, b) => b.title.localeCompare(a.title));
         break;
       case "most":
-        list = [...list].sort(
-          (a, b) =>
-            b.subtopics.reduce((s, sub) => s + sub.questions, 0) -
-            a.subtopics.reduce((s, sub) => s + sub.questions, 0),
-        );
+        list = [...list].sort((a, b) => b.totalQuestions - a.totalQuestions);
         break;
       case "least":
-        list = [...list].sort(
-          (a, b) =>
-            a.subtopics.reduce((s, sub) => s + sub.questions, 0) -
-            b.subtopics.reduce((s, sub) => s + sub.questions, 0),
-        );
+        list = [...list].sort((a, b) => a.totalQuestions - b.totalQuestions);
         break;
       default:
         list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     }
-
     return list;
-  }, [activeFilter, search, sort]);
+  }, [topics, progressByTopic, search, sort]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <p className="text-13 text-slate">Loading topics…</p>
+      </div>
+    );
+  }
+
+  if (error || !topics) {
+    return (
+      <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
+        <div className="rounded-2xl bg-ash p-6 text-13 text-steel">
+          <p>Couldn&apos;t load topics: {error}</p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-3 font-polysans text-graphite underline underline-offset-2 hover:text-ember"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[var(--page-max-width)] px-6 py-10">
@@ -115,32 +148,14 @@ export default function TopicsPage() {
             </p>
           </div>
         </div>
-        <Button render={<Link href="#" />} variant="primary" size="sm" className="hidden shrink-0 sm:inline-flex">
-          Plan My Preparation
+        <Button render={<Link href="/progress" />} variant="primary" size="sm" className="hidden shrink-0 sm:inline-flex">
+          View My Progress
           <ArrowRightIcon className="h-3.5 w-3.5" />
         </Button>
       </div>
 
-      {/* ── 3. Topic Navigation / Filters ─────────────────────────────── */}
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {TOPIC_FILTERS.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setActiveFilter(filter.id)}
-              className={`rounded-tags border px-3 py-1 font-polysans text-13 tracking-[-0.02em] transition-colors ${
-                activeFilter === filter.id
-                  ? "border-graphite bg-graphite text-inverse"
-                  : "border-mist bg-canvas text-slate hover:border-graphite hover:text-graphite"
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Sort */}
+      {/* ── 3. Sort ──────────────────────────────────────────────────── */}
+      <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
@@ -154,7 +169,7 @@ export default function TopicsPage() {
       </div>
 
       {/* ── 4. Topic List ─────────────────────────────────────────────── */}
-      {filtered.length > 0 ? (
+      {rows.length > 0 ? (
         <div className="mt-6 overflow-hidden rounded-2xl border border-mist bg-canvas">
           {/* Table header */}
           <div className="grid grid-cols-[1fr_100px_120px_90px] gap-4 border-b border-mist bg-fog/50 px-5 py-3">
@@ -165,12 +180,7 @@ export default function TopicsPage() {
           </div>
 
           {/* Table rows */}
-          {filtered.map((topic) => {
-            const totalQuestions = topic.subtopics.reduce(
-              (s, sub) => s + sub.questions,
-              0,
-            );
-            const progress = getTopicProgress(topic);
+          {rows.map((topic) => {
             const Icon = getTopicIcon(topic.id);
 
             return (
@@ -203,7 +213,7 @@ export default function TopicsPage() {
 
                 {/* Questions count */}
                 <span className="text-13 text-steel">
-                  {totalQuestions}
+                  {topic.totalQuestions}
                 </span>
 
                 {/* Progress */}
@@ -211,11 +221,11 @@ export default function TopicsPage() {
                   <div className="h-1.5 w-full rounded-full bg-fog">
                     <div
                       className="h-full rounded-full bg-ember transition-all"
-                      style={{ width: `${progress.percent}%` }}
+                      style={{ width: `${topic.percent}%` }}
                     />
                   </div>
                   <span className="shrink-0 font-polysans text-13 text-graphite">
-                    {progress.percent}%
+                    {topic.percent}%
                   </span>
                 </div>
               </Link>
@@ -227,7 +237,7 @@ export default function TopicsPage() {
           <p className="text-15 text-steel">
             {search
               ? "No topics match your search."
-              : "No topics available yet."}
+              : "No topics yet — add them from the admin API (see docs/content-guide.md)."}
           </p>
           {search && (
             <button
@@ -242,9 +252,9 @@ export default function TopicsPage() {
       )}
 
       {/* Count */}
-      {filtered.length > 0 && (
+      {rows.length > 0 && (
         <p className="mt-6 text-13 text-slate">
-          {filtered.length} topic{filtered.length !== 1 ? "s" : ""}
+          {rows.length} topic{rows.length !== 1 ? "s" : ""}
         </p>
       )}
     </div>

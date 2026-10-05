@@ -7,7 +7,7 @@ permission subsystem must preserve while it is introduced in stages.
 
 - `USER`, `ADMIN`. Assigned out-of-band (direct DB); no API reads or changes roles.
 
-## Endpoint inventory (33 total)
+## Endpoint inventory (50 total)
 
 ### Public (no authentication)
 
@@ -24,34 +24,43 @@ permission subsystem must preserve while it is introduced in stages.
 | POST | `/api/v1/auth/refresh` | refresh cookie |
 | POST | `/api/v1/auth/logout` | refresh cookie |
 | GET | `/api/v1/auth/me` | self |
-| GET | `/api/v1/topic/` | full list |
-| GET | `/api/v1/topic/sheets` | sheet metadata + questionCount |
+| GET | `/api/v1/topic/` | full list + subtopic shells |
+| GET | `/api/v1/topic/sheets` | sheet metadata + questionCount + solved |
+| GET | `/api/v1/topic/sheets/:id/questions` | questions (options w/o answers) + progress |
 | GET | `/api/v1/topic/:id/subtopics` | no answer data |
-| GET | `/api/v1/question/?subtopicId=` | no solution / isCorrect |
+| GET | `/api/v1/question/?subtopicId=` | no solution / isCorrect (options included) |
 | GET | `/api/v1/question/:questionId` | no solution / isCorrect |
-| POST | `/api/v1/practice-session/` | creates for `req.user.id` |
-| GET | `/api/v1/profile/` (+ `/stats` `/history` `/heatmap` `/skills`) | always `req.user.id`, no `:id` param |
+| POST | `/api/v1/practice-session/` | creates for `req.user.id` (subtopicId or sheetId) |
+| GET | `/api/v1/profile/` (+ `/stats` `/history` `/heatmap` `/skills` `/continue` `/recommendations` `/progress` `/badges`) | always `req.user.id`, no `:id` param |
+| PATCH | `/api/v1/profile/` | self only (`profile:update`) |
+| DELETE | `/api/v1/profile/avatar` | self only (`profile:update`) |
+| GET | `/api/v1/leaderboard` | derived ranking (`leaderboard:read`) |
+| GET | `/api/v1/discussions` | list (`discussions:read`) |
+| POST | `/api/v1/discussions` | create (`discussions:create`) |
+| GET | `/api/v1/contests` (+ `/:id`) | list/detail (`contests:read`) |
+| POST/DELETE | `/api/v1/contests/:id/register` | register (`contests:register`) |
 
 ### Authenticated + ownership (service-level `session.userId === req.user.id` → 403)
 
 | Method | Path |
 |---|---|
-| GET | `/api/v1/practice-session/:id` (also requires `completed`) |
-| POST | `/api/v1/practice-session/:id/attempts` (also requires active session, no duplicate) |
+| GET | `/api/v1/practice-session/:id` (readable while active — options carry no answers; sheet sessions resolve sheet questions) |
+| POST | `/api/v1/practice-session/:id/attempts` (active session, no duplicate; sheet sessions check sheet membership instead of subtopic) |
 | PATCH | `/api/v1/practice-session/:id/complete` (also requires active session) |
-| GET | `/api/v1/practice-session/:id/results` (also requires `completedAt`) |
+| GET | `/api/v1/practice-session/:id/results` (also requires `completedAt`; includes per-question review with answers) |
 
 ### Admin / content-protected (`authenticate` + `authorize("ADMIN")`)
 
-`POST/PATCH/DELETE /api/v1/admin/topics`, `/subtopics`, `/questions` (9) and
-`POST/PATCH/DELETE /api/v1/admin/sheets/` (3). Sheet create/update nests
+`POST/PATCH/DELETE /api/v1/admin/topics`, `/subtopics`, `/questions` (9),
+`POST/PATCH/DELETE /api/v1/admin/sheets/` (3) and
+`POST/PATCH/DELETE /api/v1/admin/contests/` (3). Sheet create/update nests
 `questionIds` composition — no standalone linking API.
 
 ### No API surface (do NOT design permissions for these yet)
 
-- `Discussion/Comment/Reply/DiscussionLike` — Prisma models only, zero routes.
+- `Comment/Reply/DiscussionLike` writes — Prisma models only, zero routes
+  (discussions have list + create).
 - User management (list/ban/change-role) — does not exist.
-- Profile update — does not exist (GETs only).
 
 ## Recorded bug: cross-subtopic attempt injection
 
@@ -94,10 +103,11 @@ impossible. Seed never deletes assignments; revocation is a separate migration.
 ## Permission vocabulary
 
 Single source: `src/modules/authorization/authorization.constants.js`
-(23 permissions). `USER` holds 11 (reads + own practice/profile + profile
-writes); `ADMIN` holds all 23. `profile:update` exists (PATCH /profile +
-DELETE /profile/avatar, self-scoped via `req.user.id`). `users:*` and
-`discussions:*` do not exist because those APIs do not exist.
+(31 permissions). `USER` holds 16 (reads + own practice/profile + write own
+profile, discussions, contest registration); `ADMIN` holds all 31.
+`profile:update` exists (PATCH /profile + DELETE /profile/avatar, self-scoped
+via `req.user.id`). `users:*` and comment/like writes do not exist because
+those APIs do not exist.
 
 ## JWT decision (Phase 8)
 
@@ -142,14 +152,13 @@ Document who/when for each grant. Build `/admin/users` (`users:read`,
 
 ## Verification
 
-- `npm run db:seed` — idempotent seed (roles, 23 permissions, 6 badges) +
+- `npm run db:seed` — idempotent seed (roles, 31 permissions, 6 badges) +
   Profile backfill + counts (fails non-zero if any user lacks a Profile row).
-- `npm test` — 36 tests: 18 authorization (catalog consistency, allow/deny
-  matrix, middleware 401/403/404, ownership, cross-subtopic 400, option
-  integrity, duplicates, session state) + 18 profile/badges (skill-level
-  boundaries, DTO shape, PATCH allowlist + handle 409, validator strip/reject,
-  history/continue/heatmap/recommendations shapes, FIRST_SOLVE auto-grant +
-  idempotency, profile RBAC). DB-backed with unique fixtures, self-cleaning.
+- `npm test` — 50 tests: 18 authorization + 18 profile/badges + 14 content
+  (sheets reads, sheet-bound sessions + membership 400, results review,
+  progress composite, leaderboard incl. null rank, discussions, contest
+  register/409/unregister/ended-400, new RBAC matrix). DB-backed with unique
+  fixtures, self-cleaning.
 - Live boot checks performed: USER 403 on all 4 write resources, 200 on
 reads/profile, 404 on missing session, 401 without token, ADMIN passes gates
 to validation (400 on empty body, nothing created).

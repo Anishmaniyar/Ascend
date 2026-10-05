@@ -390,3 +390,202 @@ export const getRecommendationsService = async (userId, limit = 3) => {
       reason: i === 0 ? "Lowest accuracy" : "Needs practice",
     }));
 };
+
+// ---------------------------------------------------------------------------
+// Progress composite (one request powers the progress page + topic cards).
+// Convention mirrors getProfileStatsService: accuracy = correct attempts /
+// unique questions solved; solved = distinct questionIds.
+// ---------------------------------------------------------------------------
+
+const monthKey = (d) =>
+  `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+
+const monthLabel = (d) =>
+  d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+
+export const getProgressService = async (userId) => {
+  const [tree, attempts, sessions, totalSessions] = await Promise.all([
+    ProfileRepository.findCurriculumTree(),
+    ProfileRepository.findAttemptsForProgress(userId),
+    ProfileRepository.findCompletedSessionsForProgress(userId),
+    ProfileRepository.countAllSessions(userId),
+  ]);
+
+  // Totals from the curriculum.
+  let totalQuestions = 0;
+  const subtopicTotals = new Map();
+  const topicTotals = new Map();
+  for (const t of tree) {
+    let topicTotal = 0;
+    for (const s of t.subtopics) {
+      const n = s._count.questions;
+      subtopicTotals.set(s.id, { topicId: t.id, name: s.title, total: n });
+      topicTotal += n;
+      totalQuestions += n;
+    }
+    topicTotals.set(t.id, { name: t.title, total: topicTotal });
+  }
+
+  // Per-question correctness (ever-correct) + per-attempt tallies.
+  const uniqueSolved = new Set();
+  const correctQuestions = new Set();
+  const subStats = new Map(); // subtopicId -> {attempted, correct, unique:Set}
+  const topicStats = new Map(); // topicId -> {attempted, correct, unique:Set}
+  const diffStats = {
+    EASY: { attempted: 0, correct: 0 },
+    MEDIUM: { attempted: 0, correct: 0 },
+    HARD: { attempted: 0, correct: 0 },
+  };
+  const byMonth = new Map(); // monthKey -> {unique:Set, correct, attempted}
+  for (const a of attempts) {
+    uniqueSolved.add(a.questionId);
+    if (a.isCorrect) correctQuestions.add(a.questionId);
+    const sub = a.question.subtopic;
+    const top = sub.topic;
+    if (!subStats.has(sub.id))
+      subStats.set(sub.id, { attempted: 0, correct: 0, unique: new Set() });
+    if (!topicStats.has(top.id))
+      topicStats.set(top.id, { attempted: 0, correct: 0, unique: new Set() });
+    const ss = subStats.get(sub.id);
+    const ts = topicStats.get(top.id);
+    ss.attempted++;
+    ts.attempted++;
+    ss.unique.add(a.questionId);
+    ts.unique.add(a.questionId);
+    if (a.isCorrect) {
+      ss.correct++;
+      ts.correct++;
+    }
+    const dd = diffStats[a.question.difficulty];
+    dd.attempted++;
+    if (a.isCorrect) dd.correct++;
+    const mk = monthKey(a.createdAt);
+    if (!byMonth.has(mk))
+      byMonth.set(mk, { unique: new Set(), correct: 0, attempted: 0 });
+    const mm = byMonth.get(mk);
+    mm.unique.add(a.questionId);
+    mm.attempted++;
+    if (a.isCorrect) mm.correct++;
+  }
+
+  const accuracy =
+    uniqueSolved.size === 0
+      ? 0
+      : Number(((correctQuestions.size / uniqueSolved.size) * 100).toFixed(2));
+
+  // Last 6 calendar months (oldest → newest), zero-filled for chart continuity.
+  const now = new Date();
+  const monthlyTrend = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1),
+    );
+    const key = monthKey(d);
+    const m = byMonth.get(key);
+    const solved = m ? m.unique.size : 0;
+    monthlyTrend.push({
+      month: key,
+      label: monthLabel(d),
+      questionsSolved: solved,
+      accuracy:
+        solved === 0 ? 0 : Number(((m.correct / solved) * 100).toFixed(2)),
+    });
+  }
+
+  const pct = (n, t) => (t === 0 ? 0 : Math.round((n / t) * 100));
+
+  const topics = [...topicTotals.entries()].map(([id, t]) => {
+    const s = topicStats.get(id);
+    const solved = s ? s.unique.size : 0;
+    const correct = s ? s.correct : 0;
+    const attempted = s ? s.attempted : 0;
+    return {
+      id,
+      name: t.name,
+      solved,
+      total: t.total,
+      progress: pct(solved, t.total),
+      accuracy: attempted === 0 ? 0 : Math.round((correct / attempted) * 100),
+    };
+  });
+
+  const subtopics = [...subtopicTotals.entries()].map(([id, s]) => {
+    const st = subStats.get(id);
+    const solved = st ? st.unique.size : 0;
+    const correct = st ? st.correct : 0;
+    const attempted = st ? st.attempted : 0;
+    return {
+      id,
+      topicId: s.topicId,
+      name: s.name,
+      solved,
+      total: s.total,
+      attempted,
+      accuracy: attempted === 0 ? 0 : Math.round((correct / attempted) * 100),
+    };
+  });
+
+  const eligible = subtopics.filter((s) => s.attempted >= 3);
+  const byAccDesc = [...eligible].sort((a, b) => b.accuracy - a.accuracy);
+  const strengths = byAccDesc.slice(0, 3);
+  const weaknesses = [...eligible]
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, 3);
+
+  let totalPracticeTimeMs = 0;
+  for (const s of sessions) {
+    if (s.startedAt && s.completedAt) {
+      totalPracticeTimeMs += s.completedAt.getTime() - s.startedAt.getTime();
+    }
+  }
+  const avgSessionDurationMs =
+    sessions.length === 0
+      ? 0
+      : Math.round(totalPracticeTimeMs / sessions.length);
+  const spanDays =
+    sessions.length <= 1
+      ? 7
+      : Math.max(
+          7,
+          Math.ceil(
+            (sessions[sessions.length - 1].completedAt.getTime() -
+              sessions[0].completedAt.getTime()) /
+              86_400_000,
+          ),
+        );
+  const sessionsPerWeek = Number(
+    ((sessions.length / spanDays) * 7).toFixed(1),
+  );
+
+  const diffTotals = await ProfileRepository.countQuestionsByDifficulty();
+  const diffAccuracy = {};
+  for (const [k, v] of Object.entries(diffStats)) {
+    const key = k.toLowerCase();
+    diffAccuracy[key] = {
+      accuracy:
+        v.attempted === 0 ? 0 : Math.round((v.correct / v.attempted) * 100),
+      attempted: v.attempted,
+      total: diffTotals[k],
+    };
+  }
+
+  return {
+    radial: {
+      questionsSolved: { solved: uniqueSolved.size, total: totalQuestions },
+      accuracy,
+      practiceSessions: { completed: sessions.length, total: totalSessions },
+    },
+    monthlyTrend,
+    difficulty: { overall: accuracy, ...diffAccuracy },
+    topics,
+    subtopics,
+    strengths,
+    weaknesses,
+    time: {
+      totalPracticeTimeMs,
+      avgSessionDurationMs,
+      sessionsPerWeek,
+      completedSessions: sessions.length,
+    },
+  };
+};

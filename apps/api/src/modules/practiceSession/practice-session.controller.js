@@ -4,12 +4,13 @@ import * as practiceService from "./practice-session.service.js";
 export const startPracticeSession = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
 
-  const { subtopicId, mode } = req.body;
+  const { subtopicId, sheetId, mode } = req.body;
 
   const response = await practiceService.createPracticeSessionService(
     userId,
     subtopicId,
     mode,
+    sheetId,
   );
 
   return res.status(201).json({

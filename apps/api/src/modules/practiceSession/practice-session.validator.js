@@ -3,13 +3,19 @@ import { z } from "zod";
 import { PRACTICE_MODES } from "./constants.js";
 
 export const validateStartPracticeSession = z.object({
-  body: z.object({
-    subtopicId: z.uuid({ error: "Must be a valid UUID format" }),
+  body: z
+    .object({
+      subtopicId: z.uuid({ error: "Must be a valid UUID format" }).optional(),
 
-    mode: z.enum(PRACTICE_MODES, {
-      error: `Invalid mode choice. Permitted values: ${PRACTICE_MODES.join(" | ")}`,
+      sheetId: z.uuid({ error: "Must be a valid UUID format" }).optional(),
+
+      mode: z.enum(PRACTICE_MODES, {
+        error: `Invalid mode choice. Permitted values: ${PRACTICE_MODES.join(" | ")}`,
+      }),
+    })
+    .refine((b) => b.subtopicId || b.sheetId, {
+      error: "Provide subtopicId or sheetId",
     }),
-  }),
 });
 
 export const validateSubmitAttempt = z.object({

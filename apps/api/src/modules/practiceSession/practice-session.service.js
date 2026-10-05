@@ -7,6 +7,7 @@ export const createPracticeSessionService = async (
   userId,
   subtopicId,
   mode,
+  sheetId = null,
 ) => {
   const isUserValid = await PracticeRepository.findUserExists(userId);
 
@@ -14,10 +15,23 @@ export const createPracticeSessionService = async (
     throw new AppError("User does not exists", 404);
   }
 
-  const subtopicExists = await PracticeRepository.findSubTopic(subtopicId);
+  if (sheetId) {
+    // Company-sheet practice spans subtopics: the session binds to the
+    // sheet, and subtopicId is derived for topic-tree grouping only.
+    const sheet = await PracticeRepository.findSheetQuestionsById(sheetId);
+    if (!sheet) {
+      throw new AppError("Sheet not found", 404);
+    }
+    if (sheet.sheetQuestions.length === 0) {
+      throw new AppError("Sheet has no questions yet", 400);
+    }
+    subtopicId = sheet.sheetQuestions[0].question.subtopicId;
+  } else {
+    const subtopicExists = await PracticeRepository.findSubTopic(subtopicId);
 
-  if (!subtopicExists) {
-    throw new AppError("Sub Topic not found", 404);
+    if (!subtopicExists) {
+      throw new AppError("Sub Topic not found", 404);
+    }
   }
 
   if (!PRACTICE_MODES.includes(mode)) {
@@ -29,6 +43,7 @@ export const createPracticeSessionService = async (
       userId,
       subtopicId,
       mode,
+      sheetId,
     );
 
   if (findExistingSession) {
@@ -39,10 +54,19 @@ export const createPracticeSessionService = async (
     userId,
     subtopicId,
     mode,
+    sheetId,
   );
 
   return newExistingSession;
 };
+
+const toQuestionDTO = (question) => ({
+  id: question.id,
+  title: question.title,
+  difficulty: question.difficulty,
+  type: question.type,
+  options: question.options.map(({ id, text }) => ({ id, text })),
+});
 
 export const getPracticeSessionById = async (userId, sessionId) => {
   const session = await PracticeRepository.findFullSessionDetails(sessionId);
@@ -55,9 +79,9 @@ export const getPracticeSessionById = async (userId, sessionId) => {
     throw new AppError("Access denied", 403);
   }
 
-  if (!session.completed) {
-    throw new AppError("Cannot access session data until it is completed", 400);
-  }
+  // NOTE: active sessions are readable (the live runner fetches its own
+  // questions here). Options carry no isCorrect/solution, matching the
+  // public question reads, so nothing leaks before completion.
 
   const formattedQuestions = session.subtopic.questions.map((question) => {
     return {
@@ -72,11 +96,27 @@ export const getPracticeSessionById = async (userId, sessionId) => {
     mode: session.mode,
     completed: session.completed,
     startedAt: session.startedAt,
+    sheetId: session.sheetId,
+    sheet: session.sheet
+      ? {
+          id: session.sheet.id,
+          title: session.sheet.title,
+          companyName: session.sheet.companyName,
+        }
+      : null,
     subtopic: {
       id: session.subtopic.id,
       title: session.subtopic.title,
+      topic: session.subtopic.topic
+        ? {
+            id: session.subtopic.topic.id,
+            title: session.subtopic.topic.title,
+          }
+        : null,
     },
-    questions: formattedQuestions,
+    questions: session.sheetId
+      ? session.sheet.sheetQuestions.map((sq) => toQuestionDTO(sq.question))
+      : formattedQuestions,
   };
 };
 
@@ -105,19 +145,34 @@ export const submitAttemptService = async (
     throw new AppError("Practice session not found", 404);
   }
 
-  // 4. Enforce attempt.question.subtopicId === attempt.session.subtopicId.
+  // 4. Enforce question membership.
+  // Subtopic sessions: attempt.question.subtopicId === session.subtopicId.
   // Without this, attempts for any subtopic's questions could be recorded
   // inside this session, corrupting per-subtopic analytics.
-  const targetQuestion =
-    await PracticeRepository.findQuestionSubtopicById(questionId);
-  if (!targetQuestion) {
-    throw new AppError("Question not found", 404);
-  }
-  if (targetQuestion.subtopicId !== practiceSession.subtopicId) {
-    throw new AppError(
-      "Question does not belong to this session's subtopic",
-      400,
+  // Sheet sessions span subtopics: the question must be mapped to the sheet.
+  if (practiceSession.sheetId) {
+    const member = await PracticeRepository.findSheetMembership(
+      practiceSession.sheetId,
+      questionId,
     );
+    if (!member) {
+      throw new AppError(
+        "Question does not belong to this session's sheet",
+        400,
+      );
+    }
+  } else {
+    const targetQuestion =
+      await PracticeRepository.findQuestionSubtopicById(questionId);
+    if (!targetQuestion) {
+      throw new AppError("Question not found", 404);
+    }
+    if (targetQuestion.subtopicId !== practiceSession.subtopicId) {
+      throw new AppError(
+        "Question does not belong to this session's subtopic",
+        400,
+      );
+    }
   }
 
   // 5. Verify identity alignment
@@ -233,12 +288,37 @@ export const calculatePracticeResults = async (userId, sessionId) => {
     findSessionExists.completedAt.getTime() -
     findSessionExists.startedAt.getTime();
 
+  // Post-completion review: per-question breakdown WITH answers (earned by
+  // finishing; the pre-completion reads never include these).
+  const detailed = await PracticeRepository.findAttemptsWithReview(sessionId);
+  const review = detailed.map((a) => {
+    const correctOption = a.question.options.find((o) => o.isCorrect);
+    return {
+      questionId: a.question.id,
+      title: a.question.title,
+      difficulty: a.question.difficulty,
+      type: a.question.type,
+      solution: a.question.solution,
+      options: a.question.options.map(({ id, text }) => ({ id, text })),
+      selectedOptionId: a.selectedOptionId,
+      correctOptionId: correctOption ? correctOption.id : null,
+      isCorrect: a.isCorrect,
+    };
+  });
+
   return {
+    sessionId,
+    mode: findSessionExists.mode,
+    topic: findSessionExists.subtopic.topic.title,
+    subtopic: findSessionExists.subtopic.title,
     score: correctAnswers,
     totalQuestion,
     correctAnswers,
     wrongAnswers,
     accuracy,
     timeTaken,
+    startedAt: findSessionExists.startedAt,
+    completedAt: findSessionExists.completedAt,
+    review,
   };
 };
